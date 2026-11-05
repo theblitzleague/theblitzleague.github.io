@@ -1,0 +1,7 @@
+# Kept on the commissioner's PC only, never published: originals as sent (some carry generator metadata), full-size masters,
+# and design sources. The site uses only the web copies.
+assets/source/
+assets/league/*-src.*
+assets/league/*-full.*
+__pycache__/
+*.pyc

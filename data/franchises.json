@@ -1,0 +1,454 @@
+{
+  "_readme": "Commissioner-only file, keyed by Sleeper roster_id. Branding shows up automatically when a GM claims that roster. 'placeholder: true' = location not yet picked.",
+  "franchises": {
+    "1": {
+      "location": "Wyoming",
+      "nickname": "Whitewalkers",
+      "abbr": "WYO",
+      "division": "west",
+      "placeholder": false,
+      "founded": 2026,
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#7FD3FF",
+        "trim": "#C0C6D4"
+      },
+      "helmet": {
+        "shell": "#000000",
+        "facemask": "#C0C6D4",
+        "stripe": "#7FD3FF",
+        "stripeTrim": "#C0C6D4"
+      },
+      "logos": {
+        "primary": "assets/franchises/wyo/primary.webp",
+        "mark": "assets/franchises/wyo/mark-ww.webp",
+        "wordmark": "assets/franchises/wyo/wordmark.webp",
+        "helmetDecal": "assets/franchises/wyo/mark-head.webp",
+        "alternates": {
+          "\"W\" mark": "assets/franchises/wyo/mark-w.webp",
+          "Whitewalker head": "assets/franchises/wyo/mark-head.webp",
+          "Ice crown": "assets/franchises/wyo/mark-crown.webp",
+          "Mountain": "assets/franchises/wyo/mark-mountain.webp"
+        }
+      },
+      "gm": {
+        "name": "Commissioner",
+        "sleeperUserId": null,
+        "since": 2026,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": [],
+      "_colorsNote": "Official palette from the Wyoming brand sheet (assets/source/wyoming-brand-sheet.webp), 2026-11-03.",
+      "palette": [
+        [
+          "White",
+          "#FFFFFF"
+        ],
+        [
+          "Black",
+          "#000000"
+        ],
+        [
+          "Ice Blue",
+          "#7FD3FF"
+        ],
+        [
+          "Silver",
+          "#C0C6D4"
+        ]
+      ],
+      "_logosNote": "mark, wordmark, alternates and helmetDecal were cut from the flattened brand sheet (dark background keyed out). They are interim: dark-background use only, ~150-300px. Replace with transparent exports when available.",
+      "logoStatus": {
+        "mark": "Final",
+        "wordmark": "Final",
+        "alternates": "Interim cut"
+      },
+      "helmetAway": {
+        "shell": "#FFFFFF",
+        "facemask": "#000000",
+        "stripe": "#7FD3FF",
+        "stripeTrim": "#C0C6D4"
+      },
+      "_helmetNote": "Finished side-profile renders received 2026-11-03: home = matte black / silver mask, away = white / black mask, each facing both ways. These replace the recolored template for Wyoming.",
+      "helmetImages": {
+        "home": {
+          "right": "assets/franchises/wyo/helmet-home-right.webp",
+          "left": "assets/franchises/wyo/helmet-home-left.webp"
+        },
+        "away": {
+          "right": "assets/franchises/wyo/helmet-away-right.webp",
+          "left": "assets/franchises/wyo/helmet-away-left.webp"
+        }
+      },
+      "uniforms": {
+        "Home": "assets/franchises/wyo/uniform-home.webp",
+        "Away": "assets/franchises/wyo/uniform-away.webp",
+        "Alternate": "assets/franchises/wyo/uniform-alternate.webp"
+      }
+    },
+    "2": {
+      "location": "Las Vegas",
+      "nickname": null,
+      "abbr": "LV",
+      "division": "west",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#2B1F4A",
+        "secondary": "#C9A227",
+        "trim": "#F1F1F1"
+      },
+      "helmet": {
+        "shell": "#2B1F4A",
+        "facemask": "#F1F1F1",
+        "stripe": "#C9A227",
+        "stripeTrim": "#F1F1F1"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "3": {
+      "location": "Seattle",
+      "nickname": null,
+      "abbr": "SEA",
+      "division": "west",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#0F3B3A",
+        "secondary": "#7FD1B9",
+        "trim": "#E9F2EF"
+      },
+      "helmet": {
+        "shell": "#0F3B3A",
+        "facemask": "#E9F2EF",
+        "stripe": "#7FD1B9",
+        "stripeTrim": "#E9F2EF"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "4": {
+      "location": "Denver",
+      "nickname": null,
+      "abbr": "DEN",
+      "division": "west",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#3A1E1E",
+        "secondary": "#E8743B",
+        "trim": "#F3E9DF"
+      },
+      "helmet": {
+        "shell": "#3A1E1E",
+        "facemask": "#F3E9DF",
+        "stripe": "#E8743B",
+        "stripeTrim": "#F3E9DF"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "5": {
+      "location": "Chicago",
+      "nickname": null,
+      "abbr": "CHI",
+      "division": "central",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#1C2330",
+        "secondary": "#CC5500",
+        "trim": "#D9DDE3"
+      },
+      "helmet": {
+        "shell": "#1C2330",
+        "facemask": "#D9DDE3",
+        "stripe": "#CC5500",
+        "stripeTrim": "#D9DDE3"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "6": {
+      "location": "Detroit",
+      "nickname": null,
+      "abbr": "DET",
+      "division": "central",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#23272E",
+        "secondary": "#5FA8D3",
+        "trim": "#E6EBF0"
+      },
+      "helmet": {
+        "shell": "#23272E",
+        "facemask": "#E6EBF0",
+        "stripe": "#5FA8D3",
+        "stripeTrim": "#E6EBF0"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "7": {
+      "location": "Memphis",
+      "nickname": null,
+      "abbr": "MEM",
+      "division": "central",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#2A1B2E",
+        "secondary": "#D4A017",
+        "trim": "#EEE6D8"
+      },
+      "helmet": {
+        "shell": "#2A1B2E",
+        "facemask": "#EEE6D8",
+        "stripe": "#D4A017",
+        "stripeTrim": "#EEE6D8"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "8": {
+      "location": "Nashville",
+      "nickname": null,
+      "abbr": "NSH",
+      "division": "central",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#1E2A22",
+        "secondary": "#C8553D",
+        "trim": "#F0EBE3"
+      },
+      "helmet": {
+        "shell": "#1E2A22",
+        "facemask": "#F0EBE3",
+        "stripe": "#C8553D",
+        "stripeTrim": "#F0EBE3"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "9": {
+      "location": "Brooklyn",
+      "nickname": null,
+      "abbr": "BKN",
+      "division": "east",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#121212",
+        "secondary": "#B0182B",
+        "trim": "#C9CED6"
+      },
+      "helmet": {
+        "shell": "#121212",
+        "facemask": "#C9CED6",
+        "stripe": "#B0182B",
+        "stripeTrim": "#C9CED6"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "10": {
+      "location": "Boston",
+      "nickname": null,
+      "abbr": "BOS",
+      "division": "east",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#13233F",
+        "secondary": "#D23B3B",
+        "trim": "#E8E8E8"
+      },
+      "helmet": {
+        "shell": "#13233F",
+        "facemask": "#E8E8E8",
+        "stripe": "#D23B3B",
+        "stripeTrim": "#E8E8E8"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "11": {
+      "location": "Philadelphia",
+      "nickname": null,
+      "abbr": "PHI",
+      "division": "east",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#0E2B2B",
+        "secondary": "#E2B33D",
+        "trim": "#ECEFEA"
+      },
+      "helmet": {
+        "shell": "#0E2B2B",
+        "facemask": "#ECEFEA",
+        "stripe": "#E2B33D",
+        "stripeTrim": "#ECEFEA"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    },
+    "12": {
+      "location": "Baltimore",
+      "nickname": null,
+      "abbr": "BAL",
+      "division": "east",
+      "placeholder": true,
+      "founded": 2026,
+      "colors": {
+        "primary": "#24183A",
+        "secondary": "#E35B2E",
+        "trim": "#ECE7F2"
+      },
+      "helmet": {
+        "shell": "#24183A",
+        "facemask": "#ECE7F2",
+        "stripe": "#E35B2E",
+        "stripeTrim": "#ECE7F2"
+      },
+      "logos": {
+        "primary": null,
+        "mark": null,
+        "wordmark": null,
+        "helmetDecal": null
+      },
+      "gm": {
+        "name": null,
+        "sleeperUserId": null,
+        "since": null,
+        "portrait": null,
+        "bio": null
+      },
+      "pastGms": []
+    }
+  }
+}

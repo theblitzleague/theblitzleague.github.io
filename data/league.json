@@ -1,0 +1,254 @@
+{
+  "_readme": "Commissioner-only file. Set sleeperLeagueId once the league exists; until then the site runs on data/sample/.",
+  "name": "The Blitz League",
+  "shortName": "Blitz",
+  "sleeperLeagueId": null,
+  "founded": 2026,
+  "colors": {
+    "navy": "#0E1A33",
+    "red": "#E23A46",
+    "silver": "#C4CBD4",
+    "white": "#F4F6FA"
+  },
+  "divisions": [
+    {
+      "id": 1,
+      "key": "east",
+      "name": "Cutthroat Capital",
+      "region": "East",
+      "colors": [
+        "#B0182B",
+        "#0B0B0D",
+        "#A9AFB7"
+      ],
+      "logo": "assets/divisions/cutthroat-capital.webp",
+      "mark": "assets/divisions/cutthroat-capital-mark.webp",
+      "markOnDark": null,
+      "inkOnDark": "#E0485A"
+    },
+    {
+      "id": 2,
+      "key": "central",
+      "name": "Murderers Row",
+      "region": "Central",
+      "colors": [
+        "#0B1F3F"
+      ],
+      "logo": "assets/divisions/murderers-row.webp",
+      "mark": "assets/divisions/murderers-row-mark.webp",
+      "markOnDark": "#9DB4E0",
+      "inkOnDark": "#9DB4E0"
+    },
+    {
+      "id": 3,
+      "key": "west",
+      "name": "Iron District",
+      "region": "West",
+      "colors": [
+        "#3A4446"
+      ],
+      "logo": "assets/divisions/iron-district.webp",
+      "mark": "assets/divisions/iron-district-mark.webp",
+      "markOnDark": "#B9C2CE",
+      "inkOnDark": "#B9C2CE"
+    }
+  ],
+  "_rosterSlotsNote": "The real Blitz League lineup, copied from Sleeper on 2026-11-04 (league 1423408541737156608). Bench 10, taxi 3, IR 4. In live mode the site uses Sleeper's own roster_positions instead of this list.",
+  "rosterSlots": [
+    "QB",
+    "RB",
+    "RB",
+    "WR",
+    "WR",
+    "TE",
+    "FLEX",
+    "FLEX",
+    "SUPER_FLEX",
+    "K",
+    "DL",
+    "LB",
+    "DB",
+    "IDP_FLEX"
+  ],
+  "regularSeasonWeeks": 14,
+  "playoffTeams": 6,
+  "_playoffTeams": "Top 6 by record, ties broken by points for. No byes (per the commissioner, 2026-11-04). In live mode Sleeper's settings.playoff_teams overrides this.",
+  "gmIndexWeights": {
+    "winPct": 0.4,
+    "lineupIQ": 0.3,
+    "moves": 0.3
+  },
+  "_gmIndexWeights": "GM Index = weighted blend of each team's league-relative score (0-100) in win %, Lineup IQ and value from moves. GM of the Year itself is a league vote at season's end.",
+  "draftRounds": 4,
+  "futurePickSeasons": 3,
+  "logo": "assets/league/blitz-shield.webp",
+  "trophy": "assets/league/championship-trophy.webp",
+  "_trophyNote": "Championship trophy from the commissioner, 2026-11-04. trophy = 640px web copy; championship-trophy-full.webp is the original 1024x1536.",
+  "awardTrophies": {
+    "opoy": "assets/league/opoy-trophy.webp",
+    "dpoy": "assets/league/dpoy-trophy.webp"
+  },
+  "_awardTrophiesNote": "Offensive and Defensive Player of the Year trophies from the commissioner, 2026-11-04. 600px-tall web copies; *-full.webp are the originals.",
+  "network": {
+    "name": "Blitz Network",
+    "logo": "assets/league/blitz-network-white.webp",
+    "mark": "assets/league/blitz-network-mark-white.webp"
+  },
+  "_networkNote": "The league's media brand (home-page news, and the 'Watch on' slot on every matchup). Branding from the commissioner, 2026-11-04. logo = full wordmark, mark = the BN square (stories with no team). The site uses the white-text versions (*-white.webp) because the navy originals vanish on the dark background; blitz-network.webp / blitz-network-mark.webp keep the original navy for light backgrounds, and *-src.* are the files as sent. logo null = a text wordmark shows instead. Stories go in data/news.json.",
+  "_prizesNote": "Prize money, agreed by the commissioner 2026-11-04: $100 buy-in x 12 teams = $1,200. Ties split the prize evenly. Weekly = highest score of each regular-season week. Division winner = best record in the division, ties broken by points for (the site's standings rule). Points leader = most regular-season points for. GM of the Year = league vote. honorsOnly awards carry a trophy but no cash.",
+  "prizes": {
+    "buyIn": 100,
+    "champion": 450,
+    "runnerUp": 200,
+    "division": 50,
+    "weekly": 20,
+    "pointsLeader": 80,
+    "gmOfYear": 40,
+    "honorsOnly": [
+      "Offensive Player of the Year",
+      "Defensive Player of the Year",
+      "Rookie of the Year",
+      "Pickup of the Year",
+      "Trade of the Year"
+    ]
+  },
+  "_divisionsNote": "2026-11-03: Iron District replaced Miracle City as the West. Colors were sampled from the division logos (navy #0B1F3F, gunmetal #3A4446). markOnDark tints the dark-ink marks so they show on the dark site.",
+  "_locationsNote": "Candidate franchise locations from the 2026 planning brief (about 6 per region; 4 get picked). lat/lon are approximate city centers (Wyoming = state center). label = map label offset [dx, dy] in map units for crowded areas. A franchise claims one via franchises.json \"location\".",
+  "locations": [
+    {
+      "name": "Washington DC",
+      "region": "east",
+      "lat": 38.9,
+      "lon": -77.04,
+      "label": [
+        52,
+        40
+      ]
+    },
+    {
+      "name": "Brooklyn",
+      "region": "east",
+      "lat": 40.68,
+      "lon": -73.94,
+      "label": [
+        46,
+        -2
+      ]
+    },
+    {
+      "name": "Boston",
+      "region": "east",
+      "lat": 42.36,
+      "lon": -71.06,
+      "label": [
+        30,
+        -22
+      ]
+    },
+    {
+      "name": "Philadelphia",
+      "region": "east",
+      "lat": 39.95,
+      "lon": -75.17,
+      "label": [
+        58,
+        16
+      ]
+    },
+    {
+      "name": "Baltimore",
+      "region": "east",
+      "lat": 39.29,
+      "lon": -76.61,
+      "label": [
+        60,
+        30
+      ]
+    },
+    {
+      "name": "Charlotte",
+      "region": "east",
+      "lat": 35.23,
+      "lon": -80.84
+    },
+    {
+      "name": "Chicago",
+      "region": "central",
+      "lat": 41.88,
+      "lon": -87.63
+    },
+    {
+      "name": "Detroit",
+      "region": "central",
+      "lat": 42.33,
+      "lon": -83.05
+    },
+    {
+      "name": "St. Louis",
+      "region": "central",
+      "lat": 38.63,
+      "lon": -90.2
+    },
+    {
+      "name": "Memphis",
+      "region": "central",
+      "lat": 35.15,
+      "lon": -90.05
+    },
+    {
+      "name": "Nashville",
+      "region": "central",
+      "lat": 36.16,
+      "lon": -86.78
+    },
+    {
+      "name": "Columbus",
+      "region": "central",
+      "lat": 39.96,
+      "lon": -83.0
+    },
+    {
+      "name": "Wyoming",
+      "region": "west",
+      "lat": 43.0,
+      "lon": -107.55
+    },
+    {
+      "name": "Las Vegas",
+      "region": "west",
+      "lat": 36.17,
+      "lon": -115.14
+    },
+    {
+      "name": "Los Angeles",
+      "region": "west",
+      "lat": 34.05,
+      "lon": -118.24
+    },
+    {
+      "name": "Seattle",
+      "region": "west",
+      "lat": 47.61,
+      "lon": -122.33
+    },
+    {
+      "name": "Denver",
+      "region": "west",
+      "lat": 39.74,
+      "lon": -104.99
+    },
+    {
+      "name": "Portland",
+      "region": "west",
+      "lat": 45.52,
+      "lon": -122.68
+    },
+    {
+      "name": "San Antonio",
+      "region": "west",
+      "lat": 29.42,
+      "lon": -98.49
+    }
+  ],
+  "_inkNote": "inkOnDark: the division color lifted for text, borders and map markers on the dark site. markOnDark: tint for dark-ink division marks (null = show the mark in its own colors)."
+}

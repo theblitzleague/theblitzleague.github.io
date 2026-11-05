@@ -1,0 +1,5587 @@
+{
+ "11589": {
+  "full_name": "Trey Benson",
+  "first_name": "Trey",
+  "last_name": "Benson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "ARI",
+  "number": 33,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": "IR",
+  "injury_body_part": "Knee",
+  "college": "Florida State",
+  "height": "72",
+  "weight": "225",
+  "status": "Inactive"
+ },
+ "6125": {
+  "full_name": "Jeffery Simmons",
+  "first_name": "Jeffery",
+  "last_name": "Simmons",
+  "position": "DT",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "CHI",
+  "number": 99,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Mississippi State",
+  "height": "76",
+  "weight": "305",
+  "status": "Active"
+ },
+ "11646": {
+  "full_name": "Jalen Coker",
+  "first_name": "Jalen",
+  "last_name": "Coker",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CAR",
+  "number": 18,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Holy Cross",
+  "height": "75",
+  "weight": "215",
+  "status": "Active"
+ },
+ "12567": {
+  "full_name": "Malaki Starks",
+  "first_name": "Malaki",
+  "last_name": "Starks",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "BAL",
+  "number": 24,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "73",
+  "weight": "205",
+  "status": "Active"
+ },
+ "12517": {
+  "full_name": "Colston Loveland",
+  "first_name": "Colston",
+  "last_name": "Loveland",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "CHI",
+  "number": 84,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "78",
+  "weight": "241",
+  "status": "Active"
+ },
+ "8138": {
+  "full_name": "James Cook III",
+  "first_name": "James",
+  "last_name": "Cook III",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "BUF",
+  "number": 4,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "71",
+  "weight": "190",
+  "status": "Active"
+ },
+ "11627": {
+  "full_name": "Troy Franklin",
+  "first_name": "Troy",
+  "last_name": "Franklin",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DEN",
+  "number": 11,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "75",
+  "weight": "180",
+  "status": "Active"
+ },
+ "13360": {
+  "full_name": "Emmanuel McNeil-Warren",
+  "first_name": "Emmanuel",
+  "last_name": "McNeil-Warren",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "CLE",
+  "number": 28,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Toledo",
+  "height": "75",
+  "weight": "210",
+  "status": "Active"
+ },
+ "3198": {
+  "full_name": "Derrick Henry",
+  "first_name": "Derrick",
+  "last_name": "Henry",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "BAL",
+  "number": 22,
+  "age": 32,
+  "years_exp": 10,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "75",
+  "weight": "252",
+  "status": "Active"
+ },
+ "11566": {
+  "full_name": "Jayden Daniels",
+  "first_name": "Jayden",
+  "last_name": "Daniels",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "WAS",
+  "number": 5,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "76",
+  "weight": "210",
+  "status": "Active"
+ },
+ "8167": {
+  "full_name": "Christian Watson",
+  "first_name": "Christian",
+  "last_name": "Watson",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "GB",
+  "number": 9,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": "Questionable",
+  "injury_body_part": "Undisclosed",
+  "college": "North Dakota State",
+  "height": "76",
+  "weight": "215",
+  "status": "Active"
+ },
+ "6794": {
+  "full_name": "Justin Jefferson",
+  "first_name": "Justin",
+  "last_name": "Jefferson",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "MIN",
+  "number": 18,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "73",
+  "weight": "195",
+  "status": "Active"
+ },
+ "12469": {
+  "full_name": "Dylan Sampson",
+  "first_name": "Dylan",
+  "last_name": "Sampson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CLE",
+  "number": 22,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Tennessee",
+  "height": "68",
+  "weight": "200",
+  "status": "Active"
+ },
+ "11632": {
+  "full_name": "Malik Nabers",
+  "first_name": "Malik",
+  "last_name": "Nabers",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NYG",
+  "number": 1,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "72",
+  "weight": "200",
+  "status": "Active"
+ },
+ "9997": {
+  "full_name": "Zay Flowers",
+  "first_name": "Zay",
+  "last_name": "Flowers",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "BAL",
+  "number": 4,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Boston College",
+  "height": "69",
+  "weight": "183",
+  "status": "Active"
+ },
+ "10222": {
+  "full_name": "Jayden Reed",
+  "first_name": "Jayden",
+  "last_name": "Reed",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "GB",
+  "number": 11,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": "IR",
+  "injury_body_part": "Neck",
+  "college": "Michigan State",
+  "height": "71",
+  "weight": "187",
+  "status": "Inactive"
+ },
+ "8137": {
+  "full_name": "George Pickens",
+  "first_name": "George",
+  "last_name": "Pickens",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DAL",
+  "number": 3,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "75",
+  "weight": "205",
+  "status": "Active"
+ },
+ "12534": {
+  "full_name": "Kyle Monangai",
+  "first_name": "Kyle",
+  "last_name": "Monangai",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CHI",
+  "number": 25,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": "Questionable",
+  "injury_body_part": "Toe",
+  "college": "Rutgers",
+  "height": "68",
+  "weight": "207",
+  "status": "Active"
+ },
+ "11625": {
+  "full_name": "Adonai Mitchell",
+  "first_name": "Adonai",
+  "last_name": "Mitchell",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NYJ",
+  "number": 15,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas",
+  "height": "74",
+  "weight": "205",
+  "status": "Active"
+ },
+ "9228": {
+  "full_name": "Bryce Young",
+  "first_name": "Bryce",
+  "last_name": "Young",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "CAR",
+  "number": 9,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "70",
+  "weight": "204",
+  "status": "Active"
+ },
+ "12545": {
+  "full_name": "Tyler Shough",
+  "first_name": "Tyler",
+  "last_name": "Shough",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "NO",
+  "number": 6,
+  "age": 27,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Louisville",
+  "height": "77",
+  "weight": "219",
+  "status": "Active"
+ },
+ "13365": {
+  "full_name": "Anthony Hill Jr.",
+  "first_name": "Anthony",
+  "last_name": "Hill Jr.",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "TEN",
+  "number": 53,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas",
+  "height": "74",
+  "weight": "238",
+  "status": "Active"
+ },
+ "8392": {
+  "full_name": "Nick Cross",
+  "first_name": "Nick",
+  "last_name": "Cross",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "WAS",
+  "number": 25,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Maryland",
+  "height": "72",
+  "weight": "212",
+  "status": "Active"
+ },
+ "12713": {
+  "full_name": "Andy Borregales",
+  "first_name": "Andy",
+  "last_name": "Borregales",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "NE",
+  "number": 8,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Miami (FL)",
+  "height": "71",
+  "weight": "202",
+  "status": "Active"
+ },
+ "5862": {
+  "full_name": "Brian Burns",
+  "first_name": "Brian",
+  "last_name": "Burns",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "NYG",
+  "number": 0,
+  "age": 28,
+  "years_exp": 7,
+  "injury_status": "IR",
+  "injury_body_part": "Knee - ACL",
+  "college": "Florida State",
+  "height": "77",
+  "weight": "250",
+  "status": "Inactive"
+ },
+ "6904": {
+  "full_name": "Jalen Hurts",
+  "first_name": "Jalen",
+  "last_name": "Hurts",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "PHI",
+  "number": 1,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": "IR",
+  "injury_body_part": "Calf",
+  "college": "Oklahoma",
+  "height": "73",
+  "weight": "223",
+  "status": "Inactive"
+ },
+ "2227": {
+  "full_name": "Aaron Donald",
+  "first_name": "Aaron",
+  "last_name": "Donald",
+  "position": "DT",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "LAR",
+  "number": 99,
+  "age": 35,
+  "years_exp": 12,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Pittsburgh",
+  "height": "73",
+  "weight": "280",
+  "status": "Active"
+ },
+ "9488": {
+  "full_name": "Jaxon Smith-Njigba",
+  "first_name": "Jaxon",
+  "last_name": "Smith-Njigba",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "SEA",
+  "number": 11,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "72",
+  "weight": "197",
+  "status": "Active"
+ },
+ "4137": {
+  "full_name": "James Conner",
+  "first_name": "James",
+  "last_name": "Conner",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "ARI",
+  "number": 6,
+  "age": 31,
+  "years_exp": 9,
+  "injury_status": "IR",
+  "injury_body_part": "Foot",
+  "college": "Pittsburgh",
+  "height": "73",
+  "weight": "233",
+  "status": "Inactive"
+ },
+ "8142": {
+  "full_name": "Alec Pierce",
+  "first_name": "Alec",
+  "last_name": "Pierce",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "IND",
+  "number": 14,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": "IR",
+  "injury_body_part": "Heel",
+  "college": "Cincinnati",
+  "height": "75",
+  "weight": "211",
+  "status": "Inactive"
+ },
+ "6803": {
+  "full_name": "Brandon Aiyuk",
+  "first_name": "Brandon",
+  "last_name": "Aiyuk",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "SF",
+  "number": 11,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": "DNR",
+  "injury_body_part": "Knee - ACL + MCL",
+  "college": "Arizona State",
+  "height": "72",
+  "weight": "200",
+  "status": "Active"
+ },
+ "13287": {
+  "full_name": "Jeremiyah Love",
+  "first_name": "Jeremiyah",
+  "last_name": "Love",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "ARI",
+  "number": 4,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": "IR",
+  "injury_body_part": "Ankle",
+  "college": "Notre Dame",
+  "height": "72",
+  "weight": "212",
+  "status": "Inactive"
+ },
+ "12474": {
+  "full_name": "Woody Marks",
+  "first_name": "Woody",
+  "last_name": "Marks",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "HOU",
+  "number": 4,
+  "age": 25,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "70",
+  "weight": "208",
+  "status": "Active"
+ },
+ "12489": {
+  "full_name": "RJ Harvey",
+  "first_name": "RJ",
+  "last_name": "Harvey",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "DEN",
+  "number": 12,
+  "age": 25,
+  "years_exp": 1,
+  "injury_status": "IR",
+  "injury_body_part": "Knee",
+  "college": "UCF",
+  "height": "68",
+  "weight": "205",
+  "status": "Inactive"
+ },
+ "3233": {
+  "full_name": "Kevin Byard III",
+  "first_name": "Kevin",
+  "last_name": "Byard III",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "NE",
+  "number": 31,
+  "age": 33,
+  "years_exp": 10,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Middle Tennessee",
+  "height": "71",
+  "weight": "212",
+  "status": "Active"
+ },
+ "5012": {
+  "full_name": "Mark Andrews",
+  "first_name": "Mark",
+  "last_name": "Andrews",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "BAL",
+  "number": 89,
+  "age": 31,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma",
+  "height": "77",
+  "weight": "250",
+  "status": "Active"
+ },
+ "5892": {
+  "full_name": "David Montgomery",
+  "first_name": "David",
+  "last_name": "Montgomery",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "HOU",
+  "number": 32,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": "Questionable",
+  "injury_body_part": "Groin",
+  "college": "Iowa State",
+  "height": "71",
+  "weight": "230",
+  "status": "Active"
+ },
+ "8148": {
+  "full_name": "Jameson Williams",
+  "first_name": "Jameson",
+  "last_name": "Williams",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DET",
+  "number": 1,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "73",
+  "weight": "184",
+  "status": "Active"
+ },
+ "11576": {
+  "full_name": "Braelon Allen",
+  "first_name": "Braelon",
+  "last_name": "Allen",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NYJ",
+  "number": 0,
+  "age": 22,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wisconsin",
+  "height": "73",
+  "weight": "235",
+  "status": "Active"
+ },
+ "7569": {
+  "full_name": "Nico Collins",
+  "first_name": "Nico",
+  "last_name": "Collins",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "HOU",
+  "number": 12,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "76",
+  "weight": "222",
+  "status": "Active"
+ },
+ "8364": {
+  "full_name": "Trent McDuffie",
+  "first_name": "Trent",
+  "last_name": "McDuffie",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "LAR",
+  "number": 22,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": "Questionable",
+  "injury_body_part": "Back",
+  "college": "Washington",
+  "height": "71",
+  "weight": "193",
+  "status": "Active"
+ },
+ "5189": {
+  "full_name": "Eddy Pineiro",
+  "first_name": "Eddy",
+  "last_name": "Pineiro",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "SF",
+  "number": 18,
+  "age": 31,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Florida",
+  "height": "71",
+  "weight": "190",
+  "status": "Active"
+ },
+ "12507": {
+  "full_name": "Omarion Hampton",
+  "first_name": "Omarion",
+  "last_name": "Hampton",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LAC",
+  "number": 8,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "North Carolina",
+  "height": "72",
+  "weight": "220",
+  "status": "Active"
+ },
+ "9508": {
+  "full_name": "Tyjae Spears",
+  "first_name": "Tyjae",
+  "last_name": "Spears",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "TEN",
+  "number": 2,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": "Out",
+  "injury_body_part": "Knee",
+  "college": "Tulane",
+  "height": "71",
+  "weight": "200",
+  "status": "Active"
+ },
+ "8131": {
+  "full_name": "Isaiah Likely",
+  "first_name": "Isaiah",
+  "last_name": "Likely",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "NYG",
+  "number": 9,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Coastal Carolina",
+  "height": "76",
+  "weight": "241",
+  "status": "Active"
+ },
+ "7594": {
+  "full_name": "Chuba Hubbard",
+  "first_name": "Chuba",
+  "last_name": "Hubbard",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CAR",
+  "number": 30,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma State",
+  "height": "73",
+  "weight": "216",
+  "status": "Active"
+ },
+ "7021": {
+  "full_name": "Rico Dowdle",
+  "first_name": "Rico",
+  "last_name": "Dowdle",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "PIT",
+  "number": 13,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "South Carolina",
+  "height": "71",
+  "weight": "218",
+  "status": "Active"
+ },
+ "10232": {
+  "full_name": "Michael Wilson",
+  "first_name": "Michael",
+  "last_name": "Wilson",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "ARI",
+  "number": 14,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": "Questionable",
+  "injury_body_part": "Ribs",
+  "college": "Stanford",
+  "height": "74",
+  "weight": "213",
+  "status": "Active"
+ },
+ "1945": {
+  "full_name": "Chris Boswell",
+  "first_name": "Chris",
+  "last_name": "Boswell",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "PIT",
+  "number": 9,
+  "age": 35,
+  "years_exp": 12,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Rice",
+  "height": "74",
+  "weight": "185",
+  "status": "Active"
+ },
+ "5872": {
+  "full_name": "Deebo Samuel Sr.",
+  "first_name": "Deebo",
+  "last_name": "Samuel Sr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "SF",
+  "number": 19,
+  "age": 30,
+  "years_exp": 7,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "South Carolina",
+  "height": "72",
+  "weight": "215",
+  "status": "Active"
+ },
+ "6786": {
+  "full_name": "CeeDee Lamb",
+  "first_name": "CeeDee",
+  "last_name": "Lamb",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DAL",
+  "number": 88,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma",
+  "height": "74",
+  "weight": "198",
+  "status": "Active"
+ },
+ "6217": {
+  "full_name": "Blake Cashman",
+  "first_name": "Blake",
+  "last_name": "Cashman",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "MIN",
+  "number": 51,
+  "age": 30,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Minnesota",
+  "height": "73",
+  "weight": "235",
+  "status": "Active"
+ },
+ "2393": {
+  "full_name": "Danielle Hunter",
+  "first_name": "Danielle",
+  "last_name": "Hunter",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "HOU",
+  "number": 55,
+  "age": 32,
+  "years_exp": 11,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "77",
+  "weight": "263",
+  "status": "Active"
+ },
+ "8132": {
+  "full_name": "Tyler Allgeier",
+  "first_name": "Tyler",
+  "last_name": "Allgeier",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "ARI",
+  "number": 22,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "BYU",
+  "height": "70",
+  "weight": "225",
+  "status": "Active"
+ },
+ "11682": {
+  "full_name": "Cole Bishop",
+  "first_name": "Cole",
+  "last_name": "Bishop",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "BUF",
+  "number": 24,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Utah",
+  "height": "74",
+  "weight": "206",
+  "status": "Active"
+ },
+ "8150": {
+  "full_name": "Kyren Williams",
+  "first_name": "Kyren",
+  "last_name": "Williams",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LAR",
+  "number": 23,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Notre Dame",
+  "height": "69",
+  "weight": "207",
+  "status": "Active"
+ },
+ "4033": {
+  "full_name": "David Njoku",
+  "first_name": "David",
+  "last_name": "Njoku",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "LAC",
+  "number": 83,
+  "age": 30,
+  "years_exp": 9,
+  "injury_status": "IR",
+  "injury_body_part": "Lower Leg",
+  "college": "Miami (FL)",
+  "height": "76",
+  "weight": "246",
+  "status": "Inactive"
+ },
+ "5876": {
+  "full_name": "Julian Love",
+  "first_name": "Julian",
+  "last_name": "Love",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "SEA",
+  "number": 20,
+  "age": 28,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Notre Dame",
+  "height": "71",
+  "weight": "195",
+  "status": "Active"
+ },
+ "13286": {
+  "full_name": "Jadarian Price",
+  "first_name": "Jadarian",
+  "last_name": "Price",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "SEA",
+  "number": 8,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Notre Dame",
+  "height": "71",
+  "weight": "209",
+  "status": "Active"
+ },
+ "6804": {
+  "full_name": "Jordan Love",
+  "first_name": "Jordan",
+  "last_name": "Love",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "GB",
+  "number": 10,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Utah State",
+  "height": "76",
+  "weight": "219",
+  "status": "Active"
+ },
+ "12518": {
+  "full_name": "Tyler Warren",
+  "first_name": "Tyler",
+  "last_name": "Warren",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "IND",
+  "number": 84,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Penn State",
+  "height": "78",
+  "weight": "256",
+  "status": "Active"
+ },
+ "9500": {
+  "full_name": "Josh Downs",
+  "first_name": "Josh",
+  "last_name": "Downs",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "IND",
+  "number": 2,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "North Carolina",
+  "height": "69",
+  "weight": "171",
+  "status": "Active"
+ },
+ "4046": {
+  "full_name": "Patrick Mahomes",
+  "first_name": "Patrick",
+  "last_name": "Mahomes",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "KC",
+  "number": 15,
+  "age": 31,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas Tech",
+  "height": "74",
+  "weight": "225",
+  "status": "Active"
+ },
+ "11705": {
+  "full_name": "Tykee Smith",
+  "first_name": "Tykee",
+  "last_name": "Smith",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "TB",
+  "number": 23,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "70",
+  "weight": "202",
+  "status": "Active"
+ },
+ "12495": {
+  "full_name": "Ollie Gordon II",
+  "first_name": "Ollie",
+  "last_name": "Gordon II",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "MIA",
+  "number": 0,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma State",
+  "height": "74",
+  "weight": "225",
+  "status": "Active"
+ },
+ "13340": {
+  "full_name": "Rueben Bain Jr.",
+  "first_name": "Rueben",
+  "last_name": "Bain Jr.",
+  "position": "DL",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "TB",
+  "number": 3,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Miami (FL)",
+  "height": "75",
+  "weight": "270",
+  "status": "Active"
+ },
+ "13375": {
+  "full_name": "Sonny Styles",
+  "first_name": "Sonny",
+  "last_name": "Styles",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "WAS",
+  "number": 52,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "77",
+  "weight": "243",
+  "status": "Active"
+ },
+ "11792": {
+  "full_name": "Will Reichard",
+  "first_name": "Will",
+  "last_name": "Reichard",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "MIN",
+  "number": 16,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "73",
+  "weight": "190",
+  "status": "Active"
+ },
+ "7659": {
+  "full_name": "Tre'von Moehrig",
+  "first_name": "Tre'von",
+  "last_name": "Moehrig",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "CAR",
+  "number": 7,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "TCU",
+  "height": "74",
+  "weight": "215",
+  "status": "Active"
+ },
+ "7567": {
+  "full_name": "Kenny Gainwell",
+  "first_name": "Kenny",
+  "last_name": "Gainwell",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "TB",
+  "number": 1,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Memphis",
+  "height": "69",
+  "weight": "200",
+  "status": "Active"
+ },
+ "11667": {
+  "full_name": "Dallas Turner",
+  "first_name": "Dallas",
+  "last_name": "Turner",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "MIN",
+  "number": 15,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "75",
+  "weight": "247",
+  "status": "Active"
+ },
+ "12514": {
+  "full_name": "Emeka Egbuka",
+  "first_name": "Emeka",
+  "last_name": "Egbuka",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "TB",
+  "number": 2,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": "Questionable",
+  "injury_body_part": "Foot",
+  "college": "Ohio State",
+  "height": "73",
+  "weight": "205",
+  "status": "Active"
+ },
+ "3294": {
+  "full_name": "Dak Prescott",
+  "first_name": "Dak",
+  "last_name": "Prescott",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "DAL",
+  "number": 4,
+  "age": 33,
+  "years_exp": 10,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Mississippi State",
+  "height": "74",
+  "weight": "230",
+  "status": "Active"
+ },
+ "12533": {
+  "full_name": "Jacory Croskey-Merritt",
+  "first_name": "Jacory",
+  "last_name": "Croskey-Merritt",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "WAS",
+  "number": 22,
+  "age": 25,
+  "years_exp": 1,
+  "injury_status": "IR",
+  "injury_body_part": "Groin",
+  "college": "Arizona",
+  "height": "71",
+  "weight": "208",
+  "status": "Inactive"
+ },
+ "9221": {
+  "full_name": "Jahmyr Gibbs",
+  "first_name": "Jahmyr",
+  "last_name": "Gibbs",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "DET",
+  "number": 0,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "69",
+  "weight": "202",
+  "status": "Active"
+ },
+ "4971": {
+  "full_name": "Derwin James Jr.",
+  "first_name": "Derwin",
+  "last_name": "James Jr.",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "LAC",
+  "number": 3,
+  "age": 30,
+  "years_exp": 8,
+  "injury_status": "IR",
+  "injury_body_part": "Hamstring",
+  "college": "Florida State",
+  "height": "74",
+  "weight": "215",
+  "status": "Inactive"
+ },
+ "5846": {
+  "full_name": "DK Metcalf",
+  "first_name": "DK",
+  "last_name": "Metcalf",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "PIT",
+  "number": 4,
+  "age": 28,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ole Miss",
+  "height": "76",
+  "weight": "235",
+  "status": "Active"
+ },
+ "7049": {
+  "full_name": "Jauan Jennings",
+  "first_name": "Jauan",
+  "last_name": "Jennings",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "MIN",
+  "number": 14,
+  "age": 29,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Tennessee",
+  "height": "75",
+  "weight": "212",
+  "status": "Active"
+ },
+ "8280": {
+  "full_name": "Nik Bonitto",
+  "first_name": "Nik",
+  "last_name": "Bonitto",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "DEN",
+  "number": 15,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma",
+  "height": "75",
+  "weight": "240",
+  "status": "Active"
+ },
+ "7672": {
+  "full_name": "Ernest Jones IV",
+  "first_name": "Ernest",
+  "last_name": "Jones IV",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "SEA",
+  "number": 13,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "South Carolina",
+  "height": "74",
+  "weight": "233",
+  "status": "Active"
+ },
+ "7526": {
+  "full_name": "Jaylen Waddle",
+  "first_name": "Jaylen",
+  "last_name": "Waddle",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DEN",
+  "number": 17,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "70",
+  "weight": "185",
+  "status": "Active"
+ },
+ "12508": {
+  "full_name": "Jaxson Dart",
+  "first_name": "Jaxson",
+  "last_name": "Dart",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "NYG",
+  "number": 6,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": "IR",
+  "injury_body_part": "Knee - Meniscus",
+  "college": "Ole Miss",
+  "height": "74",
+  "weight": "223",
+  "status": "Inactive"
+ },
+ "4081": {
+  "full_name": "Budda Baker",
+  "first_name": "Budda",
+  "last_name": "Baker",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "ARI",
+  "number": 3,
+  "age": 30,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Washington",
+  "height": "70",
+  "weight": "195",
+  "status": "Active"
+ },
+ "11631": {
+  "full_name": "Brian Thomas Jr.",
+  "first_name": "Brian",
+  "last_name": "Thomas Jr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "JAX",
+  "number": 7,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "74",
+  "weight": "209",
+  "status": "Active"
+ },
+ "9509": {
+  "full_name": "Bijan Robinson",
+  "first_name": "Bijan",
+  "last_name": "Robinson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "ATL",
+  "number": 7,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas",
+  "height": "71",
+  "weight": "215",
+  "status": "Active"
+ },
+ "8408": {
+  "full_name": "Jordan Mason",
+  "first_name": "Jordan",
+  "last_name": "Mason",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "MIN",
+  "number": 27,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia Tech",
+  "height": "71",
+  "weight": "230",
+  "status": "Active"
+ },
+ "9504": {
+  "full_name": "Kayshon Boutte",
+  "first_name": "Kayshon",
+  "last_name": "Boutte",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "HOU",
+  "number": 14,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "72",
+  "weight": "203",
+  "status": "Active"
+ },
+ "6797": {
+  "full_name": "Justin Herbert",
+  "first_name": "Justin",
+  "last_name": "Herbert",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "LAC",
+  "number": 10,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "78",
+  "weight": "236",
+  "status": "Active"
+ },
+ "11610": {
+  "full_name": "Malik Washington",
+  "first_name": "Malik",
+  "last_name": "Washington",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "MIA",
+  "number": 6,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Virginia",
+  "height": "68",
+  "weight": "192",
+  "status": "Active"
+ },
+ "10229": {
+  "full_name": "Rashee Rice",
+  "first_name": "Rashee",
+  "last_name": "Rice",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "KC",
+  "number": 4,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "SMU",
+  "height": "73",
+  "weight": "204",
+  "status": "Active"
+ },
+ "12512": {
+  "full_name": "Quinshon Judkins",
+  "first_name": "Quinshon",
+  "last_name": "Judkins",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CLE",
+  "number": 10,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "72",
+  "weight": "221",
+  "status": "Active"
+ },
+ "13368": {
+  "full_name": "Jermod McCoy",
+  "first_name": "Jermod",
+  "last_name": "McCoy",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "LV",
+  "number": 28,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Tennessee",
+  "height": "72",
+  "weight": "193",
+  "status": "Active"
+ },
+ "8121": {
+  "full_name": "Romeo Doubs",
+  "first_name": "Romeo",
+  "last_name": "Doubs",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NE",
+  "number": 87,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": "IR",
+  "injury_body_part": "Shoulder",
+  "college": "Nevada",
+  "height": "74",
+  "weight": "210",
+  "status": "Inactive"
+ },
+ "5844": {
+  "full_name": "T.J. Hockenson",
+  "first_name": "T.J.",
+  "last_name": "Hockenson",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "MIN",
+  "number": 87,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Iowa",
+  "height": "77",
+  "weight": "248",
+  "status": "Active"
+ },
+ "11563": {
+  "full_name": "Bo Nix",
+  "first_name": "Bo",
+  "last_name": "Nix",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "DEN",
+  "number": 10,
+  "age": 26,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "74",
+  "weight": "217",
+  "status": "Active"
+ },
+ "11533": {
+  "full_name": "Brandon Aubrey",
+  "first_name": "Brandon",
+  "last_name": "Aubrey",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "DAL",
+  "number": 17,
+  "age": 31,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Notre Dame",
+  "height": "75",
+  "weight": "218",
+  "status": "Active"
+ },
+ "9493": {
+  "full_name": "Puka Nacua",
+  "first_name": "Puka",
+  "last_name": "Nacua",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "LAR",
+  "number": 12,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "BYU",
+  "height": "74",
+  "weight": "216",
+  "status": "Active"
+ },
+ "4199": {
+  "full_name": "Aaron Jones Sr.",
+  "first_name": "Aaron",
+  "last_name": "Jones Sr.",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "MIN",
+  "number": 33,
+  "age": 31,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "UTEP",
+  "height": "70",
+  "weight": "208",
+  "status": "Active"
+ },
+ "4984": {
+  "full_name": "Josh Allen",
+  "first_name": "Josh",
+  "last_name": "Allen",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "BUF",
+  "number": 17,
+  "age": 30,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wyoming",
+  "height": "77",
+  "weight": "237",
+  "status": "Active"
+ },
+ "7523": {
+  "full_name": "Trevor Lawrence",
+  "first_name": "Trevor",
+  "last_name": "Lawrence",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "JAX",
+  "number": 16,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Clemson",
+  "height": "78",
+  "weight": "220",
+  "status": "Active"
+ },
+ "12591": {
+  "full_name": "Xavier Watts",
+  "first_name": "Xavier",
+  "last_name": "Watts",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "ATL",
+  "number": 31,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Notre Dame",
+  "height": "72",
+  "weight": "203",
+  "status": "Active"
+ },
+ "11628": {
+  "full_name": "Marvin Harrison Jr.",
+  "first_name": "Marvin",
+  "last_name": "Harrison Jr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "HOU",
+  "number": 18,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "75",
+  "weight": "220",
+  "status": "Active"
+ },
+ "2133": {
+  "full_name": "Davante Adams",
+  "first_name": "Davante",
+  "last_name": "Adams",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "LAR",
+  "number": 17,
+  "age": 33,
+  "years_exp": 12,
+  "injury_status": "IR",
+  "injury_body_part": "Hamstring",
+  "college": "Fresno State",
+  "height": "73",
+  "weight": "204",
+  "status": "Inactive"
+ },
+ "3163": {
+  "full_name": "Jared Goff",
+  "first_name": "Jared",
+  "last_name": "Goff",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "DET",
+  "number": 16,
+  "age": 32,
+  "years_exp": 10,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "California",
+  "height": "76",
+  "weight": "217",
+  "status": "Active"
+ },
+ "12484": {
+  "full_name": "Jayden Higgins",
+  "first_name": "Jayden",
+  "last_name": "Higgins",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "HOU",
+  "number": 81,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": "IR",
+  "injury_body_part": "Knee - ACL",
+  "college": "Iowa State",
+  "height": "76",
+  "weight": "215",
+  "status": "Inactive"
+ },
+ "12481": {
+  "full_name": "Cam Skattebo",
+  "first_name": "Cam",
+  "last_name": "Skattebo",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NYG",
+  "number": 44,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "Arizona State",
+  "height": "71",
+  "weight": "215",
+  "status": "Active"
+ },
+ "11565": {
+  "full_name": "J.J. McCarthy",
+  "first_name": "J.J.",
+  "last_name": "McCarthy",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "NYG",
+  "number": 18,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "75",
+  "weight": "219",
+  "status": "Active"
+ },
+ "8136": {
+  "full_name": "Rachaad White",
+  "first_name": "Rachaad",
+  "last_name": "White",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "WAS",
+  "number": 1,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Arizona State",
+  "height": "72",
+  "weight": "214",
+  "status": "Active"
+ },
+ "10219": {
+  "full_name": "Chris Rodriguez Jr.",
+  "first_name": "Chris",
+  "last_name": "Rodriguez Jr.",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "JAX",
+  "number": 24,
+  "age": 27,
+  "years_exp": 3,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hand",
+  "college": "Kentucky",
+  "height": "71",
+  "weight": "224",
+  "status": "Active"
+ },
+ "11618": {
+  "full_name": "Jalen McMillan",
+  "first_name": "Jalen",
+  "last_name": "McMillan",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "TB",
+  "number": 11,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": "IR",
+  "injury_body_part": "Knee - PCL",
+  "college": "Washington",
+  "height": "73",
+  "weight": "192",
+  "status": "Inactive"
+ },
+ "8329": {
+  "full_name": "Devin Lloyd",
+  "first_name": "Devin",
+  "last_name": "Lloyd",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "CAR",
+  "number": 55,
+  "age": 28,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Utah",
+  "height": "75",
+  "weight": "243",
+  "status": "Active"
+ },
+ "9225": {
+  "full_name": "Tank Bigsby",
+  "first_name": "Tank",
+  "last_name": "Bigsby",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "PHI",
+  "number": 8,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": "IR",
+  "injury_body_part": "Abdomen",
+  "college": "Auburn",
+  "height": "71",
+  "weight": "215",
+  "status": "Inactive"
+ },
+ "2747": {
+  "full_name": "Jason Myers",
+  "first_name": "Jason",
+  "last_name": "Myers",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "SEA",
+  "number": 5,
+  "age": 35,
+  "years_exp": 11,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Marist",
+  "height": "70",
+  "weight": "190",
+  "status": "Active"
+ },
+ "1373": {
+  "full_name": "Geno Smith",
+  "first_name": "Geno",
+  "last_name": "Smith",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "NYJ",
+  "number": 7,
+  "age": 36,
+  "years_exp": 13,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "West Virginia",
+  "height": "74",
+  "weight": "221",
+  "status": "Active"
+ },
+ "8151": {
+  "full_name": "Kenneth Walker III",
+  "first_name": "Kenneth",
+  "last_name": "Walker III",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "KC",
+  "number": 9,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan State",
+  "height": "69",
+  "weight": "211",
+  "status": "Active"
+ },
+ "8339": {
+  "full_name": "Kyle Hamilton",
+  "first_name": "Kyle",
+  "last_name": "Hamilton",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "BAL",
+  "number": 14,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Notre Dame",
+  "height": "76",
+  "weight": "220",
+  "status": "Active"
+ },
+ "6768": {
+  "full_name": "Tua Tagovailoa",
+  "first_name": "Tua",
+  "last_name": "Tagovailoa",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "ATL",
+  "number": 1,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "73",
+  "weight": "225",
+  "status": "Active"
+ },
+ "5022": {
+  "full_name": "Dallas Goedert",
+  "first_name": "Dallas",
+  "last_name": "Goedert",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "PHI",
+  "number": 88,
+  "age": 31,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "South Dakota State",
+  "height": "77",
+  "weight": "256",
+  "status": "Active"
+ },
+ "2216": {
+  "full_name": "Mike Evans",
+  "first_name": "Mike",
+  "last_name": "Evans",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "SF",
+  "number": 5,
+  "age": 33,
+  "years_exp": 12,
+  "injury_status": "Questionable",
+  "injury_body_part": "Achilles",
+  "college": "Texas A&M",
+  "height": "77",
+  "weight": "231",
+  "status": "Active"
+ },
+ "13294": {
+  "full_name": "Makai Lemon",
+  "first_name": "Makai",
+  "last_name": "Lemon",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "PHI",
+  "number": 9,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "71",
+  "weight": "192",
+  "status": "Active"
+ },
+ "13371": {
+  "full_name": "Dillon Thieneman",
+  "first_name": "Dillon",
+  "last_name": "Thieneman",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "CHI",
+  "number": 31,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "72",
+  "weight": "201",
+  "status": "Active"
+ },
+ "8144": {
+  "full_name": "Chris Olave",
+  "first_name": "Chris",
+  "last_name": "Olave",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NO",
+  "number": 12,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "72",
+  "weight": "187",
+  "status": "Active"
+ },
+ "8126": {
+  "full_name": "Wan'Dale Robinson",
+  "first_name": "Wan'Dale",
+  "last_name": "Robinson",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "TEN",
+  "number": 4,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Kentucky",
+  "height": "68",
+  "weight": "185",
+  "status": "Active"
+ },
+ "5840": {
+  "full_name": "Josh Hines-Allen",
+  "first_name": "Josh",
+  "last_name": "Hines-Allen",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "JAX",
+  "number": 41,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Kentucky",
+  "height": "77",
+  "weight": "255",
+  "status": "Active"
+ },
+ "6801": {
+  "full_name": "Tee Higgins",
+  "first_name": "Tee",
+  "last_name": "Higgins",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CIN",
+  "number": 5,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Clemson",
+  "height": "76",
+  "weight": "220",
+  "status": "Active"
+ },
+ "11581": {
+  "full_name": "MarShawn Lloyd",
+  "first_name": "MarShawn",
+  "last_name": "Lloyd",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "GB",
+  "number": 32,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "69",
+  "weight": "220",
+  "status": "Active"
+ },
+ "4866": {
+  "full_name": "Saquon Barkley",
+  "first_name": "Saquon",
+  "last_name": "Barkley",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "PHI",
+  "number": 26,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Penn State",
+  "height": "72",
+  "weight": "233",
+  "status": "Active"
+ },
+ "4881": {
+  "full_name": "Lamar Jackson",
+  "first_name": "Lamar",
+  "last_name": "Jackson",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "BAL",
+  "number": 8,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": "Out",
+  "injury_body_part": "Thumb",
+  "college": "Louisville",
+  "height": "74",
+  "weight": "205",
+  "status": "Inactive"
+ },
+ "7640": {
+  "full_name": "Micah Parsons",
+  "first_name": "Micah",
+  "last_name": "Parsons",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "GB",
+  "number": 1,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": "PUP",
+  "injury_body_part": "Knee - ACL",
+  "college": "Penn State",
+  "height": "75",
+  "weight": "250",
+  "status": "Active"
+ },
+ "13385": {
+  "full_name": "Mansoor Delane",
+  "first_name": "Mansoor",
+  "last_name": "Delane",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "KC",
+  "number": 5,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": "Questionable",
+  "injury_body_part": "Shoulder",
+  "college": "LSU",
+  "height": "72",
+  "weight": "190",
+  "status": "Active"
+ },
+ "10880": {
+  "full_name": "Jack Campbell",
+  "first_name": "Jack",
+  "last_name": "Campbell",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "DET",
+  "number": 46,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": "Doubtful",
+  "injury_body_part": "Undisclosed",
+  "college": "Iowa",
+  "height": "77",
+  "weight": "246",
+  "status": "Active"
+ },
+ "3973": {
+  "full_name": "Myles Garrett",
+  "first_name": "Myles",
+  "last_name": "Garrett",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "LAR",
+  "number": 95,
+  "age": 30,
+  "years_exp": 9,
+  "injury_status": "IR",
+  "injury_body_part": "Knee",
+  "college": "Texas A&M",
+  "height": "76",
+  "weight": "272",
+  "status": "Inactive"
+ },
+ "8183": {
+  "full_name": "Brock Purdy",
+  "first_name": "Brock",
+  "last_name": "Purdy",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "SF",
+  "number": 13,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Iowa State",
+  "height": "73",
+  "weight": "220",
+  "status": "Active"
+ },
+ "11559": {
+  "full_name": "Michael Penix Jr.",
+  "first_name": "Michael",
+  "last_name": "Penix Jr.",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "ATL",
+  "number": 9,
+  "age": 26,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Washington",
+  "height": "75",
+  "weight": "220",
+  "status": "Active"
+ },
+ "12524": {
+  "full_name": "Shedeur Sanders",
+  "first_name": "Shedeur",
+  "last_name": "Sanders",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "CLE",
+  "number": 2,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Colorado",
+  "height": "74",
+  "weight": "212",
+  "status": "Active"
+ },
+ "6790": {
+  "full_name": "D'Andre Swift",
+  "first_name": "D'Andre",
+  "last_name": "Swift",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CHI",
+  "number": 4,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "68",
+  "weight": "204",
+  "status": "Active"
+ },
+ "4135": {
+  "full_name": "Trey Hendrickson",
+  "first_name": "Trey",
+  "last_name": "Hendrickson",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "BAL",
+  "number": 91,
+  "age": 31,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Florida Atlantic",
+  "height": "76",
+  "weight": "265",
+  "status": "Active"
+ },
+ "11603": {
+  "full_name": "AJ Barner",
+  "first_name": "AJ",
+  "last_name": "Barner",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "SEA",
+  "number": 88,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "78",
+  "weight": "251",
+  "status": "Active"
+ },
+ "6949": {
+  "full_name": "Jordyn Brooks",
+  "first_name": "Jordyn",
+  "last_name": "Brooks",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "MIA",
+  "number": 20,
+  "age": 29,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas Tech",
+  "height": "72",
+  "weight": "240",
+  "status": "Active"
+ },
+ "11635": {
+  "full_name": "Ladd McConkey",
+  "first_name": "Ladd",
+  "last_name": "McConkey",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "LAC",
+  "number": 15,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "72",
+  "weight": "185",
+  "status": "Active"
+ },
+ "8161": {
+  "full_name": "Malik Willis",
+  "first_name": "Malik",
+  "last_name": "Willis",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "MIA",
+  "number": 2,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Liberty",
+  "height": "73",
+  "weight": "225",
+  "status": "Active"
+ },
+ "13275": {
+  "full_name": "Ty Simpson",
+  "first_name": "Ty",
+  "last_name": "Simpson",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "LAR",
+  "number": 15,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "74",
+  "weight": "208",
+  "status": "Active"
+ },
+ "6813": {
+  "full_name": "Jonathan Taylor",
+  "first_name": "Jonathan",
+  "last_name": "Taylor",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "IND",
+  "number": 28,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wisconsin",
+  "height": "70",
+  "weight": "226",
+  "status": "Active"
+ },
+ "12526": {
+  "full_name": "Tetairoa McMillan",
+  "first_name": "Tetairoa",
+  "last_name": "McMillan",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CAR",
+  "number": 4,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Arizona",
+  "height": "76",
+  "weight": "220",
+  "status": "Active"
+ },
+ "12597": {
+  "full_name": "Nick Emmanwori",
+  "first_name": "Nick",
+  "last_name": "Emmanwori",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "SEA",
+  "number": 3,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "South Carolina",
+  "height": "75",
+  "weight": "220",
+  "status": "Active"
+ },
+ "8676": {
+  "full_name": "Rashid Shaheed",
+  "first_name": "Rashid",
+  "last_name": "Shaheed",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "SEA",
+  "number": 22,
+  "age": 28,
+  "years_exp": 4,
+  "injury_status": "Questionable",
+  "injury_body_part": "Knee",
+  "college": "Weber State",
+  "height": "72",
+  "weight": "180",
+  "status": "Active"
+ },
+ "5017": {
+  "full_name": "Jessie Bates III",
+  "first_name": "Jessie",
+  "last_name": "Bates III",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "ATL",
+  "number": 3,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wake Forest",
+  "height": "73",
+  "weight": "210",
+  "status": "Active"
+ },
+ "11678": {
+  "full_name": "Cooper DeJean",
+  "first_name": "Cooper",
+  "last_name": "DeJean",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "PHI",
+  "number": 33,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Iowa",
+  "height": "72",
+  "weight": "198",
+  "status": "Active"
+ },
+ "8228": {
+  "full_name": "Jaylen Warren",
+  "first_name": "Jaylen",
+  "last_name": "Warren",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "PIT",
+  "number": 30,
+  "age": 28,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma State",
+  "height": "68",
+  "weight": "215",
+  "status": "Active"
+ },
+ "4034": {
+  "full_name": "Christian McCaffrey",
+  "first_name": "Christian",
+  "last_name": "McCaffrey",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "SF",
+  "number": 23,
+  "age": 30,
+  "years_exp": 9,
+  "injury_status": "Questionable",
+  "injury_body_part": "Calf",
+  "college": "Stanford",
+  "height": "71",
+  "weight": "210",
+  "status": "Active"
+ },
+ "5947": {
+  "full_name": "Jakobi Meyers",
+  "first_name": "Jakobi",
+  "last_name": "Meyers",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "JAX",
+  "number": 3,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "NC State",
+  "height": "74",
+  "weight": "200",
+  "status": "Active"
+ },
+ "12501": {
+  "full_name": "Matthew Golden",
+  "first_name": "Matthew",
+  "last_name": "Golden",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "GB",
+  "number": 0,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas",
+  "height": "71",
+  "weight": "191",
+  "status": "Active"
+ },
+ "7547": {
+  "full_name": "Amon-Ra St. Brown",
+  "first_name": "Amon-Ra",
+  "last_name": "St. Brown",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DET",
+  "number": 14,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "72",
+  "weight": "202",
+  "status": "Active"
+ },
+ "8110": {
+  "full_name": "Jake Ferguson",
+  "first_name": "Jake",
+  "last_name": "Ferguson",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "DAL",
+  "number": 87,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": "Questionable",
+  "injury_body_part": "Ankle",
+  "college": "Wisconsin",
+  "height": "77",
+  "weight": "250",
+  "status": "Active"
+ },
+ "6788": {
+  "full_name": "Xavier McKinney",
+  "first_name": "Xavier",
+  "last_name": "McKinney",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "GB",
+  "number": 29,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "72",
+  "weight": "201",
+  "status": "Active"
+ },
+ "13293": {
+  "full_name": "Ja'Kobi Lane",
+  "first_name": "Ja'Kobi",
+  "last_name": "Lane",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "BAL",
+  "number": 6,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "76",
+  "weight": "205",
+  "status": "Active"
+ },
+ "2449": {
+  "full_name": "Stefon Diggs",
+  "first_name": "Stefon",
+  "last_name": "Diggs",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "WAS",
+  "number": 3,
+  "age": 32,
+  "years_exp": 11,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Maryland",
+  "height": "72",
+  "weight": "191",
+  "status": "Active"
+ },
+ "7627": {
+  "full_name": "Greg Rousseau",
+  "first_name": "Greg",
+  "last_name": "Rousseau",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "BUF",
+  "number": 15,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Miami (FL)",
+  "height": "78",
+  "weight": "266",
+  "status": "Active"
+ },
+ "10927": {
+  "full_name": "Jordan Battle",
+  "first_name": "Jordan",
+  "last_name": "Battle",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "CIN",
+  "number": 27,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "Alabama",
+  "height": "73",
+  "weight": "215",
+  "status": "Active"
+ },
+ "11586": {
+  "full_name": "Blake Corum",
+  "first_name": "Blake",
+  "last_name": "Corum",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LAR",
+  "number": 24,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "68",
+  "weight": "202",
+  "status": "Active"
+ },
+ "4960": {
+  "full_name": "Roquan Smith",
+  "first_name": "Roquan",
+  "last_name": "Smith",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "BAL",
+  "number": 0,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "73",
+  "weight": "235",
+  "status": "Active"
+ },
+ "4217": {
+  "full_name": "George Kittle",
+  "first_name": "George",
+  "last_name": "Kittle",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "SF",
+  "number": 85,
+  "age": 33,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Iowa",
+  "height": "76",
+  "weight": "250",
+  "status": "Active"
+ },
+ "8180": {
+  "full_name": "Jalen Nailor",
+  "first_name": "Jalen",
+  "last_name": "Nailor",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "LV",
+  "number": 9,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan State",
+  "height": "72",
+  "weight": "190",
+  "status": "Active"
+ },
+ "9224": {
+  "full_name": "Chase Brown",
+  "first_name": "Chase",
+  "last_name": "Brown",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CIN",
+  "number": 30,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Illinois",
+  "height": "70",
+  "weight": "210",
+  "status": "Active"
+ },
+ "9511": {
+  "full_name": "Keaton Mitchell",
+  "first_name": "Keaton",
+  "last_name": "Mitchell",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LAC",
+  "number": 34,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "East Carolina",
+  "height": "68",
+  "weight": "191",
+  "status": "Active"
+ },
+ "11539": {
+  "full_name": "Jake Bates",
+  "first_name": "Jake",
+  "last_name": "Bates",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "DET",
+  "number": 39,
+  "age": 27,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Arkansas",
+  "height": "70",
+  "weight": "205",
+  "status": "Active"
+ },
+ "6183": {
+  "full_name": "Andrew Van Ginkel",
+  "first_name": "Andrew",
+  "last_name": "Van Ginkel",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "MIN",
+  "number": 43,
+  "age": 31,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wisconsin",
+  "height": "76",
+  "weight": "242",
+  "status": "Active"
+ },
+ "13417": {
+  "full_name": "De'Zhaun Stribling",
+  "first_name": "De'Zhaun",
+  "last_name": "Stribling",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "SF",
+  "number": 7,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": "IR",
+  "injury_body_part": "Ankle",
+  "college": "Ole Miss",
+  "height": "74",
+  "weight": "207",
+  "status": "Inactive"
+ },
+ "6783": {
+  "full_name": "Jerry Jeudy",
+  "first_name": "Jerry",
+  "last_name": "Jeudy",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CLE",
+  "number": 3,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "73",
+  "weight": "195",
+  "status": "Active"
+ },
+ "13346": {
+  "full_name": "Denzel Boston",
+  "first_name": "Denzel",
+  "last_name": "Boston",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CLE",
+  "number": 12,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Washington",
+  "height": "76",
+  "weight": "215",
+  "status": "Active"
+ },
+ "13269": {
+  "full_name": "Fernando Mendoza",
+  "first_name": "Fernando",
+  "last_name": "Mendoza",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "LV",
+  "number": 15,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Indiana",
+  "height": "77",
+  "weight": "225",
+  "status": "Active"
+ },
+ "13384": {
+  "full_name": "A.J. Haulcy",
+  "first_name": "A.J.",
+  "last_name": "Haulcy",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "IND",
+  "number": 25,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "71",
+  "weight": "215",
+  "status": "Active"
+ },
+ "12490": {
+  "full_name": "Bhayshul Tuten",
+  "first_name": "Bhayshul",
+  "last_name": "Tuten",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "JAX",
+  "number": 33,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": "Questionable",
+  "injury_body_part": "Ankle",
+  "college": "Virginia Tech",
+  "height": "69",
+  "weight": "209",
+  "status": "Active"
+ },
+ "12527": {
+  "full_name": "Ashton Jeanty",
+  "first_name": "Ashton",
+  "last_name": "Jeanty",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LV",
+  "number": 2,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Boise State",
+  "height": "68",
+  "weight": "208",
+  "status": "Active"
+ },
+ "8130": {
+  "full_name": "Trey McBride",
+  "first_name": "Trey",
+  "last_name": "McBride",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "ARI",
+  "number": 85,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Colorado State",
+  "height": "76",
+  "weight": "246",
+  "status": "Active"
+ },
+ "11665": {
+  "full_name": "Jared Verse",
+  "first_name": "Jared",
+  "last_name": "Verse",
+  "position": "DL",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "CLE",
+  "number": 8,
+  "age": 26,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Florida State",
+  "height": "76",
+  "weight": "260",
+  "status": "Active"
+ },
+ "13281": {
+  "full_name": "Jordyn Tyson",
+  "first_name": "Jordyn",
+  "last_name": "Tyson",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NO",
+  "number": 0,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": "IR",
+  "injury_body_part": "Hamstring",
+  "college": "Arizona State",
+  "height": "74",
+  "weight": "203",
+  "status": "Inactive"
+ },
+ "6815": {
+  "full_name": "Zack Baun",
+  "first_name": "Zack",
+  "last_name": "Baun",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "PHI",
+  "number": 53,
+  "age": 29,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wisconsin",
+  "height": "75",
+  "weight": "225",
+  "status": "Active"
+ },
+ "13363": {
+  "full_name": "David Bailey",
+  "first_name": "David",
+  "last_name": "Bailey",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "NYJ",
+  "number": 31,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": "Questionable",
+  "injury_body_part": "Groin",
+  "college": "Texas Tech",
+  "height": "75",
+  "weight": "251",
+  "status": "Active"
+ },
+ "8154": {
+  "full_name": "Brian Robinson Jr.",
+  "first_name": "Brian",
+  "last_name": "Robinson Jr.",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "ATL",
+  "number": 15,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "Alabama",
+  "height": "73",
+  "weight": "225",
+  "status": "Active"
+ },
+ "8259": {
+  "full_name": "Cameron Dicker",
+  "first_name": "Cameron",
+  "last_name": "Dicker",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "LAC",
+  "number": 11,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas",
+  "height": "73",
+  "weight": "216",
+  "status": "Active"
+ },
+ "11370": {
+  "full_name": "Chris Brooks",
+  "first_name": "Chris",
+  "last_name": "Brooks",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "GB",
+  "number": 30,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": "IR",
+  "injury_body_part": "Ankle",
+  "college": "BYU",
+  "height": "73",
+  "weight": "219",
+  "status": "Inactive"
+ },
+ "5859": {
+  "full_name": "A.J. Brown",
+  "first_name": "A.J.",
+  "last_name": "Brown",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NE",
+  "number": 1,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": "Questionable",
+  "injury_body_part": "Ankle",
+  "college": "Ole Miss",
+  "height": "73",
+  "weight": "226",
+  "status": "Active"
+ },
+ "11584": {
+  "full_name": "Bucky Irving",
+  "first_name": "Bucky",
+  "last_name": "Irving",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "TB",
+  "number": 7,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "70",
+  "weight": "195",
+  "status": "Active"
+ },
+ "9480": {
+  "full_name": "Brenton Strange",
+  "first_name": "Brenton",
+  "last_name": "Strange",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "JAX",
+  "number": 85,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Penn State",
+  "height": "76",
+  "weight": "253",
+  "status": "Active"
+ },
+ "96": {
+  "full_name": "Aaron Rodgers",
+  "first_name": "Aaron",
+  "last_name": "Rodgers",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "PIT",
+  "number": 8,
+  "age": 42,
+  "years_exp": 21,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "California",
+  "height": "74",
+  "weight": "223",
+  "status": "Active"
+ },
+ "7811": {
+  "full_name": "Talanoa Hufanga",
+  "first_name": "Talanoa",
+  "last_name": "Hufanga",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "DEN",
+  "number": 9,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": "Questionable",
+  "injury_body_part": "Ankle",
+  "college": "USC",
+  "height": "72",
+  "weight": "200",
+  "status": "Active"
+ },
+ "7641": {
+  "full_name": "Pat Surtain II",
+  "first_name": "Pat",
+  "last_name": "Surtain II",
+  "position": "CB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "DEN",
+  "number": 2,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "74",
+  "weight": "202",
+  "status": "Active"
+ },
+ "13298": {
+  "full_name": "KC Concepcion Jr.",
+  "first_name": "KC",
+  "last_name": "Concepcion Jr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CLE",
+  "number": 1,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas A&M",
+  "height": "72",
+  "weight": "190",
+  "status": "Active"
+ },
+ "1466": {
+  "full_name": "Travis Kelce",
+  "first_name": "Travis",
+  "last_name": "Kelce",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "KC",
+  "number": 87,
+  "age": 37,
+  "years_exp": 13,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Cincinnati",
+  "height": "77",
+  "weight": "250",
+  "status": "Active"
+ },
+ "5816": {
+  "full_name": "Nick Bosa",
+  "first_name": "Nick",
+  "last_name": "Bosa",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "SF",
+  "number": 97,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": "Questionable",
+  "injury_body_part": "Knee",
+  "college": "Ohio State",
+  "height": "76",
+  "weight": "266",
+  "status": "Active"
+ },
+ "10881": {
+  "full_name": "Christian Gonzalez",
+  "first_name": "Christian",
+  "last_name": "Gonzalez",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "NE",
+  "number": 0,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "73",
+  "weight": "205",
+  "status": "Active"
+ },
+ "13301": {
+  "full_name": "Antonio Williams",
+  "first_name": "Antonio",
+  "last_name": "Williams",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "WAS",
+  "number": 14,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Clemson",
+  "height": "71",
+  "weight": "195",
+  "status": "Active"
+ },
+ "9484": {
+  "full_name": "Tucker Kraft",
+  "first_name": "Tucker",
+  "last_name": "Kraft",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "GB",
+  "number": 85,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "South Dakota State",
+  "height": "77",
+  "weight": "259",
+  "status": "Active"
+ },
+ "7839": {
+  "full_name": "Evan McPherson",
+  "first_name": "Evan",
+  "last_name": "McPherson",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "CIN",
+  "number": 2,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Florida",
+  "height": "71",
+  "weight": "185",
+  "status": "Active"
+ },
+ "7016": {
+  "full_name": "Jeremy Chinn",
+  "first_name": "Jeremy",
+  "last_name": "Chinn",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB",
+   "LB"
+  ],
+  "team": "LV",
+  "number": 11,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Southern Illinois",
+  "height": "75",
+  "weight": "220",
+  "status": "Active"
+ },
+ "8112": {
+  "full_name": "Drake London",
+  "first_name": "Drake",
+  "last_name": "London",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "ATL",
+  "number": 5,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "76",
+  "weight": "215",
+  "status": "Active"
+ },
+ "11624": {
+  "full_name": "Xavier Worthy",
+  "first_name": "Xavier",
+  "last_name": "Worthy",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "KC",
+  "number": 1,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Texas",
+  "height": "71",
+  "weight": "165",
+  "status": "Active"
+ },
+ "5332": {
+  "full_name": "Foyesade Oluokun",
+  "first_name": "Foyesade",
+  "last_name": "Oluokun",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "JAX",
+  "number": 23,
+  "age": 31,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Yale",
+  "height": "74",
+  "weight": "230",
+  "status": "Active"
+ },
+ "3257": {
+  "full_name": "Jacoby Brissett",
+  "first_name": "Jacoby",
+  "last_name": "Brissett",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "ARI",
+  "number": 7,
+  "age": 33,
+  "years_exp": 10,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "North Carolina State",
+  "height": "76",
+  "weight": "235",
+  "status": "Active"
+ },
+ "7136": {
+  "full_name": "Kam Curl",
+  "first_name": "Kam",
+  "last_name": "Curl",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "LAR",
+  "number": 3,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Arkansas",
+  "height": "74",
+  "weight": "207",
+  "status": "Active"
+ },
+ "7564": {
+  "full_name": "Ja'Marr Chase",
+  "first_name": "Ja'Marr",
+  "last_name": "Chase",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CIN",
+  "number": 1,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "72",
+  "weight": "205",
+  "status": "Active"
+ },
+ "13330": {
+  "full_name": "Kenyon Sadiq",
+  "first_name": "Kenyon",
+  "last_name": "Sadiq",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "NYJ",
+  "number": 16,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "75",
+  "weight": "241",
+  "status": "Active"
+ },
+ "10891": {
+  "full_name": "Devon Witherspoon",
+  "first_name": "Devon",
+  "last_name": "Witherspoon",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "SEA",
+  "number": 21,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Illinois",
+  "height": "72",
+  "weight": "185",
+  "status": "Active"
+ },
+ "10898": {
+  "full_name": "Tuli Tuipulotu",
+  "first_name": "Tuli",
+  "last_name": "Tuipulotu",
+  "position": "DL",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "LAC",
+  "number": 45,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "75",
+  "weight": "266",
+  "status": "Active"
+ },
+ "4983": {
+  "full_name": "DJ Moore",
+  "first_name": "DJ",
+  "last_name": "Moore",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "BUF",
+  "number": 2,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": "Questionable",
+  "injury_body_part": "Undisclosed",
+  "college": "Maryland",
+  "height": "72",
+  "weight": "213",
+  "status": "Active"
+ },
+ "11742": {
+  "full_name": "Cedric Gray",
+  "first_name": "Cedric",
+  "last_name": "Gray",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "TEN",
+  "number": 33,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "North Carolina",
+  "height": "74",
+  "weight": "240",
+  "status": "Active"
+ },
+ "5843": {
+  "full_name": "Devin Bush",
+  "first_name": "Devin",
+  "last_name": "Bush",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "CHI",
+  "number": 12,
+  "age": 28,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "71",
+  "weight": "234",
+  "status": "Active"
+ },
+ "5927": {
+  "full_name": "Terry McLaurin",
+  "first_name": "Terry",
+  "last_name": "McLaurin",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "WAS",
+  "number": 17,
+  "age": 31,
+  "years_exp": 7,
+  "injury_status": "IR",
+  "injury_body_part": "Knee",
+  "college": "Ohio State",
+  "height": "72",
+  "weight": "210",
+  "status": "Inactive"
+ },
+ "12529": {
+  "full_name": "TreVeyon Henderson",
+  "first_name": "TreVeyon",
+  "last_name": "Henderson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NE",
+  "number": 32,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": "Questionable",
+  "injury_body_part": "Illness",
+  "college": "Ohio State",
+  "height": "70",
+  "weight": "202",
+  "status": "Active"
+ },
+ "5991": {
+  "full_name": "Maxx Crosby",
+  "first_name": "Maxx",
+  "last_name": "Crosby",
+  "position": "DE",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "LV",
+  "number": 98,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Eastern Michigan",
+  "height": "77",
+  "weight": "255",
+  "status": "Active"
+ },
+ "12522": {
+  "full_name": "Cam Ward",
+  "first_name": "Cam",
+  "last_name": "Ward",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "TEN",
+  "number": 1,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Miami (FL)",
+  "height": "74",
+  "weight": "219",
+  "status": "Active"
+ },
+ "4070": {
+  "full_name": "T.J. Watt",
+  "first_name": "T.J.",
+  "last_name": "Watt",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "PIT",
+  "number": 90,
+  "age": 32,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Wisconsin",
+  "height": "76",
+  "weight": "252",
+  "status": "Active"
+ },
+ "4227": {
+  "full_name": "Harrison Butker",
+  "first_name": "Harrison",
+  "last_name": "Butker",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "KC",
+  "number": 7,
+  "age": 31,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia Tech",
+  "height": "76",
+  "weight": "205",
+  "status": "Active"
+ },
+ "11786": {
+  "full_name": "Cam Little",
+  "first_name": "Cam",
+  "last_name": "Little",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "JAX",
+  "number": 39,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Arkansas",
+  "height": "73",
+  "weight": "172",
+  "status": "Active"
+ },
+ "12492": {
+  "full_name": "Pat Bryant",
+  "first_name": "Pat",
+  "last_name": "Bryant",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DEN",
+  "number": 13,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": "IR",
+  "injury_body_part": "Ankle",
+  "college": "Illinois",
+  "height": "74",
+  "weight": "204",
+  "status": "Inactive"
+ },
+ "2617": {
+  "full_name": "Alex Singleton",
+  "first_name": "Alex",
+  "last_name": "Singleton",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "DEN",
+  "number": 49,
+  "age": 32,
+  "years_exp": 11,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Montana State",
+  "height": "74",
+  "weight": "240",
+  "status": "Active"
+ },
+ "13376": {
+  "full_name": "Caleb Downs",
+  "first_name": "Caleb",
+  "last_name": "Downs",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "DAL",
+  "number": 13,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": "Questionable",
+  "injury_body_part": "Head",
+  "college": "Ohio State",
+  "height": "72",
+  "weight": "210",
+  "status": "Active"
+ },
+ "10892": {
+  "full_name": "Will Anderson Jr.",
+  "first_name": "Will",
+  "last_name": "Anderson Jr.",
+  "position": "DL",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "HOU",
+  "number": 51,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "76",
+  "weight": "243",
+  "status": "Active"
+ },
+ "10949": {
+  "full_name": "Chamarri Conner",
+  "first_name": "Chamarri",
+  "last_name": "Conner",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "KC",
+  "number": 27,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Virginia Tech",
+  "height": "72",
+  "weight": "202",
+  "status": "Active"
+ },
+ "7588": {
+  "full_name": "Javonte Williams",
+  "first_name": "Javonte",
+  "last_name": "Williams",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "DAL",
+  "number": 33,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "North Carolina",
+  "height": "70",
+  "weight": "222",
+  "status": "Active"
+ },
+ "9506": {
+  "full_name": "Sean Tucker",
+  "first_name": "Sean",
+  "last_name": "Tucker",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "TB",
+  "number": 44,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Syracuse",
+  "height": "70",
+  "weight": "205",
+  "status": "Active"
+ },
+ "7553": {
+  "full_name": "Kyle Pitts Sr.",
+  "first_name": "Kyle",
+  "last_name": "Pitts Sr.",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "ATL",
+  "number": 8,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Florida",
+  "height": "78",
+  "weight": "250",
+  "status": "Active"
+ },
+ "4035": {
+  "full_name": "Alvin Kamara",
+  "first_name": "Alvin",
+  "last_name": "Kamara",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NO",
+  "number": 41,
+  "age": 31,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Tennessee",
+  "height": "70",
+  "weight": "215",
+  "status": "Active"
+ },
+ "12574": {
+  "full_name": "Abdul Carter",
+  "first_name": "Abdul",
+  "last_name": "Carter",
+  "position": "DL",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "NYG",
+  "number": 3,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Penn State",
+  "height": "75",
+  "weight": "252",
+  "status": "Active"
+ },
+ "8266": {
+  "full_name": "Quay Walker",
+  "first_name": "Quay",
+  "last_name": "Walker",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "LV",
+  "number": 7,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "76",
+  "weight": "240",
+  "status": "Active"
+ },
+ "13345": {
+  "full_name": "Jonah Coleman",
+  "first_name": "Jonah",
+  "last_name": "Coleman",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "DEN",
+  "number": 20,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Washington",
+  "height": "68",
+  "weight": "220",
+  "status": "Active"
+ },
+ "13337": {
+  "full_name": "Emmett Johnson",
+  "first_name": "Emmett",
+  "last_name": "Johnson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "KC",
+  "number": 10,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Nebraska",
+  "height": "71",
+  "weight": "200",
+  "status": "Active"
+ },
+ "11647": {
+  "full_name": "Kimani Vidal",
+  "first_name": "Kimani",
+  "last_name": "Vidal",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LAC",
+  "number": 28,
+  "age": 25,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Troy",
+  "height": "68",
+  "weight": "215",
+  "status": "Active"
+ },
+ "12588": {
+  "full_name": "Kevin Winston Jr.",
+  "first_name": "Kevin",
+  "last_name": "Winston Jr.",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "TEN",
+  "number": 23,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": "Questionable",
+  "injury_body_part": "Shoulder",
+  "college": "Penn State",
+  "height": "74",
+  "weight": "213",
+  "status": "Active"
+ },
+ "7611": {
+  "full_name": "Rhamondre Stevenson",
+  "first_name": "Rhamondre",
+  "last_name": "Stevenson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NE",
+  "number": 38,
+  "age": 28,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma",
+  "height": "72",
+  "weight": "227",
+  "status": "Active"
+ },
+ "6770": {
+  "full_name": "Joe Burrow",
+  "first_name": "Joe",
+  "last_name": "Burrow",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "CIN",
+  "number": 9,
+  "age": 29,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "LSU",
+  "height": "76",
+  "weight": "215",
+  "status": "Active"
+ },
+ "4037": {
+  "full_name": "Chris Godwin Jr.",
+  "first_name": "Chris",
+  "last_name": "Godwin Jr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "TB",
+  "number": 14,
+  "age": 30,
+  "years_exp": 9,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Penn State",
+  "height": "73",
+  "weight": "209",
+  "status": "Active"
+ },
+ "3214": {
+  "full_name": "Hunter Henry",
+  "first_name": "Hunter",
+  "last_name": "Henry",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "NE",
+  "number": 85,
+  "age": 31,
+  "years_exp": 10,
+  "injury_status": "Questionable",
+  "injury_body_part": "Foot",
+  "college": "Arkansas",
+  "height": "77",
+  "weight": "249",
+  "status": "Active"
+ },
+ "5041": {
+  "full_name": "Fred Warner",
+  "first_name": "Fred",
+  "last_name": "Warner",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "SF",
+  "number": 54,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "BYU",
+  "height": "75",
+  "weight": "230",
+  "status": "Active"
+ },
+ "13305": {
+  "full_name": "Mike Washington Jr.",
+  "first_name": "Mike",
+  "last_name": "Washington Jr.",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "LV",
+  "number": 4,
+  "age": 23,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Arkansas",
+  "height": "74",
+  "weight": "228",
+  "status": "Active"
+ },
+ "12578": {
+  "full_name": "Carson Schwesinger",
+  "first_name": "Carson",
+  "last_name": "Schwesinger",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "CLE",
+  "number": 49,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "UCLA",
+  "height": "75",
+  "weight": "242",
+  "status": "Active"
+ },
+ "7002": {
+  "full_name": "Juwan Johnson",
+  "first_name": "Juwan",
+  "last_name": "Johnson",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "NO",
+  "number": 83,
+  "age": 30,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oregon",
+  "height": "76",
+  "weight": "245",
+  "status": "Active"
+ },
+ "6806": {
+  "full_name": "J.K. Dobbins",
+  "first_name": "J.K.",
+  "last_name": "Dobbins",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "DEN",
+  "number": 27,
+  "age": 27,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "70",
+  "weight": "212",
+  "status": "Active"
+ },
+ "11560": {
+  "full_name": "Caleb Williams",
+  "first_name": "Caleb",
+  "last_name": "Williams",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "CHI",
+  "number": 18,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "73",
+  "weight": "226",
+  "status": "Active"
+ },
+ "11583": {
+  "full_name": "Jonathon Brooks",
+  "first_name": "Jonathon",
+  "last_name": "Brooks",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "CAR",
+  "number": 25,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": "IR",
+  "injury_body_part": "Abdomen",
+  "college": "Texas",
+  "height": "72",
+  "weight": "216",
+  "status": "Inactive"
+ },
+ "13276": {
+  "full_name": "Omar Cooper Jr.",
+  "first_name": "Omar",
+  "last_name": "Cooper Jr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NYJ",
+  "number": 11,
+  "age": 22,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Indiana",
+  "height": "72",
+  "weight": "199",
+  "status": "Active"
+ },
+ "5967": {
+  "full_name": "Tony Pollard",
+  "first_name": "Tony",
+  "last_name": "Pollard",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "TEN",
+  "number": 20,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Memphis",
+  "height": "72",
+  "weight": "209",
+  "status": "Active"
+ },
+ "5870": {
+  "full_name": "Daniel Jones",
+  "first_name": "Daniel",
+  "last_name": "Jones",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "IND",
+  "number": 17,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Duke",
+  "height": "77",
+  "weight": "230",
+  "status": "Active"
+ },
+ "12540": {
+  "full_name": "Chimere Dike",
+  "first_name": "Chimere",
+  "last_name": "Dike",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "TEN",
+  "number": 17,
+  "age": 24,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Florida",
+  "height": "73",
+  "weight": "196",
+  "status": "Active"
+ },
+ "10917": {
+  "full_name": "Byron Young",
+  "first_name": "Byron",
+  "last_name": "Young",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "LAR",
+  "number": 0,
+  "age": 28,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Tennessee",
+  "height": "74",
+  "weight": "260",
+  "status": "Active"
+ },
+ "11655": {
+  "full_name": "Tyrone Tracy Jr.",
+  "first_name": "Tyrone",
+  "last_name": "Tracy Jr.",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NYG",
+  "number": 29,
+  "age": 26,
+  "years_exp": 2,
+  "injury_status": "IR",
+  "injury_body_part": "Hamstring",
+  "college": "Purdue",
+  "height": "71",
+  "weight": "210",
+  "status": "Inactive"
+ },
+ "4943": {
+  "full_name": "Sam Darnold",
+  "first_name": "Sam",
+  "last_name": "Darnold",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "SEA",
+  "number": 14,
+  "age": 29,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "75",
+  "weight": "225",
+  "status": "Active"
+ },
+ "11604": {
+  "full_name": "Brock Bowers",
+  "first_name": "Brock",
+  "last_name": "Bowers",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "LV",
+  "number": 89,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "76",
+  "weight": "235",
+  "status": "Active"
+ },
+ "9754": {
+  "full_name": "Quentin Johnston",
+  "first_name": "Quentin",
+  "last_name": "Johnston",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "LAC",
+  "number": 1,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "TCU",
+  "height": "74",
+  "weight": "208",
+  "status": "Active"
+ },
+ "9753": {
+  "full_name": "Zach Charbonnet",
+  "first_name": "Zach",
+  "last_name": "Charbonnet",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "SEA",
+  "number": 26,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "UCLA",
+  "height": "73",
+  "weight": "220",
+  "status": "Active"
+ },
+ "11435": {
+  "full_name": "Emanuel Wilson",
+  "first_name": "Emanuel",
+  "last_name": "Wilson",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "SEA",
+  "number": 23,
+  "age": 27,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Fort Valley State",
+  "height": "70",
+  "weight": "226",
+  "status": "Active"
+ },
+ "4892": {
+  "full_name": "Baker Mayfield",
+  "first_name": "Baker",
+  "last_name": "Mayfield",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "TB",
+  "number": 6,
+  "age": 31,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Oklahoma",
+  "height": "73",
+  "weight": "215",
+  "status": "Active"
+ },
+ "12493": {
+  "full_name": "Oronde Gadsden",
+  "first_name": "Oronde",
+  "last_name": "Gadsden",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "LAC",
+  "number": 86,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Syracuse",
+  "height": "77",
+  "weight": "236",
+  "status": "Active"
+ },
+ "13377": {
+  "full_name": "Arvell Reese",
+  "first_name": "Arvell",
+  "last_name": "Reese",
+  "position": "LB",
+  "fantasy_positions": [
+   "DL",
+   "LB"
+  ],
+  "team": "NYG",
+  "number": 52,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "76",
+  "weight": "243",
+  "status": "Active"
+ },
+ "6888": {
+  "full_name": "Antoine Winfield Jr.",
+  "first_name": "Antoine",
+  "last_name": "Winfield Jr.",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "TB",
+  "number": 31,
+  "age": 28,
+  "years_exp": 6,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Minnesota",
+  "height": "69",
+  "weight": "203",
+  "status": "Active"
+ },
+ "5001": {
+  "full_name": "Dalton Schultz",
+  "first_name": "Dalton",
+  "last_name": "Schultz",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "HOU",
+  "number": 86,
+  "age": 30,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Stanford",
+  "height": "77",
+  "weight": "242",
+  "status": "Active"
+ },
+ "5045": {
+  "full_name": "Courtland Sutton",
+  "first_name": "Courtland",
+  "last_name": "Sutton",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "DEN",
+  "number": 14,
+  "age": 31,
+  "years_exp": 8,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "SMU",
+  "height": "76",
+  "weight": "216",
+  "status": "Active"
+ },
+ "10236": {
+  "full_name": "Dalton Kincaid",
+  "first_name": "Dalton",
+  "last_name": "Kincaid",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "BUF",
+  "number": 86,
+  "age": 27,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Utah",
+  "height": "75",
+  "weight": "246",
+  "status": "Active"
+ },
+ "5849": {
+  "full_name": "Kyler Murray",
+  "first_name": "Kyler",
+  "last_name": "Murray",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "MIN",
+  "number": 1,
+  "age": 29,
+  "years_exp": 7,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "Oklahoma",
+  "height": "70",
+  "weight": "207",
+  "status": "Active"
+ },
+ "11620": {
+  "full_name": "Rome Odunze",
+  "first_name": "Rome",
+  "last_name": "Odunze",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CHI",
+  "number": 15,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Washington",
+  "height": "75",
+  "weight": "214",
+  "status": "Active"
+ },
+ "5346": {
+  "full_name": "Zaire Franklin",
+  "first_name": "Zaire",
+  "last_name": "Franklin",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "GB",
+  "number": 44,
+  "age": 30,
+  "years_exp": 8,
+  "injury_status": "Questionable",
+  "injury_body_part": "Shin",
+  "college": "Syracuse",
+  "height": "72",
+  "weight": "235",
+  "status": "Active"
+ },
+ "8289": {
+  "full_name": "Aidan Hutchinson",
+  "first_name": "Aidan",
+  "last_name": "Hutchinson",
+  "position": "DL",
+  "fantasy_positions": [
+   "DL"
+  ],
+  "team": "DET",
+  "number": 97,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Michigan",
+  "height": "79",
+  "weight": "268",
+  "status": "Active"
+ },
+ "9226": {
+  "full_name": "De'Von Achane",
+  "first_name": "De'Von",
+  "last_name": "Achane",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "MIA",
+  "number": 28,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": "IR",
+  "injury_body_part": "Knee - ACL",
+  "college": "Texas A&M",
+  "height": "69",
+  "weight": "195",
+  "status": "Inactive"
+ },
+ "11564": {
+  "full_name": "Drake Maye",
+  "first_name": "Drake",
+  "last_name": "Maye",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "NE",
+  "number": 10,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "North Carolina",
+  "height": "76",
+  "weight": "225",
+  "status": "Active"
+ },
+ "8267": {
+  "full_name": "Nakobe Dean",
+  "first_name": "Nakobe",
+  "last_name": "Dean",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "LV",
+  "number": 17,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "71",
+  "weight": "230",
+  "status": "Active"
+ },
+ "10914": {
+  "full_name": "Daiyan Henley",
+  "first_name": "Daiyan",
+  "last_name": "Henley",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "LAC",
+  "number": 0,
+  "age": 26,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Washington State",
+  "height": "72",
+  "weight": "225",
+  "status": "Active"
+ },
+ "11687": {
+  "full_name": "Edgerrin Cooper",
+  "first_name": "Edgerrin",
+  "last_name": "Cooper",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "GB",
+  "number": 56,
+  "age": 24,
+  "years_exp": 2,
+  "injury_status": "IR",
+  "injury_body_part": "Achilles",
+  "college": "Texas A&M",
+  "height": "74",
+  "weight": "229",
+  "status": "Inactive"
+ },
+ "13279": {
+  "full_name": "Carnell Tate",
+  "first_name": "Carnell",
+  "last_name": "Tate",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "TEN",
+  "number": 14,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": "Out",
+  "injury_body_part": "Shoulder",
+  "college": "Ohio State",
+  "height": "74",
+  "weight": "192",
+  "status": "Active"
+ },
+ "10905": {
+  "full_name": "Brian Branch",
+  "first_name": "Brian",
+  "last_name": "Branch",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "DET",
+  "number": 32,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": "Questionable",
+  "injury_body_part": "Head",
+  "college": "Alabama",
+  "height": "72",
+  "weight": "203",
+  "status": "Active"
+ },
+ "7543": {
+  "full_name": "Travis Etienne Jr.",
+  "first_name": "Travis",
+  "last_name": "Etienne Jr.",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NO",
+  "number": 3,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": "IR",
+  "injury_body_part": "Hamstring",
+  "college": "Clemson",
+  "height": "70",
+  "weight": "215",
+  "status": "Inactive"
+ },
+ "8205": {
+  "full_name": "Isiah Pacheco",
+  "first_name": "Isiah",
+  "last_name": "Pacheco",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "DET",
+  "number": 10,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": "IR",
+  "injury_body_part": "Back",
+  "college": "Rutgers",
+  "height": "70",
+  "weight": "210",
+  "status": "Inactive"
+ },
+ "3451": {
+  "full_name": "Ka'imi Fairbairn",
+  "first_name": "Ka'imi",
+  "last_name": "Fairbairn",
+  "position": "K",
+  "fantasy_positions": [
+   "K"
+  ],
+  "team": "HOU",
+  "number": 15,
+  "age": 32,
+  "years_exp": 10,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "UCLA",
+  "height": "72",
+  "weight": "183",
+  "status": "Active"
+ },
+ "11685": {
+  "full_name": "Kamari Lassiter",
+  "first_name": "Kamari",
+  "last_name": "Lassiter",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB"
+  ],
+  "team": "HOU",
+  "number": 3,
+  "age": 23,
+  "years_exp": 2,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "72",
+  "weight": "180",
+  "status": "Active"
+ },
+ "8134": {
+  "full_name": "Khalil Shakir",
+  "first_name": "Khalil",
+  "last_name": "Shakir",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "BUF",
+  "number": 10,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Boise State",
+  "height": "72",
+  "weight": "190",
+  "status": "Active"
+ },
+ "13388": {
+  "full_name": "CJ Allen",
+  "first_name": "CJ",
+  "last_name": "Allen",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "IND",
+  "number": 53,
+  "age": 21,
+  "years_exp": 0,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Georgia",
+  "height": "72",
+  "weight": "230",
+  "status": "Active"
+ },
+ "8146": {
+  "full_name": "Garrett Wilson",
+  "first_name": "Garrett",
+  "last_name": "Wilson",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "NYJ",
+  "number": 5,
+  "age": 26,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "72",
+  "weight": "183",
+  "status": "Active"
+ },
+ "9758": {
+  "full_name": "C.J. Stroud",
+  "first_name": "C.J.",
+  "last_name": "Stroud",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "HOU",
+  "number": 7,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Ohio State",
+  "height": "75",
+  "weight": "218",
+  "status": "Active"
+ },
+ "10859": {
+  "full_name": "Sam LaPorta",
+  "first_name": "Sam",
+  "last_name": "LaPorta",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "DET",
+  "number": 87,
+  "age": 25,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Iowa",
+  "height": "75",
+  "weight": "245",
+  "status": "Active"
+ },
+ "138": {
+  "full_name": "Ben Roethlisberger",
+  "first_name": "Ben",
+  "last_name": "Roethlisberger",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "PIT",
+  "number": 7,
+  "age": 39,
+  "years_exp": 18,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Miami (OH)",
+  "height": "77",
+  "weight": "240",
+  "status": "Active"
+ },
+ "8659": {
+  "full_name": "Nate Landman",
+  "first_name": "Nate",
+  "last_name": "Landman",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "LAR",
+  "number": 53,
+  "age": 27,
+  "years_exp": 4,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Colorado",
+  "height": "75",
+  "weight": "234",
+  "status": "Active"
+ },
+ "12519": {
+  "full_name": "Luther Burden III",
+  "first_name": "Luther",
+  "last_name": "Burden III",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "CHI",
+  "number": 10,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Missouri",
+  "height": "72",
+  "weight": "210",
+  "status": "Active"
+ },
+ "7841": {
+  "full_name": "Jamien Sherwood",
+  "first_name": "Jamien",
+  "last_name": "Sherwood",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "NYJ",
+  "number": 44,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Auburn",
+  "height": "74",
+  "weight": "216",
+  "status": "Active"
+ },
+ "12506": {
+  "full_name": "Harold Fannin Jr.",
+  "first_name": "Harold",
+  "last_name": "Fannin Jr.",
+  "position": "TE",
+  "fantasy_positions": [
+   "TE"
+  ],
+  "team": "CLE",
+  "number": 44,
+  "age": 22,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Bowling Green",
+  "height": "76",
+  "weight": "241",
+  "status": "Active"
+ },
+ "5850": {
+  "full_name": "Josh Jacobs",
+  "first_name": "Josh",
+  "last_name": "Jacobs",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "GB",
+  "number": 8,
+  "age": 28,
+  "years_exp": 7,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Alabama",
+  "height": "70",
+  "weight": "223",
+  "status": "Active"
+ },
+ "8155": {
+  "full_name": "Breece Hall",
+  "first_name": "Breece",
+  "last_name": "Hall",
+  "position": "RB",
+  "fantasy_positions": [
+   "RB"
+  ],
+  "team": "NYJ",
+  "number": 20,
+  "age": 25,
+  "years_exp": 4,
+  "injury_status": "Questionable",
+  "injury_body_part": "Quadriceps",
+  "college": "Iowa State",
+  "height": "71",
+  "weight": "217",
+  "status": "Active"
+ },
+ "9756": {
+  "full_name": "Jordan Addison",
+  "first_name": "Jordan",
+  "last_name": "Addison",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "MIN",
+  "number": 3,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "USC",
+  "height": "71",
+  "weight": "179",
+  "status": "Active"
+ },
+ "7525": {
+  "full_name": "DeVonta Smith",
+  "first_name": "DeVonta",
+  "last_name": "Smith",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "PHI",
+  "number": 6,
+  "age": 27,
+  "years_exp": 5,
+  "injury_status": "Questionable",
+  "injury_body_part": "Hamstring",
+  "college": "Alabama",
+  "height": "72",
+  "weight": "170",
+  "status": "Active"
+ },
+ "12530": {
+  "full_name": "Travis Hunter",
+  "first_name": "Travis",
+  "last_name": "Hunter",
+  "position": "DB",
+  "fantasy_positions": [
+   "DB",
+   "WR"
+  ],
+  "team": "JAX",
+  "number": 12,
+  "age": 23,
+  "years_exp": 1,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Colorado",
+  "height": "73",
+  "weight": "185",
+  "status": "Active"
+ },
+ "6819": {
+  "full_name": "Michael Pittman Jr.",
+  "first_name": "Michael",
+  "last_name": "Pittman Jr.",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "PIT",
+  "number": 11,
+  "age": 29,
+  "years_exp": 6,
+  "injury_status": "IR",
+  "injury_body_part": "Foot",
+  "college": "USC",
+  "height": "76",
+  "weight": "223",
+  "status": "Inactive"
+ },
+ "421": {
+  "full_name": "Matthew Stafford",
+  "first_name": "Matthew",
+  "last_name": "Stafford",
+  "position": "QB",
+  "fantasy_positions": [
+   "QB"
+  ],
+  "team": "LAR",
+  "number": 9,
+  "age": 38,
+  "years_exp": 17,
+  "injury_status": "Questionable",
+  "injury_body_part": "Arm",
+  "college": "Georgia",
+  "height": "75",
+  "weight": "214",
+  "status": "Active"
+ },
+ "9487": {
+  "full_name": "Parker Washington",
+  "first_name": "Parker",
+  "last_name": "Washington",
+  "position": "WR",
+  "fantasy_positions": [
+   "WR"
+  ],
+  "team": "JAX",
+  "number": 11,
+  "age": 24,
+  "years_exp": 3,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Penn State",
+  "height": "70",
+  "weight": "204",
+  "status": "Active"
+ },
+ "7648": {
+  "full_name": "Nick Bolton",
+  "first_name": "Nick",
+  "last_name": "Bolton",
+  "position": "LB",
+  "fantasy_positions": [
+   "LB"
+  ],
+  "team": "KC",
+  "number": 32,
+  "age": 26,
+  "years_exp": 5,
+  "injury_status": null,
+  "injury_body_part": null,
+  "college": "Missouri",
+  "height": "71",
+  "weight": "237",
+  "status": "Active"
+ }
+}

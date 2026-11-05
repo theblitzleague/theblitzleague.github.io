@@ -1,0 +1,4 @@
+{
+  "_readme": "Blitz Network stories for the home page, newest first. Each: date (YYYY-MM-DD), headline, dek (one-line summary), tag (e.g. Breaking, Feature, Rumor), breaking (true puts it in the red ticker), byline, url (optional link), image (optional path), teams (optional roster_ids). Automatic wire stories from league results are added by the site; don't copy them here.",
+  "stories": []
+}

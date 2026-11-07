@@ -13,6 +13,11 @@ What it holds, and where each part comes from:
   proj       This week's projection for every player Sleeper projects (api.sleeper.com/projections/...), in league
              scoring, with the NFL opponent.
   trending   Sleeper's most-added and most-dropped players over the last 24 hours.
+  rookies    Every NFL rookie's week-by-week points (league scoring) and snap share, from the same Sleeper weekly stats.
+  bigBoard   ESPN's ranked NFL draft prospects for next spring (sports.core.api.espn.com .../draft/athletes): overall and
+             position rank, school, size, the opening of ESPN's scouting note, and this college season's stats.
+  college    The latest finished college football week (ESPN scoreboard, FBS): each game's passing, rushing and receiving
+             leader, plus ESPN's college football headlines.
 
 js/nfl.js asks ESPN and Sleeper for news, games, injuries and trending directly when it can (they allow it), and
 uses this snapshot when it can't (the claude.ai preview blocks outside requests) or when a call fails. dvp and proj
@@ -27,6 +32,8 @@ import json, os, sys, time, urllib.request, datetime
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 OUT = os.path.join(ROOT, "data", "nfl.json")
 ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl"
+CFB = "https://site.api.espn.com/apis/site/v2/sports/football/college-football"
+CORE = "https://sports.core.api.espn.com/v2/sports/football/leagues"
 SLEEPER = "https://api.sleeper.app/v1"
 STATS = "https://api.sleeper.com/stats/nfl/{season}/{week}?season_type=regular"
 PROJ = "https://api.sleeper.com/projections/nfl/{season}/{week}?season_type=regular"
@@ -113,6 +120,7 @@ for team in inj.get("injuries", []):
 # ---------- Sleeper: points allowed by position, projections, trending ----------
 allowed = {}      # team -> pos -> points
 played = {}       # team -> set of game ids
+rookies = {}      # player_id -> [[week, points, snap %], ...]
 for w in range(1, week):
     for r in get(STATS.format(season=season, week=w)):
         opp, pl = r.get("opponent"), r.get("player") or {}
@@ -123,6 +131,10 @@ for w in range(1, week):
         if g and (r.get("stats") or {}).get("gp"):
             allowed.setdefault(opp, {}).setdefault(g, 0.0)
             allowed[opp][g] += points(r["stats"], g)
+            if pl.get("years_exp") == 0:
+                st = r["stats"]
+                snp, tm = (st.get("def_snp"), st.get("tm_def_snp")) if g in ("DL", "LB", "DB") else (st.get("off_snp"), st.get("tm_off_snp"))
+                rookies.setdefault(r["player_id"], []).append([w, round(points(st, g), 1), round(100 * snp / tm) if snp and tm else None])
     time.sleep(0.5)
 dvp = {}
 for t, gids in played.items():
@@ -144,13 +156,97 @@ for r in get(PROJ.format(season=season, week=week)):
 
 trending = {k: get(f"{SLEEPER}/players/nfl/trending/{k}?lookback_hours=24&limit=25") for k in ("add", "drop")}
 
+# ---------- ESPN: next spring's draft prospects ----------
+def core(url):
+    return get(url.replace("http://", "https://", 1))
+
+def stat(cats, cat, name):
+    for c in cats:
+        if c.get("name") == cat:
+            for x in c.get("stats", []):
+                if x.get("name") == name:
+                    return x.get("value") or 0
+    return 0
+
+draft_year = int(season) + 1
+board, schools = [], {}
+try:
+    lst = core(f"{CORE}/nfl/seasons/{draft_year}/draft/athletes?limit=100")
+    for it in lst.get("items", []):
+        x = core(it["$ref"])
+        attr = {a.get("name"): a.get("value") for a in x.get("attributes", [])}
+        cref = (x.get("college") or {}).get("$ref")
+        if cref and cref not in schools:
+            schools[cref] = core(cref).get("shortName")
+        note = next((a.get("text") for a in x.get("analysis", []) if a.get("text")), "") or ""
+        if len(note) > 300:                     # the opening of ESPN's note; the full one is a click away on ESPN
+            cut = note[:300].rfind(". ")
+            note = note[:cut + 1] if cut > 120 else note[:300].rsplit(" ", 1)[0] + "…"
+        cid = ((x.get("athlete") or {}).get("$ref") or "").split("/athletes/")[-1].split("?")[0]
+        stats = None
+        if cid:
+            try:
+                cats = core(f"{CORE}/college-football/seasons/{season}/types/2/athletes/{cid}/statistics")["splits"]["categories"]
+                stats = {"gp": stat(cats, "general", "gamesPlayed"),
+                         "pass": [stat(cats, "passing", k) for k in ("passingYards", "passingTouchdowns", "interceptions")],
+                         "rush": [stat(cats, "rushing", k) for k in ("rushingYards", "rushingTouchdowns")],
+                         "rec": [stat(cats, "receiving", k) for k in ("receptions", "receivingYards", "receivingTouchdowns")],
+                         "def": [stat(cats, "defensive", "totalTackles"), stat(cats, "defensive", "tacklesForLoss"), stat(cats, "defensive", "sacks"),
+                                 stat(cats, "defensiveInterceptions", "interceptions"), stat(cats, "defensive", "passesDefended")]}
+            except Exception:
+                stats = None
+        card = next((l.get("href") for l in x.get("links", []) if "playercard" in (l.get("rel") or [])), None)
+        board.append({"rank": attr.get("overall"), "posRank": attr.get("rank"), "name": x.get("displayName"),
+                      "pos": (x.get("position") or {}).get("abbreviation"), "school": schools.get(cref),
+                      "ht": x.get("displayHeight"), "wt": x.get("displayWeight"), "note": note, "url": card, "cid": cid, "stats": stats})
+        time.sleep(0.15)
+    board.sort(key=lambda b: b["rank"] or 999)
+except Exception as e:
+    print("big board skipped:", e)
+
+# ---------- ESPN: the latest finished college week ----------
+def cfb_week(wk=None):
+    return get(f"{CFB}/scoreboard?groups=80&limit=300" + (f"&week={wk}" if wk else ""))
+
+college = {"week": None, "leaders": {}, "news": []}
+try:
+    sbc = cfb_week()
+    cw = (sbc.get("week") or {}).get("number")
+    if sum(1 for e in sbc.get("events", []) if e["status"]["type"]["state"] == "post") < 20 and cw and cw > 1:
+        sbc, cw = cfb_week(cw - 1), cw - 1             # this week's games aren't done yet: use last week's
+    college["week"] = cw
+    for e in sbc.get("events", []):
+        c = e["competitions"][0]
+        if e["status"]["type"]["state"] != "post":
+            continue
+        teams = {t["team"]["id"]: t for t in c["competitors"]}
+        for l in c.get("leaders", []):
+            for x in l.get("leaders", [])[:1]:
+                a, tid = x.get("athlete") or {}, (x.get("team") or {}).get("id")
+                me = teams.get(tid) or {}
+                opp = next((t for k, t in teams.items() if k != tid), {})
+                college["leaders"].setdefault(l["name"], []).append({
+                    "name": a.get("displayName"), "cid": str(a.get("id") or ""), "pos": (a.get("position") or {}).get("abbreviation"),
+                    "team": (me.get("team") or {}).get("abbreviation"), "opp": (opp.get("team") or {}).get("abbreviation"),
+                    "rank": (me.get("curatedRank") or {}).get("current"), "line": x.get("displayValue"), "v": x.get("value") or 0})
+    for k in college["leaders"]:
+        college["leaders"][k] = sorted(college["leaders"][k], key=lambda r: -r["v"])[:10]
+    for a in get(f"{CFB}/news?limit=40").get("articles", []):
+        cats = a.get("categories", [])
+        college["news"].append({"id": a.get("id"), "at": a.get("published"), "type": a.get("type"), "head": a.get("headline", ""),
+                                "dek": a.get("description", ""), "url": ((a.get("links") or {}).get("web") or {}).get("href"),
+                                "athletes": [c["description"] for c in cats if c.get("type") == "athlete" and c.get("description")]})
+except Exception as e:
+    print("college skipped:", e)
+
 out = {"_readme": "Built by tools/build_nfl.py; see that file for sources. Don't edit by hand.",
        "built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
        "season": season, "week": week, "dvpThrough": week - 1,
        "scoring": "league" if scoring else "sleeper-default",
        "news": news, "games": games, "byes": byes, "injuries": injuries,
-       "dvp": dvp, "proj": proj, "trending": trending}
+       "dvp": dvp, "proj": proj, "trending": trending,
+       "rookies": rookies, "draftYear": draft_year, "bigBoard": board, "college": college}
 if len(dvp) < 30 or not games:
     sys.exit(f"Unexpected data (dvp teams {len(dvp)}, games {len(games)}); not overwriting {OUT}")
 json.dump(out, open(OUT, "w"), separators=(",", ":"))
-print(f"{OUT}: week {week}, {len(news)} stories, {len(games)} games, {len(injuries)} injuries, {len(dvp)} defenses, {len(proj)} projections")
+print(f"{OUT}: week {week}, {len(news)} stories, {len(games)} games, {len(injuries)} injuries, {len(dvp)} defenses, {len(proj)} projections, {len(rookies)} rookies, {len(board)} prospects, college week {college['week']}")

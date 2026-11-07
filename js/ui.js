@@ -20,13 +20,15 @@
   const teamName = t => t.f.nickname ? `${t.f.location} ${t.f.nickname}` : t.f.location;
   const rec = t => `${t.wins}-${t.losses}${t.ties ? '-' + t.ties : ''}`;
 
-  function status(p) {
+  function badge(p) {
     const s = p.injury_status;
     if (!s) return '';
     const cls = { Out: 'out', IR: 'ir', PUP: 'ir', Sus: 'out', Questionable: 'q', Doubtful: 'd' }[s] || 'q';
     const label = { Questionable: 'Q', Doubtful: 'D' }[s] || s;
-    return `<span class="tag ${cls}" title="${esc(s)}${p.injury_body_part ? ' · ' + esc(p.injury_body_part) : ''}">${esc(label)}</span>`;
+    const tip = [s, p.injury_body_part, p.injury_note].filter(Boolean).join(' · ');
+    return `<span class="tag ${cls}" title="${esc(tip)}">${esc(label)}</span>`;
   }
+  const status = p => (p && p._id ? `<span class="inj" data-inj="${esc(p._id)}">${badge(p)}</span>` : badge(p));
   const pmeta = p => [p.team || 'FA', p.number != null ? '#' + p.number : null, p.age ? `${p.age} yrs` : null].filter(Boolean).join(' · ');
 
   // Color washed in behind a team. A near-black primary would vanish on the dark site, so use a darkened secondary.
@@ -187,5 +189,5 @@
     if (scrollY > top) scrollTo({ top });
   }));
 
-  window.UI = { POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
+  window.UI = { POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
 })();

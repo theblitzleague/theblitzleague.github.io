@@ -1,9 +1,9 @@
 /* The Blitz Network: real NFL news and matchups, read through Blitz League rosters. Data: js/nfl.js.
-   Tabs: #headlines, #injuries, #matchups, #defenses, #slate, #trending. */
+   Tabs: #headlines, #injuries, #matchups, #defenses, #slate, #trending, #rookies. */
 (function () {
   const { esc, f1, shot, pid, wash, tabsHTML, boot } = UI;
   let M, N;
-  const TABS = [['headlines', 'Headlines'], ['injuries', 'Injuries'], ['matchups', 'Matchups'], ['defenses', 'Defenses'], ['slate', 'NFL slate'], ['trending', 'Trending']];
+  const TABS = [['headlines', 'Headlines'], ['injuries', 'Injuries'], ['matchups', 'Matchups'], ['defenses', 'Defenses'], ['slate', 'NFL slate'], ['trending', 'Trending'], ['rookies', 'Rookies & College']];
   const P = id => M.players[id] || { full_name: `Player ${id}`, position: '?' };
   const WHERE = { starter: 'Starting', bench: 'Bench', taxi: 'Taxi', IR: 'IR' };
   const TYPE = { HeadlineNews: 'News', Story: 'Story', Media: 'Video', Preview: 'Preview', Recap: 'Recap' };
@@ -170,7 +170,81 @@
     </div>`;
   }
 
-  const VIEWS = { headlines, injuries, matchups, defenses, slate, trending };
+  // ---------- Rookies & College ----------
+  let rkView = 'all', bbView = 'scorers';
+  // ESPN prospect positions -> the Blitz slot they'd fill (null: doesn't score in this league).
+  const BLITZ_POS = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', PK: 'K', K: 'K', EDGE: 'DL', DE: 'DL', DT: 'DL', DL: 'DL', LB: 'LB', CB: 'DB', S: 'DB', DB: 'DB' };
+  const n0 = v => (v == null ? '-' : Math.round(v).toLocaleString('en-US'));
+  const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+  const chipRow = (attr, cur, opts) => `<div class="nw-filter" role="group">${opts.map(([k, l]) => `<button type="button" data-${attr}="${k}" aria-pressed="${cur === k}">${l}</button>`).join('')}</div>`;
+
+  function rookieRows() {
+    return Object.entries(N.rookies).filter(([id]) => M.players[id]).map(([id, w]) => {
+      const pts = w.map(x => x[1]), snaps = w.map(x => x[2]).filter(x => x != null), last = pts.slice(-3);
+      const p = P(id), idp = NFL.IDP.includes(p.position);
+      return { id, p, idp, gp: w.length, ppg: avg(pts), l3: avg(last), snap: snaps.length ? snaps[snaps.length - 1] : null,
+        snapEarly: snaps.length ? avg(snaps.slice(0, Math.min(3, snaps.length))) : null, owner: N.owner(id), proj: N.proj[id] ? N.proj[id][0] : null };
+    });
+  }
+  function rookieTable(rows) {
+    const trend = r => { const d = r.l3 - r.ppg; return Math.abs(d) < 1 ? '<span class="nw-flat">steady</span>' : `<span class="${d > 0 ? 'nw-up' : 'nw-down'}">${d > 0 ? '▲' : '▼'} ${f1(Math.abs(d))}</span>`; };
+    return `<div class="tablewrap"><table class="nw-rk"><thead><tr><th>#</th><th>Rookie</th><th class="num">GP</th><th class="num">Pts/G</th><th class="num">Last 3</th><th>Trend</th><th class="num">Snaps</th><th class="num">Proj</th><th>Blitz</th></tr></thead>
+      <tbody>${rows.map((r, i) => `<tr><td class="rk">${i + 1}</td><td>${who(r.id)}</td><td class="num">${r.gp}</td><td class="num strong">${f1(r.ppg)}</td><td class="num">${f1(r.l3)}</td><td>${trend(r)}</td>
+        <td class="num">${r.snap != null ? r.snap + '%' : '-'}</td><td class="num">${r.proj != null ? f1(r.proj) : '-'}</td><td>${r.owner ? own(r.owner, true) : '<span class="nw-fa">Free agent</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  function statLine(b) {
+    const s = b.stats; if (!s) return '<span class="pmeta">No college stats from ESPN this season</span>';
+    const parts = [];
+    if (s.pass[0]) parts.push(`${n0(s.pass[0])} pass yd, ${n0(s.pass[1])} TD, ${n0(s.pass[2])} INT`);
+    if (s.rush[0] && (b.pos === 'QB' || b.pos === 'RB' || s.rush[0] > 100)) parts.push(`${n0(s.rush[0])} rush yd, ${n0(s.rush[1])} TD`);
+    if (s.rec[0]) parts.push(`${n0(s.rec[0])} rec, ${n0(s.rec[1])} yd, ${n0(s.rec[2])} TD`);
+    if (BLITZ_POS[b.pos] && NFL.IDP.includes(BLITZ_POS[b.pos])) parts.push(`${n0(s.def[0])} tkl, ${s.def[1] ? f1(s.def[1]).replace(/\.0$/, '') : 0} TFL, ${s.def[2] ? f1(s.def[2]).replace(/\.0$/, '') : 0} sacks, ${n0(s.def[3])} INT, ${n0(s.def[4])} PD`);
+    return `<span class="nw-cstat">${n0(s.gp)} G · ${parts.join(' · ') || 'no stats yet'}</span>`;
+  }
+  function rookies() {
+    const all = rookieRows().sort((a, b) => b.ppg - a.ppg);
+    const pick = { all: r => r.gp >= 2, off: r => r.gp >= 2 && !r.idp, idp: r => r.gp >= 2 && r.idp, fa: r => r.gp >= 2 && !r.owner }[rkView];
+    const shown = all.filter(pick);
+    // Stash watch: unowned rookies whose scoring or playing time is climbing.
+    const stash = all.filter(r => !r.owner && r.gp >= 2 && ((r.l3 >= r.ppg * 1.2 && r.l3 >= 6) || (r.snap != null && r.snapEarly != null && r.snap - r.snapEarly >= 15 && r.snap >= 50)))
+      .sort((a, b) => b.l3 - a.l3).slice(0, 8);
+    const board = N.bigBoard.filter(b => bbView === 'all' || (bbView === 'scorers' ? BLITZ_POS[b.pos] : bbView === 'off' ? ['QB', 'RB', 'WR', 'TE'].includes(BLITZ_POS[b.pos]) : NFL.IDP.includes(BLITZ_POS[b.pos])));
+    const onBoard = new Map(N.bigBoard.map(b => [b.cid, b])), byName = new Map(N.bigBoard.map(b => [NFL.norm(b.name), b]));
+    const C = N.college, LEAD = [['passingYards', 'Passing'], ['rushingYards', 'Rushing'], ['receivingYards', 'Receiving']];
+    const tagBoard = b => (b ? `<span class="nw-bb">Big Board #${b.rank}</span>` : '');
+    const cnews = (C.news || []).map(n => ({ ...n, bb: n.athletes.map(a => byName.get(NFL.norm(a))).filter(Boolean) }))
+      .sort((a, b) => (b.bb.length ? 1 : 0) - (a.bb.length ? 1 : 0) || String(b.at).localeCompare(String(a.at)));
+    const citem = n => `<article class="nw-story cfb">${n.url ? `<a class="nw-hit" href="${esc(n.url)}" target="_blank" rel="noopener" aria-label="${esc(n.head)} (ESPN)"></a>` : ''}
+      <div>${storyTag(n)}${n.bb.map(tagBoard).join('')}<h3>${esc(n.head)}</h3><span class="pmeta">${meta(n)}</span></div></article>`;
+    return `<div class="grid">
+      <section class="panel s12"><header><div><span class="eyebrow">${esc(N.season)} NFL rookies · points in Blitz scoring</span><h2>Rookie report</h2></div><span class="aside">${shown.length} rookies</span></header>
+        ${chipRow('rk', rkView, [['all', 'All'], ['off', 'Offense'], ['idp', 'IDP'], ['fa', 'Free agents']])}
+        ${shown.length ? rookieTable(shown.slice(0, 25)) : '<div class="empty">No rookies match.</div>'}
+        ${shown.length > 25 ? `<details class="nw-reveal"><summary>${shown.length - 25} more</summary>${rookieTable(shown.slice(25))}</details>` : ''}
+        <p class="footnote">Rookies with 2+ games, through NFL week ${N.dvpThrough}. Last 3 is the average of his three most recent games; the trend compares it with his season average. Snaps: share of his team's offensive (or defensive) snaps in his latest game.</p></section>
+      <section class="panel s5"><header><div><span class="eyebrow">Unowned in the Blitz and trending up</span><h2>Stash watch</h2></div></header>
+        ${stash.length ? `<div class="nw-trends">${stash.map(r => `<div class="nw-trend nw-stash">${who(r.id)}<span class="nw-count add">${f1(r.l3)}<small> last 3</small></span>
+          <span class="pmeta">${f1(r.ppg)} season${r.snap != null ? ` · ${r.snapEarly != null ? Math.round(r.snapEarly) + '% → ' : ''}${r.snap}% snaps` : ''}</span></div>`).join('')}</div>`
+          : '<div class="empty">No unowned rookie is trending up right now.</div>'}
+        <p class="footnote">Free-agent rookies whose last three games beat their season average by 20%+, or whose snap share jumped 15+ points to at least half the snaps.</p></section>
+      <section class="panel s7"><header><div><span class="eyebrow">ESPN's ranked prospects for the ${esc(N.draftYear)} NFL Draft</span><h2>${esc(N.draftYear)} Big Board</h2></div><span class="aside">${board.length} of ${N.bigBoard.length}</span></header>
+        ${chipRow('bb', bbView, [['scorers', 'Scores in Blitz'], ['off', 'Offense'], ['idp', 'IDP'], ['all', 'All 50']])}
+        ${board.length ? `<div class="nw-board">${board.map(b => `<details class="nw-pro${BLITZ_POS[b.pos] ? '' : ' none'}"><summary>
+            <span class="nw-prk">${b.rank}</span><span class="nw-pname"><b>${esc(b.name)}</b><small>${esc(b.pos || '')}${b.posRank ? ` ${esc(b.pos)}${b.posRank}` : ''} · ${esc(b.school || '')}${b.ht ? ` · ${esc(b.ht)}, ${esc(b.wt || '')}` : ''}</small></span>
+            ${BLITZ_POS[b.pos] ? `<span class="nw-slot">${esc(BLITZ_POS[b.pos])}</span>` : '<span class="nw-slot off">No Blitz slot</span>'}</summary>
+            <div class="nw-pbody">${statLine(b)}${b.note ? `<p>${esc(b.note)}</p>` : ''}${b.url ? `<a href="${esc(b.url)}" target="_blank" rel="noopener">ESPN scouting and stats &rsaquo;</a>` : ''}</div></details>`).join('')}</div>`
+          : `<div class="empty">ESPN hasn't published a ${esc(N.draftYear || '')} board yet.</div>`}
+        <p class="footnote">Rankings, scouting notes and college stats are ESPN's (${esc(N.season)} college season). Tap a prospect for his stats and ESPN's note. "Scores in Blitz" hides positions with no Blitz lineup slot (offensive line, punters, long snappers).</p></section>
+      <section class="panel s12"><header><div><span class="eyebrow">College football week ${esc(C.week || '')} · each game's leader</span><h2>College watch</h2></div></header>
+        <div class="nw-cfb">${LEAD.map(([k, l]) => `<div><div class="sub">${l}</div>${(C.leaders[k] || []).slice(0, 8).map((x, i) => `<div class="nw-clead"><span class="rk">${i + 1}</span>
+          <span class="nw-pname"><b>${esc(x.name)}</b><small>${esc(x.pos || '')} · ${x.rank && x.rank <= 25 ? `#${x.rank} ` : ''}${esc(x.team || '')} vs ${esc(x.opp || '')}</small></span><span class="nw-cline">${esc(x.line || '')}</span>${tagBoard(onBoard.get(x.cid))}</div>`).join('') || '<div class="empty">No finished games.</div>'}</div>`).join('')}</div>
+        <div class="sub">College headlines</div>
+        ${cnews.length ? `<div class="nw-list compact">${cnews.slice(0, 10).map(citem).join('')}</div>${cnews.length > 10 ? `<details class="nw-reveal"><summary>${cnews.length - 10} more</summary><div class="nw-list compact">${cnews.slice(10).map(citem).join('')}</div></details>` : ''}` : '<div class="empty">No college headlines.</div>'}
+        <p class="footnote">Leaders and headlines from ESPN, as of ${ago(N.built)}. Stories naming a Big Board prospect come first.</p></section>
+    </div>`;
+  }
+
+  const VIEWS = { headlines, injuries, matchups, defenses, slate, trending, rookies };
   function route() {
     const h = location.hash.slice(1), cur = VIEWS[h] ? h : 'headlines';
     document.getElementById('tabs').innerHTML = tabsHTML(TABS, cur);
@@ -184,7 +258,13 @@
     hero();
     route();
     addEventListener('hashchange', route);
-    document.addEventListener('click', e => { const b = e.target.closest('[data-sort]'); if (!b) return; sortBy = b.dataset.sort || null; route(); });
+    document.addEventListener('click', e => {
+      const b = e.target.closest('[data-sort], [data-rk], [data-bb]'); if (!b) return;
+      if (b.dataset.sort != null) sortBy = b.dataset.sort || null;
+      if (b.dataset.rk) rkView = b.dataset.rk;
+      if (b.dataset.bb) bbView = b.dataset.bb;
+      route();
+    });
   });
   function hero() {
     const net = M.league.network || {};

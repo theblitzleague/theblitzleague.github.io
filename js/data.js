@@ -52,7 +52,8 @@
   const IDP = { DE: 'DL', DT: 'DL', NT: 'DL', ILB: 'LB', OLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
   const KEEP = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB'];
   function normalize(players) {
-    for (const p of Object.values(players)) {
+    for (const [id, p] of Object.entries(players)) {
+      p._id = id;                                   // lets an injury badge find its player again (js/ui.js status)
       if (KEEP.includes(p.position)) continue;
       const g = (p.fantasy_positions || []).find(x => ['DL', 'LB', 'DB'].includes(x)) || IDP[p.position];
       if (g) { p.nflPos = p.position; p.position = g; }
@@ -193,7 +194,20 @@
 
   window.Hub = {
     // One load per page: the page and the player card share it.
-    load() { return this._p || (this._p = this._load()); },
+    load() {
+      // Injury badges start from data/players.json (rebuilt nightly) and are then corrected from ESPN's live injury
+      // report by js/nfl.js, without holding the page back.
+      return this._p || (this._p = this._load().then(M => { if (window.NFL) NFL.overlay(M).catch(e => console.error(e)); return M; }));
+    },
+    // ESPN's live injury report (~350 KB compressed), fetched at most once per page and shared by everything that needs it.
+    injuries() {
+      if (!this._inj) {
+        const c = new AbortController(), t = setTimeout(() => c.abort(), 9000);
+        this._inj = fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries', { signal: c.signal })
+          .then(r => { clearTimeout(t); if (!r.ok) throw new Error(r.status); return r.json(); }).catch(() => null);
+      }
+      return this._inj;
+    },
     async _load() {
       const [league, brand, history] = await Promise.all([getJSON('data/league.json'), getJSON('data/franchises.json'),
         getJSON('data/history.json').catch(() => ({ seasons: [] }))]);

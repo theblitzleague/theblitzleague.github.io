@@ -1,0 +1,47 @@
+# Rebuilds the site's saved NFL data every morning so nothing waits on a manual run.
+#   data/players.json  Sleeper's player database, trimmed (Sleeper asks for at most one pull a day)
+#   data/nfl.json      defense-vs-position, projections, rookies, the draft Big Board, college leaders
+# Commits only when the data actually changed. Can also be run by hand from the repo's Actions tab.
+name: Refresh data
+
+on:
+  schedule:
+    - cron: "37 8 * * *"      # 08:37 UTC = 2:37 AM Central (3:37 AM in daylight time): just after Wednesday's 2 AM waivers
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build players
+        run: python3 tools/build_players.py
+
+      - name: Build NFL data
+        # --scoring is only used while data/league.json has no sleeperLeagueId yet.
+        run: python3 tools/build_nfl.py --scoring 1423408541737156608
+
+      - name: Commit if changed
+        run: |
+          git config user.name "theblitzleague"
+          git config user.email "352703561+theblitzleague@users.noreply.github.com"
+          git add data/players.json data/nfl.json
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Daily data refresh"
+            git push
+          fi

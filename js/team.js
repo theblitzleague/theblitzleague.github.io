@@ -2,7 +2,7 @@
 (function () {
   const TABS = [
     ['overview', 'Overview'], ['depth-chart', 'Depth Chart'], ['roster', 'Roster'], ['schedule', 'Schedule'],
-    ['draft-capital', 'Draft Capital'], ['transactions', 'Transactions'], ['history', 'History'], ['front-office', 'Front Office'], ['earnings', 'Earnings'],
+    ['draft-capital', 'Draft Capital'], ['transactions', 'Transactions'], ['front-office', 'Front Office'], ['earnings', 'Earnings'],
   ];
   const { POS_ORDER, SIL, esc, f1, f2, ord, SLOT_LABEL, lum, shot, teamName, rec, status, pmeta, wash, accentFor } = UI;
 
@@ -302,9 +302,9 @@
     const past = M.history.filter(s => s.teams && s.teams[t.id]).map(s => ({ s, e: s.teams[t.id] }));
     const post = s => s.champion === t.id ? '<span class="tag ok">Champion</span>' : s.runnerUp === t.id ? '<span class="tag trade">Runner-up</span>' : '-';
     const divName = id => (M.league.divisions.find(d => d.id === id) || t.division).name;
-    return `<div class="grid">
+    return `<div class="grid" id="history" style="margin-top:12px">
   <section class="panel s8">
-    <header><div><span class="eyebrow">Est. ${t.f.founded}</span><h2>Season by season</h2></div></header>
+    <header><div><span class="eyebrow">Franchise history · est. ${t.f.founded}</span><h2>Season by season</h2></div></header>
     ${honorsRack(t.titles, t.divTitles)}
     <div class="tablewrap"><table><thead><tr><th>Season</th><th>GM</th><th class="num">W-L</th><th class="num">PF</th><th class="num">PA</th><th>Division</th><th>Postseason</th></tr></thead>
     <tbody>${past.map(({ s, e }) => `<tr><td>${esc(s.season)}</td><td>${esc(e.gmName || '-')}</td><td class="num">${e.wins}-${e.losses}${e.ties ? '-' + e.ties : ''}</td><td class="num">${f1(e.pf)}</td><td class="num">${f1(e.pa)}</td>
@@ -345,7 +345,6 @@
           <div><a class="big" href="#earnings">${car ? UI.money(car.won) : '-'}</a><span class="lbl">Career earnings</span></div>
         </div>
         <div class="pmeta" style="margin-bottom:14px">${car ? `Career as a Blitz League GM: ${car.seasons} season${car.seasons === 1 ? '' : 's'}${car.teams.size > 1 ? ` with ${car.teams.size} franchises` : ''}${car.current ? `, ${esc(M.state.season)} so far` : ''}. Titles follow the GM.` : 'No GM has claimed this franchise yet.'}</div>
-        <div class="prose">${gm.bio ? esc(gm.bio).split(/\n\n+/).map(p => `<p>${p}</p>`).join('') : '<p class="empty">The commissioner hasn\'t written this GM\'s bio yet.</p>'}</div>
       </div>
     </div>
   </section>
@@ -369,7 +368,7 @@
     ${t.f.uniforms ? `<div class="sub">Uniforms</div><div class="uniforms">${Object.entries(t.f.uniforms).map(([n, src]) =>
       `<figure><img src="${esc(src)}" alt="${esc(n)} uniform" loading="lazy"><figcaption>${esc(n)}</figcaption></figure>`).join('')}</div>` : ''}
   </section>
-</div>`;
+</div>${history()}`;
   }
 
   // Career earnings: every prize the current GM has won, with any franchise, at the amounts paid that season.
@@ -412,14 +411,18 @@
 </div>`;
   }
 
-  const RENDER = { earnings, overview, 'depth-chart': depthChart, roster, schedule, 'draft-capital': draftCapital, transactions, history, 'front-office': frontOffice };
+  const RENDER = { earnings, overview, 'depth-chart': depthChart, roster, schedule, 'draft-capital': draftCapital, transactions, 'front-office': frontOffice };
 
   function route() {
-    const tab = RENDER[location.hash.slice(1)] ? location.hash.slice(1) : 'overview';
+    const h = location.hash.slice(1), tab = h === 'history' ? 'front-office' : RENDER[h] ? h : 'overview';
     document.getElementById('tabs').innerHTML = tabRow(tab);
     document.getElementById('content').innerHTML = RENDER[tab]();
     document.title = `${teamName(T)} · Blitz Hub`;
     paintHelmets(document).catch(e => console.error(e));
+    // #history (old links) = the history section at the foot of Front Office. Logos above it load late and push it
+    // down, so land on it again once they have.
+    if (h === 'history') { const go = () => { const el = document.getElementById('history'); if (el && location.hash === '#history') el.scrollIntoView(); };
+      requestAnimationFrame(go); if (document.readyState !== 'complete') addEventListener('load', go, { once: true }); else setTimeout(go, 400); }
   }
 
   const applyColors = f => UI.applyColors(f);
@@ -437,6 +440,7 @@
       document.getElementById('hero').innerHTML = hero() + weekStrip();
       route();
       addEventListener('hashchange', route);   // js/ui.js keeps the tab bar and scroll position sensible
+      addEventListener('hub:injuries', () => { const h = location.hash.slice(1); if (!RENDER[h] || h === 'overview') route(); });
     } catch (e) {
       content.innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;
       console.error(e);

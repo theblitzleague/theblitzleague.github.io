@@ -5,6 +5,8 @@
    - ESPN's public site API (site.api.espn.com): news, scoreboard, injuries. Asked for live; data/nfl.json if that fails.
    - Sleeper: trending adds/drops (asked for live), and in data/nfl.json, points allowed by position and projections,
      both scored with the Blitz League's own scoring settings.
+   - Rookies & College (snapshot only): rookie game logs from Sleeper; ESPN's ranked draft prospects with their college
+     stats; the latest finished college week's leaders and ESPN college headlines.
    Headlines and ESPN's one-line injury notes are shown as ESPN wrote them, credited and linked to ESPN. Nothing is
    written here that the data doesn't say. */
 (function () {
@@ -83,12 +85,57 @@
 
   const group = p => (p && (POS.includes(p.position) ? p.position : null));
 
+  // ---------- live injury badges ----------
+  // ESPN's report lists each player it tracks with his latest status, including "Active" once he's cleared. A player
+  // ESPN lists gets ESPN's status; a player ESPN doesn't list keeps the nightly Sleeper status (ESPN leaves many
+  // long-term IR players off). A name that can't be matched to exactly one player changes nothing.
+  const LIVE = { Out: 'Out', Questionable: 'Questionable', Doubtful: 'Doubtful', 'Injured Reserve': 'IR', Suspension: 'Sus', Active: null };
+  async function overlay(M) {
+    const inj = await Hub.injuries();
+    if (!inj || !inj.injuries) return;
+    const P = M.players, ix = nameIndex(P), seen = new Set();
+    for (const t of inj.injuries) for (const x of t.injuries || []) {
+      const a = x.athlete || {}, team = ab((a.team || {}).abbreviation || '') || null;
+      const id = resolve(ix, P, a.displayName, team ? [team] : null);
+      if (!id || seen.has(id) || !x.status) continue;
+      seen.add(id);                                 // if ESPN ever lists a player twice, the first entry wins
+      const d = x.details || {}, fs = ((d.fantasyStatus || {}).abbreviation || '');
+      const p = P[id];
+      p.injury_status = /^PUP/.test(fs) ? 'PUP' : x.status in LIVE ? LIVE[x.status] : x.status;
+      p.injury_body_part = p.injury_status ? d.type || p.injury_body_part || null : null;
+      p.injury_note = p.injury_status ? x.shortComment || null : null;
+      p.injury_live = true;
+    }
+    M.injuriesLive = true;
+    for (const el of document.querySelectorAll('[data-inj]')) {
+      const p = P[el.dataset.inj];
+      if (p) el.innerHTML = UI.badge(p);
+    }
+    dispatchEvent(new Event('hub:injuries'));        // pages that list injured players (team overview) redraw that list
+  }
+
   // Pages draw at once from data/nfl.json; live ESPN/Sleeper data replaces it through onLive when (and if) it arrives,
   // so a slow or blocked outside request never holds the page blank.
+  // Sample mode only carries the players on the placeholder rosters. The Network needs every NFL player (unowned
+  // rookies, trending free agents, names in headlines), so fill the rest in from data/players.json, normalized the
+  // same way js/data.js does it (IDP positions -> DL / LB / DB).
+  const IDPMAP = { DE: 'DL', DT: 'DL', NT: 'DL', ILB: 'LB', OLB: 'LB', MLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
+  async function fillPlayers(M) {
+    if (M.live || M._allPlayers) return;
+    const all = await fetch('data/players.json').then(r => (r.ok ? r.json() : {})).catch(() => ({}));
+    for (const [id, p] of Object.entries(all)) {
+      if (M.players[id]) continue;
+      const g = (p.fantasy_positions || []).find(x => IDP.includes(x)) || IDPMAP[p.position];
+      M.players[id] = g && !IDP.includes(p.position) ? { ...p, nflPos: p.position, position: g } : p;
+      M.players[id]._id = id;
+    }
+    M._allPlayers = true;
+  }
+
   async function load(M, onLive) {
-    const snap = await fetch('data/nfl.json').then(r => (r.ok ? r.json() : null)).catch(() => null) || {};
+    const [snap] = await Promise.all([fetch('data/nfl.json').then(r => (r.ok ? r.json() : null)).catch(() => null), fillPlayers(M)]).then(([s]) => [s || {}]);
     Promise.all([
-      timed(`${ESPN}/scoreboard`).catch(() => null), timed(`${ESPN}/news?limit=50`).catch(() => null), timed(`${ESPN}/injuries`, 9000).catch(() => null),
+      timed(`${ESPN}/scoreboard`).catch(() => null), timed(`${ESPN}/news?limit=50`).catch(() => null), Hub.injuries(),
       timed(`${SLEEPER}/players/nfl/trending/add?lookback_hours=24&limit=25`).catch(() => null),
       timed(`${SLEEPER}/players/nfl/trending/drop?lookback_hours=24&limit=25`).catch(() => null)])
       .then(([sb, news, inj, add, drop]) => {
@@ -109,6 +156,7 @@
       injuries: inj && inj.injuries ? (live.injuries = true, hurt(inj)) : (snap.injuries || []).map(x => ({ ...x })),
       trending: add && drop ? (live.trending = true, { add, drop }) : snap.trending || { add: [], drop: [] },
       dvp: snap.dvp || {}, proj: snap.proj || {}, live,
+      rookies: snap.rookies || {}, bigBoard: snap.bigBoard || [], draftYear: snap.draftYear, college: snap.college || { leaders: {}, news: [] },
     };
     // The snapshot's projections are for one NFL week; never show them against a different one.
     if (snap.week !== N.week) N.proj = {};
@@ -136,5 +184,5 @@
     return N;
   }
 
-  window.NFL = { load, POS, OFF, IDP, norm };
+  window.NFL = { load, overlay, POS, OFF, IDP, norm };
 })();

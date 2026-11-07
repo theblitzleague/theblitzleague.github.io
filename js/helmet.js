@@ -91,7 +91,7 @@
     return `<svg class="${cls || 'mark'}" viewBox="0 0 100 104" role="img" aria-label="${esc(f.location)}">
   <path d="M50 4 L92 18 V52 C92 78 72 94 50 100 C28 94 8 78 8 52 V18 Z" fill="${esc(f.colors.primary)}" stroke="${esc(f.colors.secondary)}" stroke-width="5"/>
   <path d="M50 14 L82 25 V52 C82 72 67 85 50 90 C33 85 18 72 18 52 V25 Z" fill="none" stroke="${esc(f.colors.trim)}" stroke-opacity=".35" stroke-width="1.5"/>
-  <text x="50" y="${len > 2 ? 64 : 67}" text-anchor="middle" font-family="Oswald, 'Barlow Condensed', sans-serif" font-weight="700" font-size="${len > 2 ? 30 : 38}" fill="${esc(f.colors.trim)}">${esc(f.abbr)}</text>
+  <text x="50" y="${len > 2 ? 64 : 67}" text-anchor="middle" font-family="'Barlow Condensed', 'Arial Narrow', sans-serif" font-weight="800" font-size="${len > 2 ? 30 : 38}" fill="${esc(f.colors.trim)}">${esc(f.abbr)}</text>
 </svg>`;
   };
   /* Division mark. Dark-ink marks get tinted through a CSS mask (markOnDark) so they read on the dark site.

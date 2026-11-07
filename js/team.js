@@ -436,7 +436,7 @@
       document.getElementById('crumb').innerHTML = `<a href="teams.html">Teams</a> · ${esc(T.division.name)} · <strong>${esc(teamName(T))}</strong>`;
       document.getElementById('hero').innerHTML = hero() + weekStrip();
       route();
-      addEventListener('hashchange', () => { route(); scrollTo({ top: document.getElementById('tabs').offsetTop - 60 }); });
+      addEventListener('hashchange', route);   // js/ui.js keeps the tab bar and scroll position sensible
     } catch (e) {
       content.innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;
       console.error(e);

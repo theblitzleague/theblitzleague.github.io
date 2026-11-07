@@ -166,5 +166,26 @@
 
   const PRIZE_LABEL = { champion: 'Champion', runnerUp: 'Runner-up', division: 'Division winner', weekly: 'Weekly high score', pointsLeader: 'Points leader', gmOfYear: 'GM of the Year' };
 
+  // ---------- Scroll comfort on phones (every page loads this file) ----------
+  // Centre the active item of a sideways-scrolling strip, so the items next to it are in reach.
+  function centre(strip, item) {
+    if (!strip || !item || strip.scrollWidth <= strip.clientWidth) return;
+    const s = strip.getBoundingClientRect(), r = item.getBoundingClientRect();
+    strip.scrollLeft += (r.left - s.left) - (s.width - r.width) / 2;
+  }
+  const nav = document.querySelector('.nav');
+  if (nav) requestAnimationFrame(() => centre(nav, nav.querySelector('[aria-current="page"]')));
+  // The tab strip is redrawn on every tab change; keep the selected tab in view each time.
+  const tabs = document.getElementById('tabs');
+  if (tabs) new MutationObserver(() => centre(tabs.querySelector('.wrap'), tabs.querySelector('[aria-selected="true"]'))).observe(tabs, { childList: true });
+  // Changing tab (or week) redraws the page below the tabs. If you were scrolled past them, start the new content
+  // just under the pinned tab bar; if you were above them, stay put.
+  addEventListener('hashchange', () => requestAnimationFrame(() => {
+    const hero = document.getElementById('hero'), bar = document.querySelector('.topbar');
+    if (!tabs || !tabs.firstElementChild || !hero) return;
+    const top = hero.offsetTop + hero.offsetHeight - (bar ? bar.offsetHeight : 0);
+    if (scrollY > top) scrollTo({ top });
+  }));
+
   window.UI = { POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
 })();

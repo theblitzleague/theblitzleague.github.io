@@ -1058,3 +1058,5 @@ table.nw-dvp { min-width: 760px; }
 .nav a.nav-logo { display: flex; align-items: center; padding-block: 0; }
 .nav a.nav-logo img { height: 22px; width: auto; display: block; opacity: .78; transition: opacity .15s; }
 .nav a.nav-logo:hover img, .nav a.nav-logo[aria-current="page"] img { opacity: 1; }
+/* The tab bar stays pinned under the top bar, so switching tabs never needs a scroll back up. */
+#tabs { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 57px); z-index: 15; }

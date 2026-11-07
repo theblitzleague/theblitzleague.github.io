@@ -5,8 +5,9 @@
    sw.js on the phone turns it into the notification, so it looks the same everywhere. Phones whose registration has
    expired are removed. The send result (sent / failed) is written back onto the announcement for the Commissioner panel. */
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 
 initializeApp();
@@ -50,4 +51,24 @@ exports.announce = onDocumentCreated({ document: 'announcements/{id}', region: '
     await Promise.all(res.responses.map((r, j) => (!r.success && r.error && GONE.includes(r.error.code) ? batch[j].ref.delete() : null)));
   }
   await snap.ref.update({ sent, failed, done: true });
+});
+
+// watchRefresh: every morning at 5:30 Central, check that the 2:37 AM GitHub job (.github/workflows/refresh-data.yml)
+// actually refreshed the site. It looks at the result, data/nfl.json's "built" time on the live site, so it catches any
+// failure along the way (the job, the push, the site rebuild). If it's stale, the owner gets a private message.
+exports.watchRefresh = onSchedule({ schedule: '30 5 * * *', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 0 }, async () => {
+  let built = null, why = '';
+  try {
+    const r = await fetch('https://theblitzleague.github.io/data/nfl.json?check=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) built = (await r.json()).built || null; else why = `the site answered ${r.status}`;
+  } catch (e) { why = "the site couldn't be reached"; }
+  const hours = built ? (Date.now() - Date.parse(built)) / 36e5 : null;
+  if (hours != null && hours < 20) return;                         // refreshed overnight: all good
+  const db = getFirestore(), roles = (await db.doc('config/roles').get()).data() || {};
+  const to = roles.owner || (roles.commish || [])[0];
+  if (!to) return;
+  const last = built ? new Date(built).toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'medium', timeStyle: 'short' }) + ' Central' : null;
+  await db.collection('notes').add({ to, team: null, by: 'system', at: FieldValue.serverTimestamp(), title: "Nightly refresh didn't update the site",
+    body: (last ? `The site's NFL data was last updated ${last}. ` : `Couldn't check the site's NFL data (${why}). `)
+      + 'Check the "Refresh data" run at github.com/theblitzleague/theblitzleague.github.io/actions, or ask ALFRED to look into it.' });
 });

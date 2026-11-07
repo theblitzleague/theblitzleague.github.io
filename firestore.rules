@@ -1,6 +1,6 @@
 rules_version = '2';
 // Who may read and write what in the Blitz Hub database. Nothing is allowed unless a rule below says so.
-//   config/roles      { commish: [uid] }: set by the site owner from the Firebase side, never from the site.
+//   config/roles      { owner: uid, commish: [uid] }: owner set from the Firebase side; the owner adds co-commissioners.
 //   users/{uid}       one per signed-in person: name, email, and the team the commissioner linked them to.
 //   devices/{id}      one per phone that allowed notifications: its owner and its push registration.
 //   announcements/{id} commissioner messages; anyone may read them (the home page shows them).
@@ -14,9 +14,16 @@ service cloud.firestore {
     }
     function text(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
 
+    // { owner: uid, commish: [uid] }. The owner (set from the Firebase side) may add or remove co-commissioners from the
+    // site, but can't change the owner or remove themselves. Nobody else can change it from the site.
     match /config/roles {
       allow read: if signedIn();
-      allow write: if false;
+      allow update: if signedIn() && resource.data.owner == request.auth.uid
+        && request.resource.data.keys().hasOnly(['owner', 'commish'])
+        && request.resource.data.owner == resource.data.owner
+        && request.resource.data.commish is list && request.resource.data.commish.size() <= 5
+        && resource.data.owner in request.resource.data.commish;
+      allow create, delete: if false;
     }
 
     match /users/{uid} {

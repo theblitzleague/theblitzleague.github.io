@@ -13,7 +13,7 @@ import { app, auth, db, rememberSignedIn } from './fb.js';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendSignInLinkToEmail, isSignInWithEmailLink,
   signInWithEmailLink, signOut } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy, limit,
-  onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+  onSnapshot, serverTimestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 import { getMessaging, getToken, deleteToken, isSupported } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js';
 
 const { esc, teamName } = UI;
@@ -23,7 +23,9 @@ const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { 
   set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { /* private mode */ } } };
 const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-let M, me = null, profile = null, commish = false, unsub = [];
+let M, me = null, profile = null, commish = false, owner = null, unsub = [], installPrompt = null;
+// Android / desktop Chrome offer their own install button; keep the event so the setup checklist can use it.
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; setupView(); });
 
 const panel = (eyebrow, title, body, cls = 's12') => `<section class="panel ${cls}"><header><div><span class="eyebrow">${eyebrow}</span><h2>${title}</h2></div></header>${body}</section>`;
 const note = (id, text = '') => `<p class="acct-note" id="${id}" role="status">${text}</p>`;
@@ -34,7 +36,7 @@ const teamLabel = id => (M && M.teams[id] ? teamName(M.teams[id]) : `Team ${id}`
 // ---------- signed out ----------
 function signedOutView() {
   const pending = store.get(EMAIL_KEY);
-  $('content').innerHTML = `<div class="grid">${panel('Blitz Hub account', 'Sign in', `
+  $('content').innerHTML = `<div class="grid"><div class="s12" id="setup"></div>${panel('Blitz Hub account', 'Sign in', `
     <p class="acct-lead">Sign in once on each phone or computer. The commissioner links your account to your team; there's no password to make.</p>
     <div class="acct-row"><button class="btn primary" id="g">Sign in with Google</button></div>
     <div class="acct-or"><span>or</span></div>
@@ -59,6 +61,35 @@ function signedOutView() {
     } catch (e) { say('mailmsg', `Couldn't send the email (${nice(e)}).`, true); }
   };
   $('pasteform').onsubmit = ev => { ev.preventDefault(); finishEmailLink($('paste').value.trim(), 'pastemsg'); };
+  setupView();
+}
+
+// ---------- the "get set up" checklist (setup.html sends GMs here) ----------
+function pushIsOn() {
+  return 'Notification' in window && Notification.permission === 'granted' && !!store.get('blitz.pushId');
+}
+function setupView() {
+  const box = $('setup');
+  if (!box) return;
+  const phone = ios || /Android/.test(navigator.userAgent);
+  const steps = [];
+  // 1. Install. On iPhone it must come first: the installed app keeps its own sign-in, separate from Safari.
+  if (standalone) steps.push([true, 'Install the app', 'Installed. You opened Blitz Hub from your home screen.']);
+  else if (ios) steps.push([false, 'Install the app', `In Safari, tap <b>Share</b> (the square with an arrow) at the bottom, then <b>Add to Home Screen</b> → <b>Add</b>. Then close Safari, open <b>Blitz Hub</b> from your home screen, and tap <b>Account</b> to carry on there. On iPhone, notifications only work in the installed app.`]);
+  else if (installPrompt) steps.push([false, 'Install the app', '<button class="btn primary" id="inst">Install Blitz Hub</button>']);
+  else if (phone) steps.push([false, 'Install the app', "Open your browser's menu (⋮) and choose <b>Install app</b> or <b>Add to Home screen</b>, then open Blitz Hub from your home screen."]);
+  else steps.push([true, 'Install the app', 'Optional on a computer. Notifications work in this browser.']);
+  // 2. Sign in.
+  steps.push([!!me, 'Sign in', me ? `Signed in as ${esc(me.email || me.displayName || 'you')}.` : ios && !standalone ? 'Do this in the installed app, after step 1.' : 'Use the sign-in box below: Google, or an emailed link. No password.']);
+  // 3. Notifications.
+  steps.push([pushIsOn(), 'Turn on notifications', pushIsOn() ? 'On for this device.' : me ? 'Tap <b>Turn on notifications</b> in the Notifications panel below, then <b>Allow</b>.' : 'After you sign in.']);
+  // 4. Linked to a team (the commissioner does this).
+  if (!commish) steps.push([!!(profile && profile.team), 'Get linked to your team', profile && profile.team ? `You're the GM of <b>${esc(teamLabel(profile.team))}</b>.` : "The commissioner does this once you've signed in. Nothing for you to do."]);
+  const left = steps.filter(s => !s[0]).length;
+  box.innerHTML = left === 0 ? '' : `<section class="panel setup"><header><div><span class="eyebrow">Get set up · ${steps.length - left} of ${steps.length} done</span><h2>Blitz Hub on your phone</h2></div></header>
+    <ol class="setup-steps">${steps.map(([done, title, how], i) => `<li class="${done ? 'done' : ''}${!done && steps.slice(0, i).every(s => s[0]) ? ' next' : ''}">
+      <span class="setup-n">${done ? '✓' : i + 1}</span><div><b>${title}</b><p>${how}</p></div></li>`).join('')}</ol></section>`;
+  if ($('inst')) $('inst').onclick = async () => { const p = installPrompt; installPrompt = null; if (p) { p.prompt(); await p.userChoice.catch(() => {}); } setupView(); };
 }
 
 async function finishEmailLink(link, msgId) {
@@ -81,9 +112,11 @@ async function ensureProfile(u) {
 async function signedInView(u) {
   profile = await ensureProfile(u);
   const roles = await getDoc(doc(db, 'config', 'roles')).catch(() => null);
-  commish = !!(roles && roles.exists() && (roles.data().commish || []).includes(u.uid));
+  const r = roles && roles.exists() ? roles.data() : {};
+  commish = (r.commish || []).includes(u.uid);
+  owner = r.owner || null;
   const team = profile.team && M.teams[profile.team];
-  $('content').innerHTML = `<div class="grid">
+  $('content').innerHTML = `<div class="grid"><div class="s12" id="setup"></div>
     ${panel(commish ? 'Commissioner' : 'Blitz Hub account', esc(u.displayName || u.email || 'Signed in'), `
       <p class="acct-lead">${esc(u.email || '')}</p>
       <p>${team ? `GM of <a href="team.html?team=${team.id}"><b>${esc(teamName(team))}</b></a>.` : commish ? 'Not linked to a team.' : "Not linked to a team yet. The commissioner links your account to your team; you don't need to do anything."}</p>
@@ -95,6 +128,7 @@ async function signedInView(u) {
   $('out').onclick = () => signOut(auth);
   pushView();
   myMessages();
+  setupView();
   if (commish) commishView();
 }
 
@@ -134,6 +168,7 @@ async function pushView() {
     : `<p>Get the commissioner's announcements on this ${ios ? 'phone' : 'device'}. Lineup and injury alerts come later.</p><div class="acct-row"><button class="btn primary" id="pon">Turn on notifications</button></div>`;
   if ($('pon')) $('pon').onclick = pushOn;
   if ($('poff')) $('poff').onclick = pushOff;
+  setupView();
 }
 async function pushOn() {
   say('pushmsg', 'Asking for permission…');
@@ -204,7 +239,7 @@ function commishView() {
   unsub.push(onSnapshot(query(collection(db, 'notes'), orderBy('at', 'desc'), limit(20)), s => {
     UI.markSeen(s.docs.map(d => d.id));
     $('notelist').innerHTML = s.docs.map(d => { const n = d.data(), at = n.at && n.at.toDate ? n.at.toDate() : null;
-      return `<div class="acct-item"><div><span class="pmeta">To <b>${esc(n.team ? teamLabel(n.team) : 'a GM')}</b></span><b>${esc(n.title)}</b><p>${esc(n.body)}</p>
+      return `<div class="acct-item"><div><span class="pmeta">${n.by === 'system' ? '<b>Site alert</b> to you' : `To <b>${esc(n.team ? teamLabel(n.team) : 'a GM')}</b>`}</span><b>${esc(n.title)}</b><p>${esc(n.body)}</p>
         <span class="pmeta">${at ? UI.annTime(at) : 'sending…'} · ${n.done ? (n.sent ? `delivered to ${n.sent} device${n.sent === 1 ? '' : 's'}` : 'no phone with notifications on; they\'ll see it next time they open the site') + (n.failed ? `, ${n.failed} failed` : '') : 'sending…'}</span></div>
         <button class="btn small" data-delnote="${d.id}" title="Remove it (doesn't unsend a notification)">Remove</button></div>`; }).join('') || '<p class="empty">Nothing sent yet.</p>';
     for (const b of $('notelist').querySelectorAll('[data-delnote]')) b.onclick = async () => {
@@ -236,7 +271,9 @@ async function sendNotes(title, body) {
 }
 async function members() {
   try {
-    const [us, ds] = await Promise.all([getDocs(collection(db, 'users')), getDocs(collection(db, 'devices'))]);
+    const [us, ds, rs] = await Promise.all([getDocs(collection(db, 'users')), getDocs(collection(db, 'devices')), getDoc(doc(db, 'config', 'roles'))]);
+    const cl = (rs.exists() && rs.data().commish) || [], isOwner = owner === me.uid;
+    const role = id => (id === owner ? ' · owner' : cl.includes(id) ? ' · co-commissioner' : '');
     const phones = {};
     for (const d of ds.docs) phones[d.data().uid] = (phones[d.data().uid] || 0) + 1;
     const taken = {};
@@ -246,8 +283,15 @@ async function members() {
     const opts = cur => `<option value="">No team</option>` + Object.values(M.teams).sort((a, b) => teamName(a).localeCompare(teamName(b)))
       .map(t => `<option value="${t.id}"${t.id === cur ? ' selected' : ''}>${esc(teamName(t))}${taken[t.id] && t.id !== cur ? ' (linked)' : ''}</option>`).join('');
     $('members').innerHTML = us.docs.map(u => { const p = u.data();
-      return `<div class="acct-item"><div><b>${esc(p.name || p.email || 'Unnamed')}</b><span class="pmeta">${esc(p.email || '')} · ${phones[u.id] ? `${phones[u.id]} device${phones[u.id] > 1 ? 's' : ''} with notifications` : 'no notifications'}${u.id === me.uid ? ' · you' : ''}</span></div>
+      return `<div class="acct-item"><div><b>${esc(p.name || p.email || 'Unnamed')}</b><span class="pmeta">${esc(p.email || '')} · ${phones[u.id] ? `${phones[u.id]} device${phones[u.id] > 1 ? 's' : ''} with notifications` : 'no notifications'}${role(u.id)}${u.id === me.uid ? ' · you' : ''}</span>
+          ${isOwner && u.id !== owner ? `<label class="acct-co"><input type="checkbox" data-co="${u.id}"${cl.includes(u.id) ? ' checked' : ''}> Co-commissioner</label>` : ''}</div>
         <select data-uid="${u.id}" aria-label="Team for ${esc(p.name || p.email || 'this person')}">${opts(p.team || null)}</select></div>`; }).join('') || '<p class="empty">No one has signed in yet.</p>';
+    for (const c of $('members').querySelectorAll('[data-co]')) c.onchange = async () => {
+      const who = c.closest('.acct-item').querySelector('b').textContent;
+      if (!confirm(c.checked ? `Make ${who} a co-commissioner? They'll be able to send announcements and private messages, and link accounts to teams.` : `Remove ${who} as co-commissioner?`)) { c.checked = !c.checked; return; }
+      try { await updateDoc(doc(db, 'config', 'roles'), { commish: c.checked ? arrayUnion(c.dataset.co) : arrayRemove(c.dataset.co) }); say('memmsg', c.checked ? `${who} is now a co-commissioner.` : `${who} is no longer a co-commissioner.`); members(); }
+      catch (e) { c.checked = !c.checked; say('memmsg', `Couldn't change that (${nice(e)}).`, true); }
+    };
     for (const s of $('members').querySelectorAll('select')) s.onchange = async () => {
       const team = s.value ? +s.value : null;
       if (team && taken[team] && taken[team] !== s.dataset.uid && !confirm(`${teamLabel(team)} is already linked to someone else. Link this person too?`)) { members(); return; }

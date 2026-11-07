@@ -1149,3 +1149,15 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .ann-tag { display: inline-block; font: 600 11px var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--gold, #e9b949); margin-bottom: 2px; }
 .ann.private { border-left-color: var(--gold, #e9b949); }
 .ann-card .ann.private { border-left-color: var(--gold, #e9b949); }
+
+/* Account: get-set-up checklist, co-commissioner toggle */
+.setup { border-top: 3px solid var(--red); }
+.setup-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.setup-steps li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: start; opacity: .6; }
+.setup-steps li.next, .setup-steps li.done { opacity: 1; }
+.setup-steps p { margin: 2px 0 0; color: var(--muted); }
+.setup-steps li.next p { color: var(--text); }
+.setup-n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 800 16px var(--font-display); background: var(--panel-2); border: 1px solid var(--line-2); }
+.setup-steps li.next .setup-n { background: var(--red); border-color: var(--red); color: #fff; }
+.setup-steps li.done .setup-n { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, transparent); }
+.acct-co { display: flex; gap: 6px; align-items: center; font-size: 13.5px; color: var(--muted); margin-top: 4px; cursor: pointer; }

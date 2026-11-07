@@ -84,7 +84,7 @@ Appendix B. League Settings
 | --- | --- |
 | Cutthroat Capital | East |
 | Murderers Row | Central |
-| Iron District | West |
+| Black Market | West |
 
 **Article 3. Division assignment.** A Franchise plays in the division for its region. Its division changes only if it relocates with approval under 1-2-1.
 

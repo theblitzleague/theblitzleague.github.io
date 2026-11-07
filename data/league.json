@@ -17,11 +17,10 @@
       "name": "Cutthroat Capital",
       "region": "East",
       "colors": [
-        "#B0182B",
-        "#0B0B0D",
-        "#A9AFB7"
+        "#D80018",
+        "#FFFFFF"
       ],
-      "logo": "assets/divisions/cutthroat-capital.webp",
+      "logo": "assets/divisions/cutthroat-capital-mark.webp",
       "mark": "assets/divisions/cutthroat-capital-mark.webp",
       "markOnDark": null,
       "inkOnDark": "#E0485A"
@@ -32,25 +31,27 @@
       "name": "Murderers Row",
       "region": "Central",
       "colors": [
-        "#0B1F3F"
+        "#D80030",
+        "#FFFFFF"
       ],
-      "logo": "assets/divisions/murderers-row.webp",
+      "logo": "assets/divisions/murderers-row-mark.webp",
       "mark": "assets/divisions/murderers-row-mark.webp",
-      "markOnDark": "#9DB4E0",
-      "inkOnDark": "#9DB4E0"
+      "markOnDark": null,
+      "inkOnDark": "#D7DCE4"
     },
     {
       "id": 3,
       "key": "west",
-      "name": "Iron District",
+      "name": "Black Market",
       "region": "West",
       "colors": [
-        "#3A4446"
+        "#D80018",
+        "#0E1A3A"
       ],
-      "logo": "assets/divisions/iron-district.webp",
-      "mark": "assets/divisions/iron-district-mark.webp",
-      "markOnDark": "#B9C2CE",
-      "inkOnDark": "#B9C2CE"
+      "logo": "assets/divisions/black-market-mark.webp",
+      "mark": "assets/divisions/black-market-mark.webp",
+      "markOnDark": null,
+      "inkOnDark": "#7C9BE0"
     }
   ],
   "_rosterSlotsNote": "The real Blitz League lineup, copied from Sleeper on 2026-11-04 (league 1423408541737156608). Bench 10, taxi 3, IR 4. In live mode the site uses Sleeper's own roster_positions instead of this list.",
@@ -114,7 +115,7 @@
       "Trade of the Year"
     ]
   },
-  "_divisionsNote": "2026-11-03: Iron District replaced Miracle City as the West. Colors were sampled from the division logos (navy #0B1F3F, gunmetal #3A4446). markOnDark tints the dark-ink marks so they show on the dark site.",
+  "_divisionsNote": "2026-11-07: Black Market replaced Iron District as the West, and all three division logos were replaced by the commissioner's new red-and-white set (originals in assets/source/divisions/2026-11-07/, retired files in assets/source/divisions/retired/). The new logos are made for dark backgrounds, so markOnDark is off. Because all three are red and white, inkOnDark gives each division its own accent: Cutthroat Capital red, Murderers Row silver, Black Market a lightened navy from its logo. Earlier: 2026-11-03 Iron District replaced Miracle City.",
   "_locationsNote": "Candidate franchise locations from the 2026 planning brief (about 6 per region; 4 get picked). lat/lon are approximate city centers (Wyoming = state center). label = map label offset [dx, dy] in map units for crowded areas. A franchise claims one via franchises.json \"location\".",
   "locations": [
     {

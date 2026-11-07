@@ -1203,3 +1203,8 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 /* Account: profile icon at the right end of the top bar */
 .acct-ico { flex: 0 0 auto; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--muted); border: 1px solid var(--line-2); }
 .acct-ico:hover, .acct-ico[aria-current="page"] { color: var(--text); border-color: var(--text); }
+
+/* Homepage banner: no background watermark; the division logos carry the right side, larger, without names. */
+.lhero.home .lhero-divs { gap: 28px; align-items: center; }
+.lhero.home .lhero-divs .divmark-lg { width: 112px; height: 88px; }
+@media (max-width: 1280px) { .lhero.home .lhero-divs { gap: 20px; } .lhero.home .lhero-divs .divmark-lg { width: 92px; height: 74px; } }

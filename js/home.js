@@ -20,7 +20,7 @@
 
   function hero() {
     const lg = M.league;
-    return `<section class="lhero home">${lg.logo ? `<img class="hero-watermark" src="${esc(lg.logo)}" alt="" aria-hidden="true">` : ''}<div class="wrap">
+    return `<section class="lhero home"><div class="wrap">
       ${lg.logo ? `<img class="lhero-logo big" src="${esc(lg.logo)}" alt="${esc(lg.name)}">` : ''}
       <div><span class="eyebrow">${esc(M.state.season)} season · Week ${M.current}</span><h1>${esc(lg.name)}</h1>
       <div class="nick">${Object.keys(M.teams).length} franchises · ${lg.divisions.length} divisions · Dynasty on Sleeper</div></div>

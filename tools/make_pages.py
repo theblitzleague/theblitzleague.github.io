@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Generate every site page from one template so the header, nav and script list never drift.
+Run it after any change to css/ or js/ too: the links carry a content hash for cache busting.
 Usage: python3 tools/make_pages.py   (writes *.html in the site root)"""
-import os
+import os, hashlib
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 NAV = [("./", "Home"), ("standings.html", "Standings"), ("awards.html", "Awards"), ("teams.html", "Teams"), ("matchup.html", "Matchups"), ("schedule.html", "Schedule"), ("network.html", "Network"),
        ("draft.html", "Draft"), ("almanac.html", "Almanac"), ("map.html", "League Map")]
 # Nav items shown as a logo instead of their label (the label stays as the image's alt text and the crumb).
-NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network">'}
+# width/height keep it small even if a stale stylesheet is in use.
+NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22">'}
 # file: (title, nav item it belongs to, page script, extra scripts, body attrs, has tabs)
 PAGES = {
     "index.html": ("The Blitz League", "./", "home.js", ["nfl.js"], "", False),
@@ -30,7 +32,7 @@ TPL = """<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Oswald:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="css/hub.css">
+<link rel="stylesheet" href="{css}">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0e131c">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -57,10 +59,15 @@ TPL = """<!doctype html>
 </body>
 </html>
 """
+# Each stylesheet and script is linked with a hash of its contents (?v=...), so a browser can never pair a new page
+# with an old cached copy of them. Rerun this script after changing any file in css/ or js/.
+def ver(path):
+    return f"{path}?v={hashlib.sha1(open(os.path.join(ROOT, path), 'rb').read()).hexdigest()[:8]}"
+
 for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     cur_attr = ' aria-current="page"'
     nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>' for h, l in NAV)
-    scripts = "\n".join(f'<script src="js/{s}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *extra, script])
+    scripts = "\n".join(f'<script src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *extra, script])
     crumb = dict(NAV)[cur]
-    open(os.path.join(ROOT, fn), "w").write(TPL.format(title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts))
+    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts))
 print("wrote", ", ".join(PAGES))

@@ -12,7 +12,7 @@
   },
   "divisions": [
     {
-      "id": 1,
+      "id": 3,
       "key": "east",
       "name": "Cutthroat Capital",
       "region": "East",
@@ -26,7 +26,7 @@
       "inkOnDark": "#E0485A"
     },
     {
-      "id": 2,
+      "id": 1,
       "key": "central",
       "name": "Murderers Row",
       "region": "Central",
@@ -40,7 +40,7 @@
       "inkOnDark": "#D7DCE4"
     },
     {
-      "id": 3,
+      "id": 2,
       "key": "west",
       "name": "Black Market",
       "region": "West",
@@ -115,7 +115,7 @@
       "Trade of the Year"
     ]
   },
-  "_divisionsNote": "2026-11-07: Black Market replaced Iron District as the West, and all three division logos were replaced by the commissioner's new red-and-white set (originals in assets/source/divisions/2026-11-07/, retired files in assets/source/divisions/retired/). The new logos are made for dark backgrounds, so markOnDark is off. Because all three are red and white, inkOnDark gives each division its own accent: Cutthroat Capital red, Murderers Row silver, Black Market a lightened navy from its logo. Earlier: 2026-11-03 Iron District replaced Miracle City.",
+  "_divisionsNote": "2026-11-07: Black Market replaced Iron District as the West, and all three division logos were replaced by the commissioner's new red-and-white set (originals in assets/source/divisions/2026-11-07/, retired files in assets/source/divisions/retired/). The new logos are made for dark backgrounds, so markOnDark is off. Because all three are red and white, inkOnDark gives each division its own accent: Cutthroat Capital red, Murderers Row silver, Black Market a lightened navy from its logo. Earlier: 2026-11-03 Iron District replaced Miracle City. Division ids match Sleeper's numbering (2026-11-07: 1 Murderers Row, 2 Black Market, 3 Cutthroat Capital), because in live mode each team's division comes from Sleeper's roster settings by number. The array order is only the display order.",
   "_locationsNote": "Candidate franchise locations from the 2026 planning brief (about 6 per region; 4 get picked). lat/lon are approximate city centers (Wyoming = state center). label = map label offset [dx, dy] in map units for crowded areas. A franchise claims one via franchises.json \"location\".",
   "locations": [
     {

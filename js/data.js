@@ -12,11 +12,13 @@
     return r.json();
   };
 
-  async function loadSample() {
+  async function loadSample(scoringLeague) {
     const names = ['rosters', 'users', 'matchups', 'transactions', 'traded_picks', 'players', 'state'];
-    const got = await Promise.all(names.map(n => getJSON(`data/sample/${n}.json`)));
+    // The placeholder league still scores with the real league's settings, when Sleeper answers.
+    const [got, lg] = await Promise.all([Promise.all(names.map(n => getJSON(`data/sample/${n}.json`))),
+      scoringLeague ? getJSON(`${API}/league/${scoringLeague}`).catch(() => null) : null]);
     const d = Object.fromEntries(names.map((n, i) => [n, got[i]]));
-    return { ...d, rosterPositions: null, drafts: [] };
+    return { ...d, rosterPositions: null, drafts: [], scoring: (lg && lg.scoring_settings) || null };
   }
 
   // Untested until a real league ID exists.
@@ -181,9 +183,14 @@
     Object.values(teams).sort(order).forEach((t, i) => (t.leagueRank = i + 1));
     const weekly = weeklyHighs(teams, league);
     const { careers, seasons: history } = honors(teams, raw.history, raw.state, league, weekly);
+    // Player awards from completed seasons, by player: [{award, season, rid, points}], oldest first.
+    const playerHonors = {};
+    for (const s of (raw.history && raw.history.seasons) || [])
+      for (const [award, list] of Object.entries(s.playerAwards || {}))
+        for (const w of list || []) if (w && w.player) (playerHonors[w.player] = playerHonors[w.player] || []).push({ award, season: s.season, rid: w.roster, points: w.points });
     return {
       careers, history, weekly,
-      league, teams, players: normalize(raw.players), state: raw.state, current,
+      league, teams, players: normalize(raw.players), state: raw.state, current, playerHonors,
       transactions: raw.transactions.slice().sort((a, b) => b.created - a.created),
       tradedPicks: raw.traded_picks,
       drafts: raw.drafts || [],
@@ -213,7 +220,7 @@
       const [league, brand, history] = await Promise.all([getJSON('data/league.json'), getJSON('data/franchises.json'),
         getJSON('data/history.json').catch(() => ({ seasons: [] }))]);
       const live = !!league.sleeperLeagueId;
-      const raw = live ? await loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : await loadSample();
+      const raw = live ? await loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : await loadSample(league.scoringLeagueId);
       return { ...build(league, brand, { ...raw, history }), live };
     },
     headshot: id => `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`,

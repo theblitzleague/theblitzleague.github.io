@@ -255,5 +255,7 @@
       "lon": -98.49
     }
   ],
-  "_inkNote": "inkOnDark: the division color lifted for text, borders and map markers on the dark site. markOnDark: tint for dark-ink division marks (null = show the mark in its own colors)."
+  "_inkNote": "inkOnDark: the division color lifted for text, borders and map markers on the dark site. markOnDark: tint for dark-ink division marks (null = show the mark in its own colors).",
+  "_scoringLeagueNote": "The real Blitz League on Sleeper. While the site runs on sample data (sleeperLeagueId null), it still reads this league's scoring settings so player cards score games the league's way. Live mode uses sleeperLeagueId instead.",
+  "scoringLeagueId": "1423408541737156608"
 }

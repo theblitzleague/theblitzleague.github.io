@@ -29,7 +29,7 @@
 
   function fantasy(stats, pos) {
     if (!stats) return null;
-    if (M.live && M.scoring) return Object.entries(M.scoring).reduce((t, [k, v]) => t + n(stats, k) * v, 0);
+    if (M.scoring) return Object.entries(M.scoring).reduce((t, [k, v]) => t + n(stats, k) * v, 0);
     return DEF.includes(pos) ? n(stats, 'pts_idp') : n(stats, 'pts_ppr');
   }
 
@@ -72,6 +72,35 @@
     return null;
   }
 
+  // Awards this player has won (history.json, via Hub.load) and where he stands in this season's races.
+  const AWARD = { opoy: 'Offensive Player of the Year', dpoy: 'Defensive Player of the Year', roy: 'Rookie of the Year', pickup: 'Pickup of the Year', trade: 'Trade of the Year' };
+  const OFFG = ['QB', 'RB', 'WR', 'TE'], DEFG = ['DL', 'LB', 'DB'];
+  function raceRank(id) {
+    const tot = {};
+    for (const t of Object.values(M.teams)) for (const g of t.games.filter(x => x.final)) (g.me.starters || []).forEach((pid, i) => {
+      if (pid && pid !== '0') tot[pid] = (tot[pid] || 0) + ((g.me.starters_points || [])[i] || 0); });
+    if (!tot[id]) return [];
+    const grp = pid => (M.players[pid] || {}).position, out = [];
+    const rank = keep => { const list = Object.keys(tot).filter(keep).sort((a, b) => tot[b] - tot[a]); return list.indexOf(id) + 1; };
+    const me = M.players[id] || {};
+    if (OFFG.includes(me.position)) out.push(['opoy', rank(pid => OFFG.includes(grp(pid)))]);
+    if (DEFG.includes(me.position)) out.push(['dpoy', rank(pid => DEFG.includes(grp(pid)))]);
+    if (me.years_exp === 0) out.push(['roy', rank(pid => (M.players[pid] || {}).years_exp === 0)]);
+    return out.filter(([, r]) => r > 0 && r <= 3);
+  }
+  function honors(id) {
+    const won = (M.playerHonors || {})[id] || [], tro = M.league.awardTrophies || {}, by = {};
+    won.forEach(h => (by[h.award] = by[h.award] || []).push(h));
+    const badges = Object.entries(by).map(([k, list]) => {
+      const seasons = list.map(h => { const t = M.teams[h.rid]; return `${esc(h.season)}${t ? ` <small>${esc(t.f.location)}</small>` : ''}`; }).join(', ');
+      return `<div class="pc-honor won">${tro[k] ? `<img src="${esc(tro[k])}" alt="">` : '<span class="pc-honor-ico">★</span>'}
+        <div><b>${list.length > 1 ? `${list.length}× ` : ''}${esc(AWARD[k] || k)}</b><span class="pmeta">${seasons}</span></div></div>`; });
+    const through = M.current - 1;
+    const races = through >= 1 ? raceRank(id).map(([k, r]) => `<div class="pc-honor race">${tro[k] ? `<img src="${esc(tro[k])}" alt="">` : ''}
+        <div><b>${r === 1 ? 'Leads' : r === 2 ? '2nd in' : '3rd in'} the ${esc(M.state.season)} ${esc(AWARD[k])} race</b><span class="pmeta">Through week ${through} · <a href="awards.html#players">Awards race</a></span></div></div>`) : [];
+    return badges.length || races.length ? `<div class="pc-honors">${badges.join('')}${races.join('')}</div>` : '';
+  }
+
   function shell(id) {
     const p = M.players[id] || { full_name: `Player ${id}`, position: '?' }, t = owner(id);
     const bits = [p.height ? `${Math.floor(p.height / 12)}'${p.height % 12}"` : null, p.weight ? `${p.weight} lb` : null, p.college || null,
@@ -83,6 +112,7 @@
         ${bits.length ? `<div class="pmeta">${esc(bits.join(' · '))}</div>` : ''}
         <div class="pc-own">${t ? `<a href="team.html?team=${t.id}#roster">${markSVG(t.f, 'mini')} ${esc(t.f.location)}${t.f.nickname ? ' ' + esc(t.f.nickname) : ''}</a>` : '<span class="pmeta">Free agent in this league</span>'}</div>
       </div><button class="pc-x" type="button" aria-label="Close">&times;</button></div>
+      ${honors(id)}
       <div class="pc-seasons" role="tablist">${seasons.map(s => `<button type="button" role="tab" data-season="${s}">${s}</button>`).join('')}</div>
       <div class="pc-body"><div class="loading">Loading stats from Sleeper</div></div>`;
   }
@@ -110,7 +140,7 @@
       const v = played.reduce((t, g) => t + n(g.e.stats, c[1]), 0); return v % 1 ? v.toFixed(1) : v;
     };
     const fmt = v => (typeof v === 'number' && v % 1 ? v.toFixed(1) : v);
-    const label = M.live && M.scoring ? 'League scoring' : (DEF.includes(p.position) ? 'Sleeper default IDP scoring' : 'Sleeper default PPR scoring');
+    const label = M.scoring ? 'League scoring' : (DEF.includes(p.position) ? 'Sleeper default IDP scoring' : 'Sleeper default PPR scoring');
     return `<div class="statline pc-sum"><div><span class="big">${played.length}</span><span class="lbl">Games</span></div>
         <div><span class="big">${f1(total)}</span><span class="lbl">Fantasy pts</span></div><div><span class="big">${f1(total / played.length)}</span><span class="lbl">Per game</span></div></div>
       <div class="tablewrap"><table class="st pc-log"><thead><tr><th>Wk</th><th>Opp</th><th class="num">Fpts</th>${showLeague ? '<th>Team</th>' : ''}${shown.map(c => `<th class="num">${c[0]}</th>`).join('')}</tr></thead>

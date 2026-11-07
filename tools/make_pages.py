@@ -45,6 +45,7 @@ TPL = """<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Blitz Hub">
+<meta name="blitz-notes" content="{notes}">
 </head>
 <body{body}>
 <header class="topbar"><div class="wrap">
@@ -73,5 +74,5 @@ for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>' for h, l in NAV)
     scripts = "\n".join(f'<script{' type="module"' if s in MODULES else ""} src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *dict.fromkeys(["nfl.js", "firebase-config.js", *extra]), script])
     crumb = dict(NAV).get(cur, title.split(" · ")[0])
-    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts))
+    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts, notes=ver("js/notes.js")))
 print("wrote", ", ".join(PAGES))

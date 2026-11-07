@@ -211,15 +211,27 @@
   }
   const annTime = at => at.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
   // Any announcement this device hasn't seen yet pops up once, over whatever page is open.
+  // Private messages (js/notes.js) need the sign-in code, which is only loaded where someone has signed in.
+  let notesMod = null;
+  function privateNotes() {
+    let on = false;
+    try { on = localStorage.getItem('blitz.signedIn') === '1'; } catch (e) { /* private mode */ }
+    const src = (document.querySelector('meta[name="blitz-notes"]') || {}).content;
+    if (!on || !src || !window.FIREBASE_CONFIG) return Promise.resolve([]);
+    notesMod = notesMod || import(new URL(src, document.baseURI).href);
+    return notesMod.then(m => m.mine()).catch(e => (console.error(e), []));
+  }
   async function unreadPopup(fresh) {
     if (window.top !== window || document.getElementById('ann-pop')) return;
-    const s = new Set(seen()), list = (await announcements(fresh)).filter(a => !s.has(a.id));
+    const s = new Set(seen());
+    const [pub, mine] = await Promise.all([announcements(fresh), privateNotes()]);
+    const list = [...mine, ...pub].filter(a => !s.has(a.id)).sort((a, b) => b.at - a.at);
     if (!list.length || document.getElementById('ann-pop')) return;
     const el = document.createElement('div');
     el.id = 'ann-pop'; el.className = 'ann-pop';
     el.innerHTML = `<div class="ann-card" role="dialog" aria-modal="true" aria-labelledby="ann-pop-h">
-      <span class="eyebrow">From the commissioner</span><h2 id="ann-pop-h">${list.length > 1 ? `${list.length} new announcements` : 'New announcement'}</h2>
-      <div class="ann-list">${list.map(a => `<article class="ann"><b>${esc(a.title)}</b><p>${esc(a.body)}</p><span class="pmeta">${annTime(a.at)}</span></article>`).join('')}</div>
+      <span class="eyebrow">From the commissioner</span><h2 id="ann-pop-h">${list.length > 1 ? `${list.length} new messages` : list[0].private ? 'A message for you' : 'New announcement'}</h2>
+      <div class="ann-list">${list.map(a => `<article class="ann${a.private ? ' private' : ''}">${a.private ? '<span class="ann-tag">Just for you</span>' : ''}<b>${esc(a.title)}</b><p>${esc(a.body)}</p><span class="pmeta">${annTime(a.at)}</span></article>`).join('')}</div>
       <button class="btn primary" type="button">Got it</button></div>`;
     const close = () => { markSeen(list.map(a => a.id)); el.remove(); document.removeEventListener('keydown', esc_); };
     const esc_ = e => { if (e.key === 'Escape') close(); };
@@ -232,7 +244,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => unreadPopup()); else unreadPopup();
   // A notification that arrives while the site is open on screen: sw.js tells the page, and it pops up at once.
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data && e.data.kind === 'announcement') setTimeout(() => unreadPopup(true), 800);
+    if (e.data && (e.data.kind === 'announcement' || e.data.kind === 'note')) setTimeout(() => unreadPopup(true), 800);
   });
 
   window.UI = { announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };

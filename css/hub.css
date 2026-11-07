@@ -1138,3 +1138,14 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .ann-card .eyebrow { color: var(--red); }
 .ann-card .btn.primary { background: var(--red); border-color: var(--red); }
 .ann-card .ann { border-left-color: var(--red); }
+
+/* Private messages */
+.acct-to { display: flex; gap: 16px; flex-wrap: wrap; }
+.acct-to label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.acct-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; padding: 10px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--radius); }
+.acct-pick label { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: center; cursor: pointer; }
+.acct-pick label .pmeta { grid-column: 2; font-size: 12.5px; }
+.acct-pick label.off { opacity: .5; cursor: default; }
+.ann-tag { display: inline-block; font: 600 11px var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--gold, #e9b949); margin-bottom: 2px; }
+.ann.private { border-left-color: var(--gold, #e9b949); }
+.ann-card .ann.private { border-left-color: var(--gold, #e9b949); }

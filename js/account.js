@@ -6,8 +6,10 @@
    app. The page therefore also takes a pasted link, which signs in wherever it's pasted.
    Who may do what is enforced by firestore.rules, not by this page; the page only hides what a person can't use.
    Notifications: Firebase Cloud Messaging registers this phone with the site's own service worker (sw.js), which shows
-   what functions/index.js sends. */
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+   what functions/index.js sends.
+   Private messages: the commissioner can send to chosen teams instead of the whole league; each linked GM of those
+   teams gets their own copy in notes/{id}, which only they (and the commissioner) can read. */
+import { app, auth, db, rememberSignedIn } from './fb.js';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendSignInLinkToEmail, isSignInWithEmailLink,
   signInWithEmailLink, signOut } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy, limit,
@@ -15,8 +17,6 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collec
 import { getMessaging, getToken, deleteToken, isSupported } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js';
 
 const { esc, teamName } = UI;
-const app = initializeApp(window.FIREBASE_CONFIG);
-const auth = getAuth(app), db = getFirestore(app);
 const $ = id => document.getElementById(id);
 const EMAIL_KEY = 'blitz.signinEmail';
 const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -89,11 +89,23 @@ async function signedInView(u) {
       <p>${team ? `GM of <a href="team.html?team=${team.id}"><b>${esc(teamName(team))}</b></a>.` : commish ? 'Not linked to a team.' : "Not linked to a team yet. The commissioner links your account to your team; you don't need to do anything."}</p>
       <div class="acct-row"><button class="btn" id="out">Sign out</button></div>`, 's6')}
     ${panel('This phone or computer', 'Notifications', `<div id="push"></div>${note('pushmsg')}`, 's6')}
+    ${panel('Just for you', 'Messages from the commissioner', `<div id="msgs" class="acct-list"><p class="pmeta">Loading…</p></div>`, 's12')}
     ${commish ? `<div class="s12" id="commish"></div>` : ''}
   </div>`;
   $('out').onclick = () => signOut(auth);
   pushView();
+  myMessages();
   if (commish) commishView();
+}
+
+async function myMessages() {
+  try {
+    const snap = await getDocs(query(collection(db, 'notes'), where('to', '==', me.uid)));
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.at && b.at.seconds) || 0) - ((a.at && a.at.seconds) || 0));
+    UI.markSeen(list.map(n => n.id));
+    $('msgs').innerHTML = list.map(n => `<div class="acct-item"><div><b>${esc(n.title)}</b><p>${esc(n.body)}</p><span class="pmeta">${n.at && n.at.toDate ? UI.annTime(n.at.toDate()) : ''}</span></div></div>`).join('')
+      || '<p class="empty">No private messages. League-wide announcements are on the home page.</p>';
+  } catch (e) { $('msgs').innerHTML = `<p class="acct-note bad">Couldn't load your messages (${esc(nice(e))}).</p>`; }
 }
 
 // ---------- notifications ----------
@@ -154,17 +166,25 @@ function commishView() {
   $('commish').innerHTML = `<div class="grid">
     ${panel('Commissioner', 'Send an announcement', `
       <form id="annform" class="acct-ann">
+        <div class="acct-to" role="radiogroup" aria-label="Send to">
+          <label><input type="radio" name="to" value="league" checked> Whole league</label>
+          <label><input type="radio" name="to" value="teams"> Specific GMs</label></div>
+        <div id="pick" class="acct-pick" hidden></div>
         <input id="anntitle" maxlength="80" required placeholder="Title (shows in bold on the notification)">
         <textarea id="annbody" maxlength="1000" rows="4" required placeholder="Message to the whole league"></textarea>
         <div class="acct-row"><button class="btn primary" type="submit">Send to the league</button><span class="pmeta" id="anncount"></span></div>
       </form>${note('annmsg')}
-      <div class="sub">Sent</div><div id="annlist" class="acct-list"></div>`, 's7')}
+      <div class="sub">Sent to the league</div><div id="annlist" class="acct-list"></div>
+      <div class="sub">Sent to specific GMs</div><div id="notelist" class="acct-list"></div>`, 's7')}
     ${panel('Commissioner', 'Link accounts to teams', `<p class="acct-note">Everyone who has signed in. Pick each GM's team; they get announcements once linked.</p><div id="members" class="acct-list"></div>${note('memmsg')}`, 's5')}
   </div>`;
+  const toTeams = () => document.querySelector('input[name="to"]:checked').value === 'teams';
+  for (const r of document.querySelectorAll('input[name="to"]')) r.onchange = () => { $('pick').hidden = !toTeams(); };
   $('annform').onsubmit = async ev => {
     ev.preventDefault();
     const title = $('anntitle').value.trim(), body = $('annbody').value.trim();
     if (!title || !body) return;
+    if (toTeams()) return sendNotes(title, body);
     if (!confirm(`Send this to the whole league now?\n\n${title}\n${body}`)) return;
     try {
       const ref = await addDoc(collection(db, 'announcements'), { title, body, by: me.uid, at: serverTimestamp() });
@@ -181,7 +201,38 @@ function commishView() {
       if (confirm('Remove this announcement from the site? Notifications already delivered stay on phones.')) await deleteDoc(doc(db, 'announcements', b.dataset.del)).catch(e => say('annmsg', nice(e), true));
     };
   }, e => say('annmsg', `Couldn't load sent announcements (${nice(e)}).`, true)));
+  unsub.push(onSnapshot(query(collection(db, 'notes'), orderBy('at', 'desc'), limit(20)), s => {
+    UI.markSeen(s.docs.map(d => d.id));
+    $('notelist').innerHTML = s.docs.map(d => { const n = d.data(), at = n.at && n.at.toDate ? n.at.toDate() : null;
+      return `<div class="acct-item"><div><span class="pmeta">To <b>${esc(n.team ? teamLabel(n.team) : 'a GM')}</b></span><b>${esc(n.title)}</b><p>${esc(n.body)}</p>
+        <span class="pmeta">${at ? UI.annTime(at) : 'sending…'} · ${n.done ? (n.sent ? `delivered to ${n.sent} device${n.sent === 1 ? '' : 's'}` : 'no phone with notifications on; they\'ll see it next time they open the site') + (n.failed ? `, ${n.failed} failed` : '') : 'sending…'}</span></div>
+        <button class="btn small" data-delnote="${d.id}" title="Remove it (doesn't unsend a notification)">Remove</button></div>`; }).join('') || '<p class="empty">Nothing sent yet.</p>';
+    for (const b of $('notelist').querySelectorAll('[data-delnote]')) b.onclick = async () => {
+      if (confirm('Remove this message? A notification already delivered stays on their phone.')) await deleteDoc(doc(db, 'notes', b.dataset.delnote)).catch(e => say('annmsg', nice(e), true));
+    };
+  }, e => say('annmsg', `Couldn't load sent messages (${nice(e)}).`, true)));
   members();
+}
+
+// Linked GMs by team, for the "Specific GMs" picker and for sending.
+let linked = {};
+function picker() {
+  $('pick').innerHTML = Object.values(M.teams).sort((a, b) => teamName(a).localeCompare(teamName(b))).map(t => {
+    const gms = linked[t.id] || [];
+    return `<label class="${gms.length ? '' : 'off'}"><input type="checkbox" value="${t.id}"${gms.length ? '' : ' disabled'}> ${esc(teamName(t))}
+      <span class="pmeta">${gms.length ? esc(gms.map(g => g.name || g.email || 'GM').join(', ')) : 'no GM signed in yet'}</span></label>`; }).join('');
+}
+async function sendNotes(title, body) {
+  const teams = [...$('pick').querySelectorAll('input:checked')].map(i => +i.value);
+  if (!teams.length) { say('annmsg', 'Tick at least one team.', true); return; }
+  const to = teams.flatMap(t => (linked[t] || []).map(g => ({ uid: g.uid, team: t })));
+  if (!confirm(`Send this privately to ${teams.map(teamLabel).join(', ')}?\n\n${title}\n${body}`)) return;
+  try {
+    const refs = await Promise.all(to.map(r => addDoc(collection(db, 'notes'), { to: r.uid, team: r.team, title, body, by: me.uid, at: serverTimestamp() })));
+    UI.markSeen(refs.map(r => r.id));
+    $('annform').reset(); $('pick').hidden = true;
+    say('annmsg', `Sent to ${teams.length} team${teams.length > 1 ? 's' : ''}. Delivery shows below in a few seconds.`);
+  } catch (e) { say('annmsg', `Couldn't send (${nice(e)}).`, true); }
 }
 async function members() {
   try {
@@ -189,7 +240,9 @@ async function members() {
     const phones = {};
     for (const d of ds.docs) phones[d.data().uid] = (phones[d.data().uid] || 0) + 1;
     const taken = {};
-    for (const u of us.docs) if (u.data().team) taken[u.data().team] = u.id;
+    linked = {};
+    for (const u of us.docs) if (u.data().team) { taken[u.data().team] = u.id; (linked[u.data().team] = linked[u.data().team] || []).push({ uid: u.id, ...u.data() }); }
+    if ($('pick')) picker();
     const opts = cur => `<option value="">No team</option>` + Object.values(M.teams).sort((a, b) => teamName(a).localeCompare(teamName(b)))
       .map(t => `<option value="${t.id}"${t.id === cur ? ' selected' : ''}>${esc(teamName(t))}${taken[t.id] && t.id !== cur ? ' (linked)' : ''}</option>`).join('');
     $('members').innerHTML = us.docs.map(u => { const p = u.data();
@@ -215,6 +268,7 @@ UI.boot('<strong>Account</strong>', async model => {
   onAuthStateChanged(auth, async u => {
     unsub.forEach(f => f()); unsub = [];
     me = u;
+    rememberSignedIn(!!u);
     try { u ? await signedInView(u) : signedOutView(); }
     catch (e) { $('content').innerHTML = `<div class="error">Couldn't load your account (${esc(nice(e))}).</div>`; console.error(e); }
   });

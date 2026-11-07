@@ -4,6 +4,7 @@ rules_version = '2';
 //   users/{uid}       one per signed-in person: name, email, and the team the commissioner linked them to.
 //   devices/{id}      one per phone that allowed notifications: its owner and its push registration.
 //   announcements/{id} commissioner messages; anyone may read them (the home page shows them).
+//   notes/{id}        a private commissioner message to one GM; only that GM and the commissioner may read it.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -39,6 +40,19 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['uid', 'token', 'at', 'device'])
         && text(request.resource.data.token, 4096)
         && (request.resource.data.device == null || request.resource.data.device is string && request.resource.data.device.size() <= 120);
+    }
+
+    // Private messages: one copy per recipient GM.
+    match /notes/{id} {
+      allow read: if signedIn() && (resource.data.to == request.auth.uid || isCommish());
+      allow create: if isCommish()
+        && request.resource.data.keys().hasOnly(['to', 'team', 'title', 'body', 'by', 'at'])
+        && text(request.resource.data.to, 128)
+        && (request.resource.data.team == null || request.resource.data.team is int)
+        && text(request.resource.data.title, 80) && text(request.resource.data.body, 1000)
+        && request.resource.data.by == request.auth.uid && request.resource.data.at == request.time;
+      allow delete: if isCommish();
+      allow update: if false;
     }
 
     match /announcements/{id} {

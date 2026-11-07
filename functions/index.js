@@ -12,6 +12,22 @@ const { getMessaging } = require('firebase-admin/messaging');
 initializeApp();
 const GONE = ['messaging/registration-token-not-registered', 'messaging/invalid-registration-token', 'messaging/invalid-argument'];
 
+// note: a private message to one GM (notes/{id}); goes only to that GM's registered devices.
+exports.note = onDocumentCreated({ document: 'notes/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
+  const snap = event.data;
+  if (!snap) return;
+  const n = snap.data(), db = getFirestore();
+  const devices = (await db.collection('devices').where('uid', '==', n.to).get()).docs.filter(d => d.data().token);
+  if (!devices.length) { await snap.ref.update({ sent: 0, failed: 0, done: true }); return; }
+  const res = await getMessaging().sendEachForMulticast({
+    tokens: devices.map(d => d.data().token),
+    data: { kind: 'note', title: String(n.title || 'Commissioner'), body: String(n.body || ''), url: './account.html', tag: 'note-' + event.params.id },
+    webpush: { headers: { Urgency: 'high', TTL: String(3 * 24 * 3600) } },
+  });
+  await Promise.all(res.responses.map((r, j) => (!r.success && r.error && GONE.includes(r.error.code) ? devices[j].ref.delete() : null)));
+  await snap.ref.update({ sent: res.successCount, failed: res.failureCount, done: true });
+});
+
 exports.announce = onDocumentCreated({ document: 'announcements/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
   const snap = event.data;
   if (!snap) return;

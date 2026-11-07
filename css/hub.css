@@ -1096,3 +1096,33 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .nw-story.cfb, .nw-list.compact .nw-story.cfb { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 1100px) { .nw-cfb { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .nw-pbody { padding-left: 12px; } }
+
+/* ---------- Account page (account.html): sign-in, notifications, Commissioner panel ---------- */
+.btn { font: 600 14px var(--font-body); text-transform: uppercase; letter-spacing: .03em; color: var(--text); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 10px 14px; cursor: pointer; min-height: 42px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
+.btn.small { font-size: 12px; padding: 5px 9px; min-height: 0; }
+.acct-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.acct-row input { flex: 1 1 220px; }
+.acct-lead { color: var(--muted); margin: 0 0 8px; }
+.acct-note { color: var(--muted); font-size: 14px; margin: 6px 0; min-height: 1em; }
+.acct-note.bad { color: var(--bad); }
+.acct-or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .14em; margin: 14px 0 4px; }
+.acct-or::before, .acct-or::after { content: ''; flex: 1; border-top: 1px solid var(--line-2); }
+.acct-paste { margin-top: 10px; }
+.acct-paste summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+#content input, #content textarea, #content select { font: 16px var(--font-body); color: var(--text); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+#content textarea { resize: vertical; width: 100%; }
+.acct-ann { display: grid; gap: 8px; }
+.acct-list { display: grid; gap: 8px; }
+.acct-item { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.acct-item > div { min-width: 0; display: grid; gap: 2px; }
+.acct-item p { margin: 2px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.acct-item .pmeta { overflow-wrap: anywhere; }
+.acct-item select { flex: 0 0 auto; max-width: 48%; }
+
+/* Commissioner announcements on the home page */
+.ann-list { display: grid; gap: 10px; }
+.ann { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; }
+.ann b { font-family: var(--font-display); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; }
+.ann p { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }

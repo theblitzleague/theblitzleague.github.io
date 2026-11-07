@@ -1,0 +1,54 @@
+rules_version = '2';
+// Who may read and write what in the Blitz Hub database. Nothing is allowed unless a rule below says so.
+//   config/roles      { commish: [uid] }: set by the site owner from the Firebase side, never from the site.
+//   users/{uid}       one per signed-in person: name, email, and the team the commissioner linked them to.
+//   devices/{id}      one per phone that allowed notifications: its owner and its push registration.
+//   announcements/{id} commissioner messages; anyone may read them (the home page shows them).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isCommish() {
+      return signedIn() && exists(/databases/$(database)/documents/config/roles)
+        && request.auth.uid in get(/databases/$(database)/documents/config/roles).data.commish;
+    }
+    function text(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
+
+    match /config/roles {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isCommish());
+      // A person creates their own record, without a team; only the commissioner assigns teams.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'email', 'at'])
+        && (request.resource.data.name == null || request.resource.data.name is string && request.resource.data.name.size() <= 80)
+        && (request.resource.data.email == null || request.resource.data.email is string && request.resource.data.email.size() <= 200);
+      allow update: if signedIn() && (
+        (request.auth.uid == uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'at'])
+          && (request.resource.data.name == null || request.resource.data.name is string && request.resource.data.name.size() <= 80))
+        || (isCommish() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['team'])
+          && (request.resource.data.team == null || request.resource.data.team is int && request.resource.data.team >= 1 && request.resource.data.team <= 32)));
+      allow delete: if isCommish();
+    }
+
+    match /devices/{id} {
+      allow read, delete: if signedIn() && (resource.data.uid == request.auth.uid || isCommish());
+      allow create, update: if signedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'token', 'at', 'device'])
+        && text(request.resource.data.token, 4096)
+        && (request.resource.data.device == null || request.resource.data.device is string && request.resource.data.device.size() <= 120);
+    }
+
+    match /announcements/{id} {
+      allow read: if true;
+      allow create: if isCommish()
+        && request.resource.data.keys().hasOnly(['title', 'body', 'by', 'at'])
+        && text(request.resource.data.title, 80) && text(request.resource.data.body, 1000)
+        && request.resource.data.by == request.auth.uid && request.resource.data.at == request.time;
+      allow delete: if isCommish();
+      allow update: if false;   // the sender (functions/index.js) records results with server access, which skips these rules
+    }
+  }
+}

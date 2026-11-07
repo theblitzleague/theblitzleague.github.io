@@ -5,3 +5,8 @@ assets/league/*-src.*
 assets/league/*-full.*
 __pycache__/
 *.pyc
+
+# Firebase: installed packages and local logs
+functions/node_modules/
+*.log
+.firebase/

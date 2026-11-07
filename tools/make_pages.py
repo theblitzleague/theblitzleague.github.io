@@ -11,7 +11,7 @@ NAV = [("./", "Home"), ("standings.html", "Standings"), ("awards.html", "Awards"
 NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22">'}
 # file: (title, nav item it belongs to, page script, extra scripts, body attrs, has tabs)
 PAGES = {
-    "index.html": ("Blitz Hub", "./", "home.js", ["nfl.js"], "", False),
+    "index.html": ("Blitz Hub", "./", "home.js", ["nfl.js", "firebase-config.js"], "", False),
     "standings.html": ("Standings · Blitz Hub", "standings.html", "standings.js", [], "", True),
     "awards.html": ("Awards Race · Blitz Hub", "awards.html", "awards.js", [], "", True),
     "teams.html": ("Franchises · Blitz Hub", "teams.html", "teams.js", [], "", True),
@@ -22,7 +22,11 @@ PAGES = {
     "almanac.html": ("Almanac · Blitz Hub", "almanac.html", "almanac.js", [], "", True),
     "map.html": ("League Map · Blitz Hub", "map.html", "map.js", ["us-map.js"], "", False),
     "network.html": ("Blitz Network · Blitz Hub", "network.html", "network.js", ["nfl.js"], "", True),
+    # Not in the nav yet: sign-in, notifications and the Commissioner panel, while they're being tested.
+    "account.html": ("Account · Blitz Hub", None, "account.js", ["firebase-config.js"], "", False),
 }
+# Page scripts loaded as ES modules (they import the Firebase SDK).
+MODULES = {"account.js"}
 TPL = """<!doctype html>
 <html lang="en">
 <head>
@@ -67,7 +71,7 @@ def ver(path):
 for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     cur_attr = ' aria-current="page"'
     nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>' for h, l in NAV)
-    scripts = "\n".join(f'<script src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *dict.fromkeys(["nfl.js", *extra]), script])
-    crumb = dict(NAV)[cur]
+    scripts = "\n".join(f'<script{' type="module"' if s in MODULES else ""} src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *dict.fromkeys(["nfl.js", *extra]), script])
+    crumb = dict(NAV).get(cur, title.split(" · ")[0])
     open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts))
 print("wrote", ", ".join(PAGES))

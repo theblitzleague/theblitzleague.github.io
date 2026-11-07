@@ -188,27 +188,27 @@
     },
     "5": {
       "location": "Chicago",
-      "nickname": null,
+      "nickname": "Hitmen",
       "abbr": "CHI",
       "division": "central",
-      "placeholder": true,
+      "placeholder": false,
       "founded": 2026,
       "colors": {
-        "primary": "#1C2330",
-        "secondary": "#CC5500",
-        "trim": "#D9DDE3"
+        "primary": "#101114",
+        "secondary": "#8C1827",
+        "trim": "#F1E8D8"
       },
       "helmet": {
-        "shell": "#1C2330",
-        "facemask": "#D9DDE3",
-        "stripe": "#CC5500",
-        "stripeTrim": "#D9DDE3"
+        "shell": "#101114",
+        "facemask": "#101114",
+        "stripe": "#8C1827",
+        "stripeTrim": "#F1E8D8"
       },
       "logos": {
-        "primary": null,
-        "mark": null,
-        "wordmark": null,
-        "helmetDecal": null
+        "primary": "assets/franchises/chi/primary.webp",
+        "mark": "assets/franchises/chi/mark-ch.webp",
+        "wordmark": "assets/franchises/chi/wordmark.webp",
+        "helmetDecal": "assets/franchises/chi/primary.webp"
       },
       "gm": {
         "name": null,
@@ -217,7 +217,58 @@
         "portrait": null,
         "bio": null
       },
-      "pastGms": []
+      "pastGms": [],
+      "_colorsNote": "Official palette from the Chicago Hitmen brand board, received 2026-11-05.",
+      "palette": [
+        [
+          "Black",
+          "#101114"
+        ],
+        [
+          "Oxblood",
+          "#8C1827"
+        ],
+        [
+          "Bone",
+          "#F1E8D8"
+        ],
+        [
+          "Steel",
+          "#AAB1B8"
+        ]
+      ],
+      "_helmetNote": "Finished side-profile renders received 2026-11-05. Per the brand board, the matte black helmet (black mask) is worn with both the home (black) and away (bone) uniforms; the brushed steel helmet (oxblood mask) goes with the oxblood alternate.",
+      "helmetAway": {
+        "shell": "#101114",
+        "facemask": "#101114",
+        "stripe": "#8C1827",
+        "stripeTrim": "#F1E8D8"
+      },
+      "helmetImages": {
+        "home": {
+          "right": "assets/franchises/chi/helmet-home-right.webp",
+          "left": "assets/franchises/chi/helmet-home-left.webp"
+        },
+        "away": {
+          "right": "assets/franchises/chi/helmet-home-right.webp",
+          "left": "assets/franchises/chi/helmet-home-left.webp"
+        },
+        "alternate": {
+          "right": "assets/franchises/chi/helmet-alt-right.webp",
+          "left": "assets/franchises/chi/helmet-alt-left.webp"
+        }
+      },
+      "uniforms": {
+        "Home": "assets/franchises/chi/uniform-home.webp",
+        "Away": "assets/franchises/chi/uniform-away.webp",
+        "Alternate": "assets/franchises/chi/uniform-alternate.webp"
+      },
+      "logoStatus": {
+        "primary": "Final",
+        "mark": "Final",
+        "wordmark": "Final",
+        "helmetDecal": "Final"
+      }
     },
     "6": {
       "location": "Detroit",

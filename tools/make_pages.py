@@ -3,11 +3,11 @@
 Usage: python3 tools/make_pages.py   (writes *.html in the site root)"""
 import os
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-NAV = [("./", "Home"), ("standings.html", "Standings"), ("awards.html", "Awards"), ("teams.html", "Teams"), ("matchup.html", "Matchups"), ("schedule.html", "Schedule"),
+NAV = [("./", "Home"), ("standings.html", "Standings"), ("awards.html", "Awards"), ("teams.html", "Teams"), ("matchup.html", "Matchups"), ("schedule.html", "Schedule"), ("network.html", "Network"),
        ("draft.html", "Draft"), ("almanac.html", "Almanac"), ("map.html", "League Map")]
 # file: (title, nav item it belongs to, page script, extra scripts, body attrs, has tabs)
 PAGES = {
-    "index.html": ("The Blitz League", "./", "home.js", [], "", False),
+    "index.html": ("The Blitz League", "./", "home.js", ["nfl.js"], "", False),
     "standings.html": ("Blitz League Standings", "standings.html", "standings.js", [], "", True),
     "awards.html": ("Blitz League Awards Race", "awards.html", "awards.js", [], "", True),
     "teams.html": ("Blitz League Franchises", "teams.html", "teams.js", [], "", True),
@@ -17,6 +17,7 @@ PAGES = {
     "draft.html": ("Blitz League Draft", "draft.html", "draft.js", [], "", True),
     "almanac.html": ("Blitz League Almanac", "almanac.html", "almanac.js", [], "", True),
     "map.html": ("Blitz League Map", "map.html", "map.js", ["us-map.js"], "", False),
+    "network.html": ("Blitz Network", "network.html", "network.js", ["nfl.js"], "", True),
 }
 TPL = """<!doctype html>
 <html lang="en">

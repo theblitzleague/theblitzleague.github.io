@@ -361,8 +361,11 @@
       ${slot('helmetDecal', 'Helmet decal', helmetHTML(t.f))}
       ${alts.map(([n, src]) => `<div class="logo-slot">${img(src, n)}<b>${esc(n)}</b><span>${esc(st.alternates || 'Final')}</span></div>`).join('')}
     </div>
-    <div class="sub">Helmet, home and away</div>
-    <div class="helmet-pair">${helmetHTML(t.f, { facing: 'right', variant: 'home' })}${helmetHTML(t.f, { facing: 'left', variant: 'away' })}</div>
+    ${t.f.helmetImages && t.f.helmetImages.alternate
+      ? `<div class="sub">Helmet, primary and alternate</div>
+    <div class="helmet-pair">${helmetHTML(t.f, { facing: 'right', variant: 'home' })}${helmetHTML(t.f, { facing: 'left', variant: 'alternate' })}</div>`
+      : `<div class="sub">Helmet, home and away</div>
+    <div class="helmet-pair">${helmetHTML(t.f, { facing: 'right', variant: 'home' })}${helmetHTML(t.f, { facing: 'left', variant: 'away' })}</div>`}
     ${t.f.uniforms ? `<div class="sub">Uniforms</div><div class="uniforms">${Object.entries(t.f.uniforms).map(([n, src]) =>
       `<figure><img src="${esc(src)}" alt="${esc(n)} uniform" loading="lazy"><figcaption>${esc(n)}</figcaption></figure>`).join('')}</div>` : ''}
   </section>

@@ -1,5 +1,5 @@
-/* League home: this week's games (with broadcast and line), the Blitz Network (data/news.json stories plus an automatic
-   wire written from league results), last week's awards, standings snapshot, latest moves, franchise directory. */
+/* League home: this week's games (with broadcast and line), the Blitz Network (data/news.json stories, ESPN headlines
+   naming Blitz players via js/nfl.js, and an automatic wire written from league results), last week's awards, standings snapshot, latest moves, franchise directory. */
 (function () {
   const { esc, f1, f2, ord, rec, teamName, wash, accentFor, primaryLogo } = UI;
   let M;
@@ -28,25 +28,123 @@
     </div></section>`;
   }
 
-  // Game of the week: the matchup with the most combined wins (ties: most combined points for).
-  function featured(games) {
-    const g = games.slice().sort((a, b) => ((b.me && b.opp ? M.teams[b.me.roster_id].wins + b.opp.wins : 0) - (M.teams[a.me.roster_id].wins + a.opp.wins))
-      || (M.teams[b.me.roster_id].pf + b.opp.pf - M.teams[a.me.roster_id].pf - a.opp.pf))[0];
-    const L = M.teams[g.me.roster_id], R = g.opp, st = state(g);
-    const sc = (v) => (st === 'upcoming' ? '' : f2(v));
-    return `<a class="gotw" href="${mlink(g.week, L.id)}" style="--lw:${wash(L.f)};--rw:${wash(R.f)};--lc:${accentFor(L.f)};--rc:${accentFor(R.f)}">
-      <span class="eyebrow">Game of the week · most combined wins</span>
-      <div class="gotw-row">
-        ${helmetHTML(L.f, { facing: 'right', variant: 'home' })}
-        <div class="gside"><b>${esc(L.f.location)}</b><small>${rec(L)}</small><span class="gs">${sc(g.me.points)}</span></div>
-        <div class="gmid">${UI.billingHTML(M, g)}<span class="mstatus ${st}">${st === 'final' ? 'Final' : st === 'live' ? 'Live' : 'Upcoming'}${st === 'live' ? '<i></i>' : ''}</span><em>vs</em>
-          ${UI.broadcastHTML(M)}</div>
-        <div class="gside r"><b>${esc(R.f.location)}</b><small>${rec(R)}</small><span class="gs">${sc(g.oppRow.points)}</span></div>
-        ${helmetHTML(R.f, { facing: 'left', variant: 'away' })}
+  // ---------- Showcase: the rotating feature at the top of "This week" ----------
+  // One slide per game this week (game of the week first: most combined wins, then most combined points for), with the
+  // award races mixed in. Advances every 10 seconds; arrows, dots, arrow keys and swipes move it by hand. Hovering or
+  // focusing it pauses, and it holds still for anyone with reduced motion turned on.
+  const SHOW_MS = 10000;
+  const OFF = ['QB', 'RB', 'WR', 'TE'], DEF = ['DL', 'LB', 'DB'];
+  const byWins = (a, b) => ((M.teams[b.me.roster_id].wins + b.opp.wins) - (M.teams[a.me.roster_id].wins + a.opp.wins))
+    || (M.teams[b.me.roster_id].pf + b.opp.pf - M.teams[a.me.roster_id].pf - a.opp.pf);
+
+  function lastGame(t) {
+    const g = t.games.filter(x => x.final && x.opp).pop();
+    return g ? `${g.result} ${f1(g.me.points)}-${f1(g.oppRow.points)} vs ${esc(g.opp.f.abbr || g.opp.f.location)}` : '';
+  }
+  function streakTxt(t) {
+    const n = +String(t.streak).slice(1), k = String(t.streak)[0];
+    return n >= 2 && (k === 'W' || k === 'L') ? `${k === 'W' ? 'Won' : 'Lost'} ${n} straight` : '';
+  }
+
+  function matchSlide(g, gotw) {
+    const L = M.teams[g.me.roster_id], R = g.opp, st = state(g), l = UI.line(M, g);
+    const ab = t => esc(t.f.abbr || t.f.location);
+    const plate = (t, side) => `<div class="sc-plate ${side}"><b><i>#${t.leagueRank}</i> ${esc(t.f.location)}</b>
+      <small>${[rec(t), streakTxt(t) || lastGame(t)].filter(Boolean).join(' · ')}</small></div>`;
+    const score = st === 'upcoming' ? `<b>Week ${g.week}</b><small>Upcoming</small>`
+      : `<b>${f2(g.me.points)} <span>-</span> ${f2(g.oppRow.points)}</b><small class="${st}">${st === 'final' ? 'Final' : 'Live'}${st === 'live' ? '<i></i>' : ''} · Week ${g.week}</small>`;
+    const odds = l ? `<b>${l.spread ? `${ab(l.fav)} −${l.spread}` : 'Pick’em'}</b><small>${g.final ? 'Closing line' : 'Spread'} · O/U ${l.total}</small>` : '<b>Off</b><small>Lines open after week 1</small>';
+    return `<a class="slide match" href="${mlink(g.week, L.id)}" style="--lw:${wash(L.f)};--rw:${wash(R.f)};--lc:${accentFor(L.f)};--rc:${accentFor(R.f)}">
+      <span class="sc-tag">${gotw ? 'Game of the week' : `Week ${g.week} matchup`}</span>
+      <div class="sc-side l">${helmetHTML(L.f, { facing: 'right', variant: 'home' })}${plate(L, 'l')}</div>
+      <div class="sc-mid">
+        <div class="sc-net">${UI.netWord(M)}</div>
+        ${UI.billingHTML(M, g, { tagsOnly: true }) || `<span class="sc-kick">${gotw ? 'Most combined wins this week' : `Week ${g.week}`}</span>`}
+        <h3 class="sc-team"><i>#${L.leagueRank}</i> ${esc(L.f.location)}</h3>
+        <span class="sc-vs">vs</span>
+        <h3 class="sc-team"><i>#${R.leagueRank}</i> ${esc(R.f.location)}</h3>
+        <div class="sc-strip"><div>${score}</div><div>${odds}</div></div>
       </div>
-      ${UI.oddsHTML(M, g)}
-      <span class="gotw-cta">Open matchup</span>
+      <div class="sc-side r">${helmetHTML(R.f, { facing: 'left', variant: 'away' })}${plate(R, 'r')}</div>
     </a>`;
+  }
+
+  // Award race: a trophy beside the current top four. rows: [{ f, shot?, name, sub, val, unit }].
+  function raceSlide({ href, art, title, sub, rows }) {
+    return `<a class="slide race" href="${href}">
+      <div class="race-art">${art ? `<img src="${esc(art)}" alt="">` : ''}</div>
+      <div class="race-body"><h3>${title}</h3><span class="race-sub">${sub}</span>
+        <ol>${rows.map((r, i) => `<li><span class="race-rk">${i + 1}</span>${markSVG(r.f, 'race-mark')}${r.shot ? UI.shot(r.shot, 'race-shot') : ''}
+          <div class="race-who"><b>${r.name}</b><small>${r.sub}</small></div><span class="race-v">${r.val}<small>${r.unit}</small></span></li>`).join('')}</ol></div>
+    </a>`;
+  }
+
+  // Points each player has scored in finished games, credited to the team that started him most recently.
+  function playerRace(groups) {
+    const tot = {};
+    for (const t of Object.values(M.teams)) for (const g of t.games.filter(x => x.final)) (g.me.starters || []).forEach((id, i) => {
+      if (!id || id === '0' || !groups.includes(P(id).position)) return;
+      const p = tot[id] || (tot[id] = { id, v: 0, t, wk: 0 });
+      p.v += (g.me.starters_points || [])[i] || 0;
+      if (g.week >= p.wk) { p.wk = g.week; p.t = t; }
+    });
+    return Object.values(tot).sort((a, b) => b.v - a.v).slice(0, 4)
+      .map(p => ({ f: p.t.f, shot: p.id, name: esc(P(p.id).full_name), sub: `${esc(P(p.id).nflPos || P(p.id).position)} · ${esc(p.t.f.location)}`, val: f1(p.v), unit: 'pts' }));
+  }
+
+  function showcase(games) {
+    if (!games.length) return '';
+    const ranked = games.slice().sort(byWins), through = M.current - 1, trophies = M.league.awardTrophies || {};
+    const races = [];
+    if (through >= 1) {
+      const off = playerRace(OFF), def = playerRace(DEF);
+      if (off.length) races.push(raceSlide({ href: 'awards.html#players', art: trophies.opoy, title: 'Offensive Player<br>of the Year', sub: `Current top four · through week ${through}`, rows: off }));
+      races.push(raceSlide({ href: 'standings.html', art: M.league.trophy, title: 'Race for<br>the Gauntlet', sub: `Best records · through week ${through}`,
+        rows: Object.values(M.teams).sort(order).slice(0, 4).map(t => ({ f: t.f, name: esc(t.f.location), sub: `${esc(t.division.name)} · ${f1(t.pf)} PF`, val: rec(t), unit: '' })) }));
+      if (def.length) races.push(raceSlide({ href: 'awards.html#players', art: trophies.dpoy, title: 'Defensive Player<br>of the Year', sub: `Current top four · through week ${through}`, rows: def }));
+    }
+    // Game of the week, then a race after every second game, so the races spread through the rotation.
+    const slides = [];
+    ranked.forEach((g, i) => { slides.push(matchSlide(g, i === 0)); if (i % 2 === 0 && races.length) slides.push(races.shift()); });
+    slides.push(...races);
+    return `<section class="show" aria-roledescription="carousel" aria-label="Featured this week" tabindex="0">
+      <div class="show-track">${slides.map((s, i) => s.replace('<a class="slide', `<a aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}" class="slide${i === 0 ? ' on' : ''}`)).join('')}</div>
+      ${slides.length > 1 ? `<button class="show-nav prev" type="button" aria-label="Previous">&#8249;</button><button class="show-nav next" type="button" aria-label="Next">&#8250;</button>
+      <div class="show-dots">${slides.map((_, i) => `<button type="button" aria-label="Show slide ${i + 1}"${i === 0 ? ' class="on" aria-current="true"' : ''}><i></i></button>`).join('')}</div>` : ''}
+    </section>`;
+  }
+
+  function rotate(root) {
+    if (!root) return;
+    const slides = [...root.querySelectorAll('.slide')], dots = [...root.querySelectorAll('.show-dots button')];
+    if (slides.length < 2) return;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let at = 0, timer = 0, hold = false;
+    const arm = () => {
+      clearTimeout(timer); root.classList.remove('run');
+      if (hold || still || document.hidden) return;
+      void root.offsetWidth;                     // restart the progress bar on the active dot
+      root.classList.add('run'); timer = setTimeout(() => go(at + 1), SHOW_MS);
+    };
+    function go(n) {
+      at = (n + slides.length) % slides.length;
+      slides.forEach((s, k) => { s.classList.toggle('on', k === at); s.inert = k !== at; });
+      dots.forEach((d, k) => { d.classList.toggle('on', k === at); d.setAttribute('aria-current', k === at ? 'true' : 'false'); });
+      arm();
+    }
+    slides.forEach((s, k) => (s.inert = k !== 0));
+    root.querySelector('.prev').onclick = () => go(at - 1);
+    root.querySelector('.next').onclick = () => go(at + 1);
+    dots.forEach((d, k) => (d.onclick = () => go(k)));
+    root.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') go(at - 1); else if (e.key === 'ArrowRight') go(at + 1); });
+    const pause = v => () => { hold = v; arm(); };
+    root.addEventListener('mouseenter', pause(true)); root.addEventListener('mouseleave', pause(false));
+    root.addEventListener('focusin', pause(true)); root.addEventListener('focusout', e => { if (!root.contains(e.relatedTarget)) pause(false)(); });
+    document.addEventListener('visibilitychange', arm);
+    let x0 = null;
+    root.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    root.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(at + (dx < 0 ? 1 : -1)); });
+    arm();
   }
 
   function scoreboard(games) {
@@ -121,25 +219,41 @@
     return out;
   }
 
-  function network(news) {
+  // ESPN headlines that name Blitz-rostered players (js/nfl.js), newest first, shaped like the stories above.
+  function nflStories(N) {
+    if (!N) return [];
+    const T = { HeadlineNews: 'NFL news', Story: 'NFL story', Media: 'NFL video' };
+    return N.news.filter(n => n.blitz.length).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 4).map(n => {
+      const b = n.blitz[0];
+      return { tag: T[n.type] || 'NFL', head: esc(n.head), href: n.url || '', ext: true, shot: b.id, t: b.t, byline: ['ESPN', n.byline].filter(Boolean).join(' · '),
+        dek: `${n.blitz.slice(0, 3).map(x => `${esc(P(x.id).full_name)} (${esc(x.t.f.location)})`).join(', ')}${n.blitz.length > 3 ? ` and ${n.blitz.length - 3} more` : ''}` };
+    });
+  }
+
+  function network(news, N) {
     const stories = (news.stories || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)))
       .map(s => ({ tag: s.tag || 'News', head: esc(s.headline), dek: esc(s.dek || ''), href: s.url || '', image: s.image, byline: s.byline, date: s.date, breaking: s.breaking, t: (s.teams || []).map(r => M.teams[r]).find(Boolean) }));
-    const all = [...stories, ...wire()];
+    const nfl = nflStories(N), lw = wire();
+    const all = [...stories, ...nfl.slice(0, 1), ...lw.slice(0, 2), ...nfl.slice(1), ...lw.slice(2)];
+    const hurt = N ? new Set(N.injuries.filter(x => x.own && x.own.where === 'starter' && ['Out', 'Doubtful', 'Injured Reserve'].includes(x.status)).map(x => x.pid)) : new Set();
+    const alerts = N ? N.starters.filter(s => s.bye || hurt.has(s.id)).length : 0;
     if (!all.length) return '';
     const breaking = stories.filter(s => s.breaking);
     const [lead, ...rest] = all;
-    const art = s => (s.image ? `<img class="net-img" src="${esc(s.image)}" alt="">` : s.t ? primaryLogo(s.t.f, 'net-logo') : `<img class="net-logo" src="${esc((M.league.network || {}).mark || M.league.logo)}" alt="">`);
+    const art = s => (s.image ? `<img class="net-img" src="${esc(s.image)}" alt="">` : s.shot ? UI.shot(s.shot, 'nw-lead-shot') : s.t ? primaryLogo(s.t.f, 'net-logo') : `<img class="net-logo" src="${esc((M.league.network || {}).mark || M.league.logo)}" alt="">`);
     const meta = s => [s.byline ? esc(s.byline) : s.date ? '' : 'Blitz Network Wire', s.date ? esc(s.date) : ''].filter(Boolean).join(' · ');
     const tag = s => `<span class="net-tag${s.breaking || /breaking/i.test(s.tag) ? ' hot' : ''}">${esc(s.tag)}</span>`;
-    const a = (s, cls, inner) => (s.href ? `<a class="${cls}" href="${esc(s.href)}">${inner}</a>` : `<div class="${cls}">${inner}</div>`);
+    const a = (s, cls, inner) => (s.href ? `<a class="${cls}" href="${esc(s.href)}"${s.ext ? ' target="_blank" rel="noopener"' : ''}>${inner}</a>` : `<div class="${cls}">${inner}</div>`);
     return `<section class="panel s12 network">
       ${breaking.length ? `<div class="ticker"><b>Breaking</b><span>${breaking.map(s => s.head).join(' <i>/</i> ')}</span></div>` : ''}
-      <header><div><span class="eyebrow">News, recaps and the wire</span><h2>${UI.netWord(M)}</h2></div><span class="aside">${stories.length ? `${stories.length} stor${stories.length === 1 ? 'y' : 'ies'}` : 'Wire only'}</span></header>
+      <header><div><span class="eyebrow">NFL news, recaps and the wire</span><h2>${UI.netWord(M)}</h2></div><a class="aside" href="network.html">Full coverage</a></header>
+      ${alerts ? `<a class="net-alert" href="network.html#matchups"><b>${alerts} lineup alert${alerts > 1 ? 's' : ''}</b><span>Blitz starters on bye, out, doubtful or on IR this week</span><i>&rsaquo;</i></a>` : ''}
       <div class="net-grid">
         ${a(lead, 'net-lead', `<div class="net-art" style="${lead.t ? `--lw:${wash(lead.t.f)}` : ''}">${art(lead)}</div><div class="net-copy">${tag(lead)}<h3>${lead.head}</h3><p>${lead.dek}</p><span class="pmeta">${meta(lead)}</span></div>`)}
-        <div class="net-list">${rest.slice(0, 5).map(s => a(s, 'net-item', `${s.t ? markSVG(s.t.f, 'mini') : (M.league.network || {}).mark ? `<img class="mini net-mark" src="${esc(M.league.network.mark)}" alt="">` : ''}<div>${tag(s)}<b>${s.head}</b><span class="pmeta">${s.dek}</span></div>`)).join('')}</div>
+        <div class="net-list">${rest.slice(0, 5).map(s => a(s, 'net-item', `${s.shot ? UI.shot(s.shot, 'mini net-shot') : s.t ? markSVG(s.t.f, 'mini') : (M.league.network || {}).mark ? `<img class="mini net-mark" src="${esc(M.league.network.mark)}" alt="">` : ''}<div>${tag(s)}<b>${s.head}</b><span class="pmeta">${s.dek}</span></div>`)).join('')}</div>
       </div>
-      <p class="footnote">Wire stories are written automatically from league results. Blitz Network stories and breaking news go in data/news.json.</p>
+      <div class="net-more">${['headlines:Headlines', 'injuries:Injury report', 'matchups:Matchups', 'defenses:Defense vs position', 'slate:NFL slate', 'trending:Trending'].map(x => x.split(':')).map(([h, l]) => `<a href="network.html#${h}">${l}</a>`).join('')}</div>
+      <p class="footnote">NFL stories are ESPN headlines that name Blitz-rostered players, linked to ESPN. Wire stories are written automatically from league results. Blitz Network stories and breaking news go in data/news.json.</p>
     </section>`;
   }
 
@@ -174,7 +288,8 @@
   async function start() {
     try {
       M = await Hub.load();
-      const news = await fetch('data/news.json').then(r => (r.ok ? r.json() : { stories: [] })).catch(() => ({ stories: [] }));
+      const [news, N] = await Promise.all([fetch('data/news.json').then(r => (r.ok ? r.json() : { stories: [] })).catch(() => ({ stories: [] })),
+        window.NFL ? NFL.load(M).catch(e => (console.error(e), null)) : null]);
       document.getElementById('sample-flag').hidden = M.live;
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       document.getElementById('crumb').innerHTML = `<strong>Home</strong>`;
@@ -182,8 +297,8 @@
       const games = gamesFor(M.current);
       document.getElementById('content').innerHTML = `<div class="grid">
         <section class="panel s12"><header><div><span class="eyebrow">Week ${M.current}</span><h2>This week</h2></div><a class="aside" href="matchup.html">All matchups</a></header>
-          ${featured(games)}${scoreboard(games)}</section>
-        ${network(news)}
+          ${showcase(games)}${scoreboard(games)}</section>
+        ${network(news, N)}
         <div class="s8 stack">
           <section class="panel"><header><div><span class="eyebrow">Week ${M.current - 1}</span><h2>Last week's awards</h2></div></header>${awards()}</section>
           <section class="panel"><header><div><span class="eyebrow">Wire and trades</span><h2>Latest moves</h2></div></header>${moves()}</section>
@@ -191,6 +306,7 @@
         <section class="panel s4"><header><div><span class="eyebrow">Standings</span><h2>Division races</h2></div><a class="aside" href="standings.html">Full standings</a></header>${snapshot()}</section>
         <section class="panel s12"><header><div><span class="eyebrow">${Object.keys(M.teams).length} franchises</span><h2>The league</h2></div></header>${directory()}</section>
       </div>`;
+      rotate(document.querySelector('.show'));
       paintHelmets(document).catch(e => console.error(e));
     } catch (e) {
       document.getElementById('content').innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;

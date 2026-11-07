@@ -96,6 +96,8 @@
   },
   "_networkNote": "The league's media brand (home-page news, and the 'Watch on' slot on every matchup). Branding from the commissioner, 2026-11-04. logo = full wordmark, mark = the BN square (stories with no team). The site uses the white-text versions (*-white.webp) because the navy originals vanish on the dark background; blitz-network.webp / blitz-network-mark.webp keep the original navy for light backgrounds, and *-src.* are the files as sent. logo null = a text wordmark shows instead. Stories go in data/news.json.",
   "_prizesNote": "Prize money, agreed by the commissioner 2026-11-04: $100 buy-in x 12 teams = $1,200. Ties split the prize evenly. Weekly = highest score of each regular-season week. Division winner = best record in the division, ties broken by points for (the site's standings rule). Points leader = most regular-season points for. GM of the Year = league vote. honorsOnly awards carry a trophy but no cash.",
+  "_duesSeasonNote": "The season the League ledger (Awards > Prizes & Ledger) collects dues for. 2027 is the founding season. Move it up by one each year when dues for the next season open.",
+  "duesSeason": 2027,
   "prizes": {
     "buyIn": 100,
     "champion": 450,

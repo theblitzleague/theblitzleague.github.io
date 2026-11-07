@@ -13,6 +13,27 @@ const { getMessaging } = require('firebase-admin/messaging');
 initializeApp();
 const GONE = ['messaging/registration-token-not-registered', 'messaging/invalid-registration-token', 'messaging/invalid-argument'];
 
+// duesReminders: each morning at 10:00 Central during the founding dues window, a private Hub message to every linked GM
+// whose team has no dues entry in the ledger for that season (rule 6-1-2: due March 13, seat lost if unpaid March 18).
+// A dues entry counts unless a "void" entry cancels it, the same way the ledger page counts it.
+const DUES = { season: 2027, dates: {
+  '2027-03-06': ['Dues due in one week', 'Your $100 Blitz League dues are due March 13. Pay on Venmo @gwilso22, Friends & Family, note "Blitz League dues 2027". The QR code is on Awards > Prizes & Ledger.'],
+  '2027-03-12': ['Dues due tomorrow', 'Your $100 Blitz League dues are due tomorrow, March 13. Venmo @gwilso22, Friends & Family, note "Blitz League dues 2027".'],
+  '2027-03-14': ['Dues are past due', 'Your Blitz League dues were due March 13. Under rule 6-1-2, a team still unpaid on March 18 goes to a replacement owner before the draft. Venmo @gwilso22.'],
+  '2027-03-17': ['Last day for dues', 'Tomorrow, March 18, an unpaid team goes to a replacement owner (rule 6-1-2). Pay today: Venmo @gwilso22, note "Blitz League dues 2027".'],
+} };
+exports.duesReminders = onSchedule({ schedule: '0 10 * * *', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 0 }, async () => {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+  const msg = DUES.dates[today];
+  if (!msg) return;
+  const db = getFirestore();
+  const entries = (await db.collection('ledger').where('season', '==', DUES.season).get()).docs.map(d => ({ id: d.id, ...d.data() }));
+  const voided = new Set(entries.filter(e => e.kind === 'void').map(e => e.ref));
+  const paid = new Set(entries.filter(e => e.kind === 'dues' && !voided.has(e.id)).map(e => e.team));
+  const users = (await db.collection('users').get()).docs.filter(d => d.data().team && !paid.has(d.data().team));
+  await Promise.all(users.map(u => db.collection('notes').add({ to: u.id, team: u.data().team, by: 'system', at: FieldValue.serverTimestamp(), title: msg[0], body: msg[1] })));
+});
+
 // note: a private message to one GM (notes/{id}); goes only to that GM's registered devices.
 exports.note = onDocumentCreated({ document: 'notes/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
   const snap = event.data;

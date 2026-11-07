@@ -388,10 +388,29 @@
   }
 
   function route() {
-    const tabs = [['points', 'Points race'], ['playoffs', 'Playoff race'], ['gm', 'GM Index'], ['players', 'Player awards'], ['prizes', 'Prize money']];
+    const tabs = [['points', 'Points race'], ['playoffs', 'Playoff race'], ['gm', 'GM Index'], ['players', 'Player awards'], ['prizes', 'Prizes & Ledger']];
     const tab = tabs.some(([id]) => id === location.hash.slice(1)) ? location.hash.slice(1) : 'points';
     document.getElementById('tabs').innerHTML = tabsHTML(tabs, tab);
     document.getElementById('content').innerHTML = { points, playoffs, gm, players, prizes: prizeMoney }[tab]();
+    if (tab === 'prizes') ledger();
+  }
+
+  // The League ledger (js/ledger.js) sits under the prize tables. It needs the sign-in code, which only loads on devices
+  // where someone has signed in; everyone else is told it's for signed-in members.
+  function ledger() {
+    const grid = document.querySelector('#content > .grid');
+    if (!grid) return;
+    grid.insertAdjacentHTML('beforeend', '<div class="s12" id="ledger-mount"></div>');
+    const el = document.getElementById('ledger-mount');
+    let on = false;
+    try { on = localStorage.getItem('blitz.signedIn') === '1'; } catch (e) { /* private mode */ }
+    const src = (document.querySelector('meta[name="blitz-ledger"]') || {}).content;
+    if (!on || !src || !window.FIREBASE_CONFIG) {
+      el.innerHTML = `<section class="panel ledger"><header><div><span class="eyebrow">League ledger · rule 6-4-3</span><h2>Members only</h2></div></header>
+        <p>Dues, the prize fund and every payout are recorded here for league members. <a href="account.html">Sign in</a> to see it.</p></section>`;
+      return;
+    }
+    import(new URL(src, document.baseURI).href).then(m => m.mount(el, M)).catch(e => { el.innerHTML = '<div class="error">Couldn\'t load the ledger.</div>'; console.error(e); });
   }
 
   boot('League · <strong>Awards race</strong>', m => {

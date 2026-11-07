@@ -75,7 +75,7 @@ function setupView() {
   const steps = [];
   // 1. Install. On iPhone it must come first: the installed app keeps its own sign-in, separate from Safari.
   if (standalone) steps.push([true, 'Install the app', 'Installed. You opened Blitz Hub from your home screen.']);
-  else if (ios) steps.push([false, 'Install the app', `In Safari, tap <b>Share</b> (the square with an arrow) at the bottom, then <b>Add to Home Screen</b> → <b>Add</b>. Then close Safari, open <b>Blitz Hub</b> from your home screen, and tap <b>Account</b> to carry on there. On iPhone, notifications only work in the installed app.`]);
+  else if (ios) steps.push([false, 'Install the app', `In Safari, tap <b>Share</b> (the square with an arrow) at the bottom, then <b>Add to Home Screen</b> → <b>Add</b>. Then close Safari, open <b>Blitz Hub</b> from your home screen, and tap the <b>profile icon</b> at the top right to carry on there. On iPhone, notifications only work in the installed app.`]);
   else if (installPrompt) steps.push([false, 'Install the app', '<button class="btn primary" id="inst">Install Blitz Hub</button>']);
   else if (phone) steps.push([false, 'Install the app', "Open your browser's menu (⋮) and choose <b>Install app</b> or <b>Add to Home screen</b>, then open Blitz Hub from your home screen."]);
   else steps.push([true, 'Install the app', 'Optional on a computer. Notifications work in this browser.']);
@@ -212,6 +212,7 @@ function commishView() {
       <div class="sub">Sent to the league</div><div id="annlist" class="acct-list"></div>
       <div class="sub">Sent to specific GMs</div><div id="notelist" class="acct-list"></div>`, 's7')}
     ${panel('Commissioner', 'Link accounts to teams', `<p class="acct-note">Everyone who has signed in. Pick each GM's team; they get announcements once linked.</p><div id="members" class="acct-list"></div>${note('memmsg')}`, 's5')}
+    ${panel('Commissioner', 'Scheduled reminders', `<p class="acct-note">Messages the site sends on its own. Sent ones appear under "Sent to specific GMs" as Automatic reminder.</p><div id="sched" class="acct-list"><p class="pmeta">Loading…</p></div>`, 's12')}
   </div>`;
   const toTeams = () => document.querySelector('input[name="to"]:checked').value === 'teams';
   for (const r of document.querySelectorAll('input[name="to"]')) r.onchange = () => { $('pick').hidden = !toTeams(); };
@@ -239,7 +240,7 @@ function commishView() {
   unsub.push(onSnapshot(query(collection(db, 'notes'), orderBy('at', 'desc'), limit(20)), s => {
     UI.markSeen(s.docs.map(d => d.id));
     $('notelist').innerHTML = s.docs.map(d => { const n = d.data(), at = n.at && n.at.toDate ? n.at.toDate() : null;
-      return `<div class="acct-item"><div><span class="pmeta">${n.by === 'system' ? '<b>Site alert</b> to you' : `To <b>${esc(n.team ? teamLabel(n.team) : 'a GM')}</b>`}</span><b>${esc(n.title)}</b><p>${esc(n.body)}</p>
+      return `<div class="acct-item"><div><span class="pmeta">${n.by === 'system' ? (n.team ? `<b>Automatic reminder</b> → ${esc(teamLabel(n.team))}` : '<b>Site alert</b> to you') : `To <b>${esc(n.team ? teamLabel(n.team) : 'a GM')}</b>`}</span><b>${esc(n.title)}</b><p>${esc(n.body)}</p>
         <span class="pmeta">${at ? UI.annTime(at) : 'sending…'} · ${n.done ? (n.sent ? `delivered to ${n.sent} device${n.sent === 1 ? '' : 's'}` : 'no phone with notifications on; they\'ll see it next time they open the site') + (n.failed ? `, ${n.failed} failed` : '') : 'sending…'}</span></div>
         <button class="btn small" data-delnote="${d.id}" title="Remove it (doesn't unsend a notification)">Remove</button></div>`; }).join('') || '<p class="empty">Nothing sent yet.</p>';
     for (const b of $('notelist').querySelectorAll('[data-delnote]')) b.onclick = async () => {
@@ -247,6 +248,32 @@ function commishView() {
     };
   }, e => say('annmsg', `Couldn't load sent messages (${nice(e)}).`, true)));
   members();
+  scheduled();
+}
+
+// Automatic messages and when they run. Keep in step with functions/index.js (DUES dates and the watchRefresh schedule).
+const SCHEDULE = [
+  { when: '2027-03-06T10:00:00-06:00', title: 'Dues due in one week', to: 'unpaid' },
+  { when: '2027-03-12T10:00:00-06:00', title: 'Dues due tomorrow', to: 'unpaid' },
+  { when: '2027-03-14T10:00:00-05:00', title: 'Dues are past due', to: 'unpaid' },
+  { when: '2027-03-17T10:00:00-05:00', title: 'Last day for dues (seat goes to a replacement March 18)', to: 'unpaid' },
+];
+async function scheduled() {
+  const box = $('sched');
+  try {
+    const season = Number(M.league.duesSeason) || 2027;
+    const [us, led] = await Promise.all([getDocs(collection(db, 'users')), getDocs(query(collection(db, 'ledger'), where('season', '==', season))).catch(() => null)]);
+    const entries = led ? led.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    const voided = new Set(entries.filter(e => e.kind === 'void').map(e => e.ref));
+    const paid = new Set(entries.filter(e => e.kind === 'dues' && !voided.has(e.id)).map(e => e.team));
+    const unpaid = us.docs.filter(u => u.data().team && !paid.has(u.data().team)).map(u => teamLabel(u.data().team));
+    const now = Date.now(), fmt = d => d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    const rows = SCHEDULE.map(s => ({ ...s, at: new Date(s.when) })).map(s => `<div class="acct-item"><div><b>${esc(s.title)}</b>
+        <span class="pmeta">${+s.at < now ? 'Already ran' : `Next: ${fmt(s.at)}`} · goes to GMs whose ${season} dues are unpaid</span>
+        <span class="pmeta">${+s.at < now ? '' : unpaid.length ? `If it ran now: ${unpaid.length} team${unpaid.length > 1 ? 's' : ''} (${esc(unpaid.join(', '))})` : 'If it ran now: nobody, every linked team has paid or no GMs are linked yet'}</span></div></div>`);
+    rows.push(`<div class="acct-item"><div><b>Nightly refresh check</b><span class="pmeta">Every day at 5:30 AM Central · goes to you only if the site's NFL data didn't refresh overnight</span></div></div>`);
+    box.innerHTML = rows.join('');
+  } catch (e) { box.innerHTML = `<p class="acct-note bad">Couldn't load the schedule (${esc(nice(e))}).</p>`; }
 }
 
 // Linked GMs by team, for the "Specific GMs" picker and for sending.

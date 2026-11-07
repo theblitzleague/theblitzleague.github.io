@@ -55,6 +55,8 @@
   function route() {
     const tab = ['franchises', 'all-time', 'gm-lineage'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'franchises';
     document.getElementById('tabs').innerHTML = tabsHTML([['franchises', 'Franchises'], ['all-time', 'All-time standings'], ['gm-lineage', 'GM lineage']], tab);
+    // The League Map is its own page but belongs to Teams: it sits in this tab bar and keeps Teams highlighted in the menu.
+    document.querySelector('#tabs [role="tablist"]').insertAdjacentHTML('beforeend', '<a class="tab" href="map.html">League map</a>');
     document.getElementById('content').innerHTML = { franchises: cards, 'all-time': table, 'gm-lineage': lineage }[tab]();
     paintHelmets(document).catch(e => console.error(e));
   }

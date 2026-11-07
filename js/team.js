@@ -418,7 +418,7 @@
     const tab = RENDER[location.hash.slice(1)] ? location.hash.slice(1) : 'overview';
     document.getElementById('tabs').innerHTML = tabRow(tab);
     document.getElementById('content').innerHTML = RENDER[tab]();
-    document.title = `${teamName(T)} · The Blitz League`;
+    document.title = `${teamName(T)} · Blitz Hub`;
     paintHelmets(document).catch(e => console.error(e));
   }
 

@@ -10,6 +10,6 @@ import re
 body = re.split(r"<body[^>]*>", s)[1].split("</body>")[0]
 head = "\n".join(l for l in head.splitlines() if "charset" not in l and 'name="viewport"' not in l)
 import re
-head = re.sub(r"<title>.*?</title>", "<title>Blitz League Hub</title>", head)
+head = re.sub(r"<title>.*?</title>", "<title>Blitz Hub</title>", head)
 out = '<meta name="claude:viewport-fit-sides" content="cover">\n' + head.strip() + "\n" + body.strip() + "\n"
 open(sys.argv[1], "w").write(out)

@@ -11,17 +11,17 @@ NAV = [("./", "Home"), ("standings.html", "Standings"), ("awards.html", "Awards"
 NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22">'}
 # file: (title, nav item it belongs to, page script, extra scripts, body attrs, has tabs)
 PAGES = {
-    "index.html": ("The Blitz League", "./", "home.js", ["nfl.js"], "", False),
-    "standings.html": ("Blitz League Standings", "standings.html", "standings.js", [], "", True),
-    "awards.html": ("Blitz League Awards Race", "awards.html", "awards.js", [], "", True),
-    "teams.html": ("Blitz League Franchises", "teams.html", "teams.js", [], "", True),
-    "team.html": ("Blitz League Team", "teams.html", "team.js", [], ' data-team="1"', True),
-    "matchup.html": ("Blitz League Matchup", "matchup.html", "matchup.js", [], "", False),
-    "schedule.html": ("Blitz League Schedule", "schedule.html", "schedule.js", [], "", True),
-    "draft.html": ("Blitz League Draft", "draft.html", "draft.js", [], "", True),
-    "almanac.html": ("Blitz League Almanac", "almanac.html", "almanac.js", [], "", True),
-    "map.html": ("Blitz League Map", "map.html", "map.js", ["us-map.js"], "", False),
-    "network.html": ("Blitz Network", "network.html", "network.js", ["nfl.js"], "", True),
+    "index.html": ("Blitz Hub", "./", "home.js", ["nfl.js"], "", False),
+    "standings.html": ("Standings · Blitz Hub", "standings.html", "standings.js", [], "", True),
+    "awards.html": ("Awards Race · Blitz Hub", "awards.html", "awards.js", [], "", True),
+    "teams.html": ("Franchises · Blitz Hub", "teams.html", "teams.js", [], "", True),
+    "team.html": ("Team · Blitz Hub", "teams.html", "team.js", [], ' data-team="1"', True),
+    "matchup.html": ("Matchup · Blitz Hub", "matchup.html", "matchup.js", [], "", False),
+    "schedule.html": ("Schedule · Blitz Hub", "schedule.html", "schedule.js", [], "", True),
+    "draft.html": ("Draft · Blitz Hub", "draft.html", "draft.js", [], "", True),
+    "almanac.html": ("Almanac · Blitz Hub", "almanac.html", "almanac.js", [], "", True),
+    "map.html": ("League Map · Blitz Hub", "map.html", "map.js", ["us-map.js"], "", False),
+    "network.html": ("Blitz Network · Blitz Hub", "network.html", "network.js", ["nfl.js"], "", True),
 }
 TPL = """<!doctype html>
 <html lang="en">
@@ -40,11 +40,11 @@ TPL = """<!doctype html>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Blitz League">
+<meta name="apple-mobile-web-app-title" content="Blitz Hub">
 </head>
 <body{body}>
 <header class="topbar"><div class="wrap">
-  <a class="brand" href="./"><img class="brand-logo" src="assets/league/blitz-shield.webp" alt="The Blitz League"><span><b>BLITZ</b> LEAGUE</span></a>
+  <a class="brand" href="./"><img class="brand-logo" src="assets/league/blitz-hub.webp" alt="Blitz Hub" width="672" height="132"></a>
   <nav class="nav" aria-label="League">
     {nav}
   </nav>

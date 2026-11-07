@@ -1055,3 +1055,6 @@ table.nw-dvp { min-width: 760px; }
 @media (max-width: 760px) { .net-alert span { display: none; } }
 .nw-dvp tbody th, .nw-dvp thead th:first-child { position: sticky; left: 0; z-index: 2; background: var(--bg-2); }
 @media (max-width: 760px) { .nw-key { display: none; } }
+.nav a.nav-logo { display: flex; align-items: center; padding-block: 0; }
+.nav a.nav-logo img { height: 22px; width: auto; display: block; opacity: .78; transition: opacity .15s; }
+.nav a.nav-logo:hover img, .nav a.nav-logo[aria-current="page"] img { opacity: 1; }

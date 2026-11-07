@@ -180,14 +180,17 @@
 
   boot('League · <strong>Blitz Network</strong>', async m => {
     M = m;
-    N = await NFL.load(M);
+    N = await NFL.load(M, live => { N = live; hero(); route(); });
+    hero();
+    route();
+    addEventListener('hashchange', route);
+    document.addEventListener('click', e => { const b = e.target.closest('[data-sort]'); if (!b) return; sortBy = b.dataset.sort || null; route(); });
+  });
+  function hero() {
     const net = M.league.network || {};
     document.getElementById('hero').innerHTML = `<section class="lhero nhero"><div class="wrap">
       ${net.logo ? `<img class="nhero-logo" src="${esc(net.logo)}" alt="${esc(net.name || 'Blitz Network')}">` : ''}
       <div><span class="eyebrow">NFL week ${esc(N.week)} · ${N.news.length} headlines · ${N.starters.length} Blitz starters in action</span><h1>${esc(net.name || 'Blitz Network')}</h1>
         <div class="nick">Real NFL news, injuries and matchups, read through every Blitz roster</div></div></div></section>`;
-    route();
-    addEventListener('hashchange', route);
-    document.addEventListener('click', e => { const b = e.target.closest('[data-sort]'); if (!b) return; sortBy = b.dataset.sort || null; route(); });
-  });
+  }
 })();

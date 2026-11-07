@@ -288,8 +288,10 @@
   async function start() {
     try {
       M = await Hub.load();
+      // Live NFL data, if it comes, redraws just the Blitz Network panel.
+      const relive = L => { const el = document.querySelector('.network'); if (!el) return; el.outerHTML = network(news, L); paintHelmets(document).catch(() => {}); };
       const [news, N] = await Promise.all([fetch('data/news.json').then(r => (r.ok ? r.json() : { stories: [] })).catch(() => ({ stories: [] })),
-        window.NFL ? NFL.load(M).catch(e => (console.error(e), null)) : null]);
+        window.NFL ? NFL.load(M, L => relive(L)).catch(e => (console.error(e), null)) : null]);
       document.getElementById('sample-flag').hidden = M.live;
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       document.getElementById('crumb').innerHTML = `<strong>Home</strong>`;

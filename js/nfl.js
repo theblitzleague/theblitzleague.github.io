@@ -83,20 +83,30 @@
 
   const group = p => (p && (POS.includes(p.position) ? p.position : null));
 
-  async function load(M) {
+  // Pages draw at once from data/nfl.json; live ESPN/Sleeper data replaces it through onLive when (and if) it arrives,
+  // so a slow or blocked outside request never holds the page blank.
+  async function load(M, onLive) {
     const snap = await fetch('data/nfl.json').then(r => (r.ok ? r.json() : null)).catch(() => null) || {};
-    const [sb, news, inj, add, drop] = await Promise.all([
+    Promise.all([
       timed(`${ESPN}/scoreboard`).catch(() => null), timed(`${ESPN}/news?limit=50`).catch(() => null), timed(`${ESPN}/injuries`, 9000).catch(() => null),
       timed(`${SLEEPER}/players/nfl/trending/add?lookback_hours=24&limit=25`).catch(() => null),
-      timed(`${SLEEPER}/players/nfl/trending/drop?lookback_hours=24&limit=25`).catch(() => null)]);
+      timed(`${SLEEPER}/players/nfl/trending/drop?lookback_hours=24&limit=25`).catch(() => null)])
+      .then(([sb, news, inj, add, drop]) => {
+        if (!onLive || !((sb && sb.events) || (news && news.articles) || (inj && inj.injuries) || (add && drop))) return;
+        try { onLive(build(M, snap, { sb, news, inj, add, drop })); } catch (e) { console.error(e); }
+      });
+    return build(M, snap, {});
+  }
+
+  function build(M, snap, { sb, news, inj, add, drop }) {
     const live = {};
     let s = { games: snap.games || [], byes: snap.byes || [], teamById: {}, week: snap.week };
     if (sb && sb.events) { s = slate(sb); live.games = true; }
     const N = {
       season: snap.season, week: s.week || snap.week, built: snap.built, dvpThrough: snap.dvpThrough, scoring: snap.scoring,
       games: s.games, byes: s.byes,
-      news: news && news.articles ? (live.news = true, news.articles.map(a => story(a, s.teamById))) : snap.news || [],
-      injuries: inj && inj.injuries ? (live.injuries = true, hurt(inj)) : snap.injuries || [],
+      news: news && news.articles ? (live.news = true, news.articles.map(a => story(a, s.teamById))) : (snap.news || []).map(n => ({ ...n })),
+      injuries: inj && inj.injuries ? (live.injuries = true, hurt(inj)) : (snap.injuries || []).map(x => ({ ...x })),
       trending: add && drop ? (live.trending = true, { add, drop }) : snap.trending || { add: [], drop: [] },
       dvp: snap.dvp || {}, proj: snap.proj || {}, live,
     };

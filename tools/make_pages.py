@@ -5,6 +5,8 @@ import os
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 NAV = [("./", "Home"), ("standings.html", "Standings"), ("awards.html", "Awards"), ("teams.html", "Teams"), ("matchup.html", "Matchups"), ("schedule.html", "Schedule"), ("network.html", "Network"),
        ("draft.html", "Draft"), ("almanac.html", "Almanac"), ("map.html", "League Map")]
+# Nav items shown as a logo instead of their label (the label stays as the image's alt text and the crumb).
+NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network">'}
 # file: (title, nav item it belongs to, page script, extra scripts, body attrs, has tabs)
 PAGES = {
     "index.html": ("The Blitz League", "./", "home.js", ["nfl.js"], "", False),
@@ -57,7 +59,7 @@ TPL = """<!doctype html>
 """
 for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     cur_attr = ' aria-current="page"'
-    nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}>{l}</a>' for h, l in NAV)
+    nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>' for h, l in NAV)
     scripts = "\n".join(f'<script src="js/{s}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *extra, script])
     crumb = dict(NAV)[cur]
     open(os.path.join(ROOT, fn), "w").write(TPL.format(title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts))

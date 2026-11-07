@@ -96,8 +96,9 @@
         <div class="plates">${plates.map(s => `<div class="plate${s === M.state.season ? ' now' : ''}"><b>${esc(s)}</b><span>${done[s] && done[s].champion ? esc(name(done[s].champion)) : s === M.state.season ? 'To be decided' : '&nbsp;'}</span></div>`).join('')}</div>
         ${M.history.some(s => s.champion) ? '' : `<div class="empty">No champion yet. The first Blitz League title is decided in the ${esc(M.state.season)} playoffs.</div>`}
       </div></section>
-      ${[['opoy', 'Offensive Player of the Year', 'QB, RB, WR and TE: most points scored as a starter'], ['dpoy', 'Defensive Player of the Year', 'DL, LB and DB: most points scored as a starter']]
-        .filter(([k]) => (M.league.awardTrophies || {})[k]).map(([k, name, how]) => `<a class="panel s6 award-case" href="awards.html#players">
+      ${[['opoy', 'Offensive Player of the Year', 'QB, RB, WR and TE: most points scored as a starter'], ['dpoy', 'Defensive Player of the Year', 'DL, LB and DB: most points scored as a starter'],
+        ['roy', 'Rookie of the Year', 'First-year players at any position: most points scored as a starter']]
+        .filter(([k]) => (M.league.awardTrophies || {})[k]).map(([k, name, how], i, all) => `<a class="panel ${all.length > 2 ? 's4' : 's6'} award-case" href="awards.html#players">
         <img src="${esc(M.league.awardTrophies[k])}" alt="The Blitz League ${esc(name)} trophy">
         <div><span class="eyebrow">Player award</span><h2>${esc(name)}</h2><p class="pmeta">${esc(how)}. Named after the regular season. ${M.state.season} race: see the Awards page.</p></div></a>`).join('')}
       <section class="panel s12"><header><div><span class="eyebrow">Since ${M.league.founded}</span><h2>Seasons</h2></div></header>

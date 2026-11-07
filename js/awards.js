@@ -312,7 +312,7 @@
         ${off.length ? tableOf(off) : '<div class="empty">No offensive player has started yet.</div>'}</section>
       <section class="panel s6"><header><div class="hwith">${trophy('dpoy')}<div><span class="eyebrow">DL · LB · DB ${honor('Defensive Player of the Year')}</span><h2>Defensive Player of the Year</h2></div></div><span class="aside">Through week ${through}</span></header>
         ${def.length ? tableOf(def) : `<div class="empty">${M.live ? 'No defensive player has started yet.' : 'The sample league has no defensive players. This race fills in once the real lineup, with its defensive slots, is set.'}</div>`}</section>
-      <section class="panel s6"><header><div><span class="eyebrow">First-year players ${honor('Rookie of the Year')}</span><h2>Rookie of the Year</h2></div></header>
+      <section class="panel s6"><header><div class="hwith">${trophy('roy')}<div><span class="eyebrow">First-year players ${honor('Rookie of the Year')}</span><h2>Rookie of the Year</h2></div></div><span class="aside">Through week ${through}</span></header>
         ${rookies.length ? tableOf(rookies) : '<div class="empty">No rookie has started a game yet.</div>'}</section>
       <section class="panel s6"><header><div><span class="eyebrow">Waivers and free agents ${honor('Pickup of the Year')}</span><h2>Pickup of the Year</h2></div></header>
         ${wire.length ? tableOf(wire, ['Added', p => `Week ${p.x.leg || '?'} · ${p.x.type === 'waiver' ? 'waivers' + (p.x.settings && p.x.settings.waiver_bid != null ? ` ($${p.x.settings.waiver_bid})` : '') : 'free agent'}`])

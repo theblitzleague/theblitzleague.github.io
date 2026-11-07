@@ -80,10 +80,10 @@
   }
 
   // Points each player has scored in finished games, credited to the team that started him most recently.
-  function playerRace(groups) {
+  function playerRace(groups, only) {
     const tot = {};
     for (const t of Object.values(M.teams)) for (const g of t.games.filter(x => x.final)) (g.me.starters || []).forEach((id, i) => {
-      if (!id || id === '0' || !groups.includes(P(id).position)) return;
+      if (!id || id === '0' || !groups.includes(P(id).position) || (only && !only(P(id)))) return;
       const p = tot[id] || (tot[id] = { id, v: 0, t, wk: 0 });
       p.v += (g.me.starters_points || [])[i] || 0;
       if (g.week >= p.wk) { p.wk = g.week; p.t = t; }
@@ -102,6 +102,8 @@
       races.push(raceSlide({ href: 'standings.html', art: M.league.trophy, title: 'Race for<br>the Gauntlet', sub: `Best records · through week ${through}`,
         rows: Object.values(M.teams).sort(order).slice(0, 4).map(t => ({ f: t.f, name: esc(t.f.location), sub: `${esc(t.division.name)} · ${f1(t.pf)} PF`, val: rec(t), unit: '' })) }));
       if (def.length) races.push(raceSlide({ href: 'awards.html#players', art: trophies.dpoy, title: 'Defensive Player<br>of the Year', sub: `Current top four · through week ${through}`, rows: def }));
+      const roy = playerRace([...OFF, ...DEF], p => p.years_exp === 0);
+      if (roy.length) races.push(raceSlide({ href: 'awards.html#players', art: trophies.roy, title: 'Rookie<br>of the Year', sub: `Current top four · through week ${through}`, rows: roy }));
     }
     // Game of the week, then a race after every second game, so the races spread through the rotation.
     const slides = [];

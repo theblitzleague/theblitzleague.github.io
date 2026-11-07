@@ -87,9 +87,10 @@
   "_trophyNote": "Championship trophy from the commissioner, 2026-11-04. trophy = 640px web copy; championship-trophy-full.webp is the original 1024x1536.",
   "awardTrophies": {
     "opoy": "assets/league/opoy-trophy.webp",
-    "dpoy": "assets/league/dpoy-trophy.webp"
+    "dpoy": "assets/league/dpoy-trophy.webp",
+    "roy": "assets/league/roy-trophy.webp"
   },
-  "_awardTrophiesNote": "Offensive and Defensive Player of the Year trophies from the commissioner, 2026-11-04. 600px-tall web copies; *-full.webp are the originals.",
+  "_awardTrophiesNote": "Offensive, Defensive and Rookie of the Year trophies from the commissioner (OPOY and DPOY upgraded 2026-11-07; earlier versions in assets/source/trophies/retired-2026-11-07/). 600px-tall web copies; *-full.webp are the originals (git-ignored).",
   "network": {
     "name": "Blitz Network",
     "logo": "assets/league/blitz-network-white.webp",

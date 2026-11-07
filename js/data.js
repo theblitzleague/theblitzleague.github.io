@@ -77,12 +77,13 @@
   }
 
   // Prize money one completed season paid, per roster, at that season's own amounts (history.json keeps a copy, so
-  // changing league.json later never rewrites the past). Ties split a prize. Kinds: champion, runnerUp, division,
+  // changing league.json later never rewrites the past). Ties split a prize. Kinds: champion, runnerUp, third, division,
   // weekly, pointsLeader, gmOfYear (the vote, entered by hand in history.json).
   function payouts(s, z) {
     const out = [], add = (rid, kind, amount, week) => amount && out.push({ rid: +rid, kind, amount, week });
     if (s.champion != null) add(s.champion, 'champion', z.champion);
     if (s.runnerUp != null) add(s.runnerUp, 'runnerUp', z.runnerUp);
+    if (s.third != null) add(s.third, 'third', z.third);
     (s.divisionWinners || []).forEach(r => add(r, 'division', z.division));
     (s.weeklyHigh || []).forEach(w => w.rosters.forEach(r => add(r, 'weekly', (z.weekly || 0) / w.rosters.length, w.week)));
     (s.pointsLeader || []).forEach((r, _, a) => add(r, 'pointsLeader', (z.pointsLeader || 0) / a.length));

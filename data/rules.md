@@ -174,12 +174,12 @@ Appendix B. League Settings
 
 | Prize | Amount | Awarded | Total |
 | --- | --- | --- | --- |
-| Champion | $450 | 1 | $450 |
+| Champion | $500 | 1 | $500 |
 | Runner-up | $200 | 1 | $200 |
-| Weekly high score, Weeks 1-14 | $20 | 14 | $280 |
-| Division winner | $50 | 3 | $150 |
-| Regular-season points leader | $80 | 1 | $80 |
-| General Manager of the Year | $40 | 1 | $40 |
+| Third place | $100 | 1 | $100 |
+| Regular-season points leader | $100 | 1 | $100 |
+| Division winner | $30 | 3 | $90 |
+| Weekly high score, Weeks 1-14 | $15 | 14 | $210 |
 | **Total** |  |  | **$1,200** |
 
 ### Section 3. Determining Winners
@@ -190,11 +190,11 @@ Appendix B. League Settings
 
 **Article 3. Points leader.** The Franchise with the most regular-season points for. Playoff points do not count.
 
-**Article 4. General Manager of the Year.** Chosen by a vote of the Owners at the end of the Season.
+**Article 4. General Manager of the Year.** Honor only, with no prize money: chosen by a vote of the Owners at the end of the Season. Third place goes to the winner of the third-place game between the two semifinal losers.
 
 **Article 5. Ties.** Franchises that tie for a prize split it equally.
 
-> **A.R. 6.1** In Week 6, two Franchises tie for the high score with 168.40 points. **Ruling:** Each receives $10.
+> **A.R. 6.1** In Week 6, two Franchises tie for the high score with 168.40 points. **Ruling:** Each receives $7.50.
 
 > **A.R. 6.2** A Franchise leads the League in points through Week 14, then scores the most points again in the playoffs. **Ruling:** The points-leader prize is based on Weeks 1-14 only. Playoff points never count toward it.
 
@@ -206,7 +206,7 @@ Appendix B. League Settings
 
 **Article 3. Ledger.** Every payment in and out is recorded in the League's ledger.
 
-**Article 4. Honors without prize money.** Offensive Player of the Year, Defensive Player of the Year, Rookie of the Year, Pickup of the Year and Trade of the Year carry a place in the record book, but no prize money.
+**Article 4. Honors without prize money.** General Manager of the Year, Offensive Player of the Year, Defensive Player of the Year, Rookie of the Year, Pickup of the Year and Trade of the Year carry a place in the record book, but no prize money.
 
 **Article 5. Changes.** Dues and the payout schedule change only in the Offseason under Rule 13, and never for a Season that has already been paid for.
 
@@ -216,7 +216,7 @@ Appendix B. League Settings
 
 **Article 1. Regular season.** Weeks 1 through 14 of the NFL season. Each Franchise plays one head-to-head game per week.
 
-**Article 2. Playoffs.** The six Franchises with the best regular-season records qualify, with ties broken by points for. There are no byes. The playoffs begin in Week 15, and the winner of the championship game is the League Champion.
+**Article 2. Playoffs.** The six Franchises with the best regular-season records qualify, with ties broken by points for. The top two seeds get a first-round bye. The playoffs begin in Week 15, and the winner of the championship game is the League Champion.
 
 ### Section 2. Starting Lineup
 

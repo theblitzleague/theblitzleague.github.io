@@ -12,7 +12,7 @@ const VENMO = 'gwilso22';
 const user = new Promise(res => { const stop = onAuthStateChanged(auth, u => { stop(); res(u); }); });
 let unsub = null;
 
-const PRIZES = { weekly: 'Weekly high score', champion: 'Champion', runnerUp: 'Runner-up', division: 'Division winner', pointsLeader: 'Points leader', gmOfYear: 'GM of the Year' };
+const PRIZES = { weekly: 'Weekly high score', champion: 'Champion', runnerUp: 'Runner-up', third: 'Third place', division: 'Division winner', pointsLeader: 'Points leader', gmOfYear: 'GM of the Year' };
 const dateOf = e => (e.at && e.at.toDate ? e.at.toDate() : null);
 const day = d => (d ? d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'saving…');
 

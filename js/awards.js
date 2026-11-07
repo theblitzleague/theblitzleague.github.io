@@ -226,7 +226,7 @@
     const bubble = teams.filter(t => { const m = sim.out[t.id].made; return m > 0.1 && m < 0.9; });
     return `<div class="grid">
       <a class="panel s12 prize" href="almanac.html#champions"><img src="${esc(M.league.trophy)}" alt="">
-        <div><span class="eyebrow">Playing for</span><h2>The Blitz League Championship</h2><span class="pmeta prizeline">${Z().champion ? `Champion ${UI.cash(Z().champion)}` : ''}${Z().runnerUp ? ` · Runner-up ${UI.cash(Z().runnerUp)}` : ''}${Z().champion ? ' · ' : ''}Playoffs start week ${M.league.regularSeasonWeeks + 1}. See the trophy case</span></div></a>
+        <div><span class="eyebrow">Playing for</span><h2>The Blitz League Championship</h2><span class="pmeta prizeline">${Z().champion ? `Champion ${UI.cash(Z().champion)}` : ''}${Z().runnerUp ? ` · Runner-up ${UI.cash(Z().runnerUp)}` : ''}${Z().third ? ` · Third ${UI.cash(Z().third)}` : ''}${Z().champion ? ' · ' : ''}Playoffs start week ${M.league.regularSeasonWeeks + 1}. See the trophy case</span></div></a>
       <section class="panel s12"><header><div><span class="eyebrow">Top ${PT} make the playoffs · no byes</span><h2>Playoff race</h2></div>
         <span class="aside">${sim.rem ? `${sim.rem} games left` : 'Regular season complete'}</span></header>
         <div class="tablewrap"><table class="st wide race"><thead><tr><th class="num">Seed</th><th>Team</th><th class="num">W-L</th><th class="num hide-sm">PF</th><th class="num">vs line</th>
@@ -264,7 +264,7 @@
     const sw = Object.values(W).reduce((a, b) => a + b, 0) || 1, wp = k => Math.round((W[k] || 0) / sw * 100);
     const comp = (k, t, txt) => `<td class="num">${txt}<small class="sc">${scaled[k][t.id] == null ? '' : Math.round(scaled[k][t.id])}</small></td>`;
     return `<div class="grid">
-      <section class="panel s12"><header><div><span class="eyebrow">GM of the Year race ${UI.cash(Z().gmOfYear)}</span><h2>GM Index</h2></div><span class="aside">Through week ${through}</span></header>
+      <section class="panel s12"><header><div><span class="eyebrow">GM of the Year race ${Z().gmOfYear ? UI.cash(Z().gmOfYear) : honor('General Manager of the Year')}</span><h2>GM Index</h2></div><span class="aside">Through week ${through}</span></header>
         <div class="tablewrap"><table class="st wide"><thead><tr><th class="num">#</th><th>GM</th><th class="num">Index</th><th class="pfbar hide-sm"></th>
           <th class="num">Win % <small>${wp('winPct')}%</small></th><th class="num">Lineup IQ <small>${wp('lineupIQ')}%</small></th><th class="num">Moves <small>${wp('moves')}%</small></th></tr></thead>
         <tbody>${rows.map(({ t, i }, n) => `<tr><td class="num rank">${n + 1}</td><td>${gmCell(t)}</td>
@@ -342,7 +342,7 @@
     teams.forEach(t => { banked[t.id] = 0; wkWins[t.id] = 0; });
     ww.forEach(w => w.winners.forEach(t => { banked[t.id] += w.each; wkWins[t.id]++; }));
     const paid = ww.length * (z.weekly || 0);
-    const total = (z.champion || 0) + (z.runnerUp || 0) + (z.division || 0) * divs.length + (z.weekly || 0) * W + (z.pointsLeader || 0) + (z.gmOfYear || 0);
+    const total = (z.champion || 0) + (z.runnerUp || 0) + (z.third || 0) + (z.division || 0) * divs.length + (z.weekly || 0) * W + (z.pointsLeader || 0) + (z.gmOfYear || 0);
     // Who's in line right now (nothing is in line before week 1 is final). Ties split.
     const byPf = teams.slice().sort((a, b) => b.pf - a.pf), pfLead = finals.length ? byPf.filter(t => t.pf === byPf[0].pf) : [];
     const divLead = finals.length ? divs.map(d => ({ d, t: teams.filter(t => t.division === d).sort(order)[0] })) : [];
@@ -360,6 +360,7 @@
         <div class="tablewrap"><table class="st prizes"><thead><tr><th>Prize</th><th class="num">Pays</th><th>Right now</th></tr></thead><tbody>
           ${z.champion ? row('Champion', `Wins the title game. Playoffs start week ${W + 1}`, cash(z.champion), 'Decided in the playoffs') : ''}
           ${z.runnerUp ? row('Runner-up', 'Loses the title game', cash(z.runnerUp), 'Decided in the playoffs') : ''}
+          ${z.third ? row('Third place', 'Wins the third-place game between the two semifinal losers', cash(z.third), 'Decided in the playoffs') : ''}
           ${z.division ? row('Division winners', 'Best record in the division, ties broken by points for. Paid whether or not they make the playoffs', `${divs.length} × ${cash(z.division)}`, pending || `Leading: ${divLead.map(x => `${esc(x.t.f.location)} <small>(${esc(x.d.name)})</small>`).join(', ')}`) : ''}
           ${z.weekly ? row('Weekly high score', `Highest score each week, weeks 1-${W}. A tie splits it`, `${W} × ${cash(z.weekly)}`, pending || `${ww.length} paid, ${W - ww.length} to go`) : ''}
           ${z.pointsLeader ? row('Points leader', 'Most points for over the regular season', cash(z.pointsLeader), pending || `Leading: ${names(pfLead)} (${f1(pfLead[0].pf)})`) : ''}

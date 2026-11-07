@@ -166,7 +166,7 @@
     const n = name.split(' '); return `<b class="net-word"><i>${esc(n[0])}</i> ${esc(n.slice(1).join(' '))}</b>`;
   };
 
-  const PRIZE_LABEL = { champion: 'Champion', runnerUp: 'Runner-up', division: 'Division winner', weekly: 'Weekly high score', pointsLeader: 'Points leader', gmOfYear: 'GM of the Year' };
+  const PRIZE_LABEL = { champion: 'Champion', runnerUp: 'Runner-up', third: 'Third place', division: 'Division winner', weekly: 'Weekly high score', pointsLeader: 'Points leader', gmOfYear: 'GM of the Year' };
 
   // ---------- Scroll comfort on phones (every page loads this file) ----------
   // Centre the active item of a sideways-scrolling strip, so the items next to it are in reach.

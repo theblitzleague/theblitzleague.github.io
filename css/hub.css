@@ -1217,3 +1217,11 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
   .lhero.home .lhero-divs { gap: 14px; }
   .lhero.home .lhero-divs .divmark-lg { width: 84px; height: 64px; }
 }
+
+/* GM Index: rows lead with the GM (portrait and name), their team beneath */
+.gmcell { display: flex; align-items: center; gap: 10px; color: var(--text); }
+.gmcell .gmshot { width: 40px; height: 40px; flex: 0 0 auto; }
+.gmcell span { display: grid; gap: 1px; min-width: 0; }
+.gmcell b { font-family: var(--font-display); text-transform: uppercase; font-size: 16px; }
+.gmcell small { color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.gmcell small svg, .gmcell small img { width: 16px; height: 16px; }

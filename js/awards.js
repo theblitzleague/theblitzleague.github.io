@@ -16,6 +16,14 @@
   const fpos = id => (P(id) && P(id).fantasy_positions && P(id).fantasy_positions.length ? P(id).fantasy_positions : [ppos(id)]);
   const tlink = (t, hash) => `team.html?team=${t.id}${hash || ''}`;
   const teamCell = t => `<a class="stteam" href="${tlink(t)}">${markSVG(t.f, 'mini')}<span><b>${esc(t.f.location)}</b>${t.f.nickname ? ` <small>${esc(t.f.nickname)}</small>` : ''}</span></a>`;
+  // A GM: their portrait (franchises.json gm.portrait, else their Sleeper avatar once the league is live, else a
+  // silhouette), their name, and the team they run underneath. Links to that team's Front Office.
+  const gmCell = t => {
+    const g = t.f.gm || {}, av = t.owner && t.owner.avatar ? `https://sleepercdn.com/avatars/thumbs/${encodeURIComponent(t.owner.avatar)}` : null;
+    const name = g.name || (t.owner && t.owner.display_name) || null;
+    return `<a class="gmcell" href="${tlink(t, '#front-office')}"><img class="shot gmshot" src="${esc(g.portrait || av || UI.SIL)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${UI.SIL}'">
+      <span><b>${name ? esc(name) : 'Open seat'}</b><small>${markSVG(t.f, 'mini')} ${esc(t.f.location)}${t.f.nickname ? ' ' + esc(t.f.nickname) : ''}</small></span></a>`;
+  };
   const playerCell = id => `<div class="cellp"${UI.pid(id)}>${shot(id)}<div><div class="pname">${esc(pname(id))} <span class="pos ${esc(ppos(id))}">${esc(ppos(id))}</span></div></div></div>`;
   const order = (a, b) => (b.wins - a.wins) || (b.pf - a.pf);
   const card = (lbl, big, who, sub, href, f, prize) => `<a class="award" href="${href}">${f ? markSVG(f, 'mini') : ''}<div><span class="lbl">${lbl}${prize || ''}</span><span class="big">${big}</span><span class="who">${who}</span>${sub ? `<span class="pmeta">${sub}</span>` : ''}</div></a>`;
@@ -257,9 +265,9 @@
     const comp = (k, t, txt) => `<td class="num">${txt}<small class="sc">${scaled[k][t.id] == null ? '' : Math.round(scaled[k][t.id])}</small></td>`;
     return `<div class="grid">
       <section class="panel s12"><header><div><span class="eyebrow">GM of the Year race ${UI.cash(Z().gmOfYear)}</span><h2>GM Index</h2></div><span class="aside">Through week ${through}</span></header>
-        <div class="tablewrap"><table class="st wide"><thead><tr><th class="num">#</th><th>Team</th><th class="hide-sm">GM</th><th class="num">Index</th><th class="pfbar hide-sm"></th>
+        <div class="tablewrap"><table class="st wide"><thead><tr><th class="num">#</th><th>GM</th><th class="num">Index</th><th class="pfbar hide-sm"></th>
           <th class="num">Win % <small>${wp('winPct')}%</small></th><th class="num">Lineup IQ <small>${wp('lineupIQ')}%</small></th><th class="num">Moves <small>${wp('moves')}%</small></th></tr></thead>
-        <tbody>${rows.map(({ t, i }, n) => `<tr><td class="num rank">${n + 1}</td><td>${teamCell(t)}</td><td class="gmname hide-sm">${t.f.gm && t.f.gm.name ? esc(t.f.gm.name) : '<span class="pmeta">Open seat</span>'}</td>
+        <tbody>${rows.map(({ t, i }, n) => `<tr><td class="num rank">${n + 1}</td><td>${gmCell(t)}</td>
           <td class="num strong">${i.toFixed(1)}</td><td class="pfbar hide-sm"><i style="width:${i.toFixed(1)}%"></i></td>
           ${comp('winPct', t, raw.winPct(t).toFixed(3).replace(/^0/, ''))}${comp('lineupIQ', t, iq[t.id] ? (iq[t.id].iq * 100).toFixed(1) + '%' : '-')}
           ${comp('moves', t, `${mv.net[t.id] > 0 ? '+' : ''}${f1(mv.net[t.id])}`)}</tr>`).join('')}</tbody></table></div>

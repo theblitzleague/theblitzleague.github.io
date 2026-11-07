@@ -1126,3 +1126,15 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .ann { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; }
 .ann b { font-family: var(--font-display); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; }
 .ann p { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Unread announcement popup (js/ui.js), on every page */
+.ann-pop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  background: rgba(4, 7, 12, .72); }
+.ann-card { width: min(520px, 100%); max-height: 100%; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-top: 3px solid var(--red);
+  border-radius: var(--radius); padding: 16px 18px 18px; display: grid; gap: 12px; box-shadow: 0 18px 50px rgba(0, 0, 0, .5); }
+.ann-card h2 { margin: 0; }
+.ann-card .btn { justify-self: end; min-width: 120px; }
+/* Commissioner messages are always league red, whatever team page they appear on. */
+.ann-card .eyebrow { color: var(--red); }
+.ann-card .btn.primary { background: var(--red); border-color: var(--red); }
+.ann-card .ann { border-left-color: var(--red); }

@@ -23,9 +23,12 @@ self.addEventListener('push', e => {
   try { m = e.data ? e.data.json() : {}; } catch (err) { m = { data: { body: e.data ? e.data.text() : '' } }; }
   const d = m.data || {}, n = m.notification || {};
   const title = d.title || n.title || 'Blitz Hub', body = d.body || n.body || '';
-  e.waitUntil(self.registration.showNotification(title, {
-    body, tag: d.tag || undefined, data: { url: d.url || './' },
-    icon: 'assets/icons/icon-192.png', badge: 'assets/icons/favicon-32.png' }));
+  e.waitUntil(Promise.all([
+    self.registration.showNotification(title, { body, tag: d.tag || undefined, data: { url: d.url || './' },
+      icon: 'assets/icons/icon-192.png', badge: 'assets/icons/favicon-32.png' }),
+    // If Blitz Hub is open on screen, it shows the announcement itself (iOS may not show a banner over the open app).
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => list.forEach(c => c.postMessage({ kind: d.kind || 'announcement' }))),
+  ]));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();

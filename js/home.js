@@ -288,19 +288,12 @@
   // The commissioner's announcements (sent from account.html), read straight from the database without signing in.
   // Shown at the top of the page for three weeks; nothing is shown if there are none or the database can't be reached.
   async function announcements() {
-    const cfg = window.FIREBASE_CONFIG;
-    if (!cfg) return;
-    const url = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/announcements?orderBy=at%20desc&pageSize=3&key=${cfg.apiKey}`;
-    const c = new AbortController(), t = setTimeout(() => c.abort(), 6000);
-    const r = await fetch(url, { signal: c.signal }).then(x => (x.ok ? x.json() : null)).catch(() => null).finally(() => clearTimeout(t));
-    const cut = Date.now() - 21 * 864e5;
-    const list = ((r && r.documents) || []).map(d => ({ title: (d.fields.title || {}).stringValue || '', body: (d.fields.body || {}).stringValue || '',
-      at: new Date((d.fields.at || {}).timestampValue || 0) })).filter(a => a.title && +a.at > cut);
+    const list = (await UI.announcements()).slice(0, 3);
     const grid = document.querySelector('#content > .grid');
     if (!list.length || !grid || document.getElementById('announcements')) return;
     grid.insertAdjacentHTML('afterbegin', `<section class="panel s12" id="announcements"><header><div><span class="eyebrow">From the commissioner</span><h2>Announcements</h2></div></header>
       <div class="ann-list">${list.map(a => `<article class="ann"><b>${esc(a.title)}</b><p>${esc(a.body)}</p>
-        <span class="pmeta">${a.at.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></article>`).join('')}</div></section>`);
+        <span class="pmeta">${UI.annTime(a.at)}</span></article>`).join('')}</div></section>`);
     if (location.hash === '#announcements') document.getElementById('announcements').scrollIntoView();
   }
 

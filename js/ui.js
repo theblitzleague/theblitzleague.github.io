@@ -189,5 +189,51 @@
     if (scrollY > top) scrollTo({ top });
   }));
 
-  window.UI = { POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
+  // ---------- Commissioner announcements (sent from account.html) ----------
+  // Read straight from the database without signing in (firestore.rules lets anyone read them). Newest first, last 3 weeks.
+  const ANN_DAYS = 21, SEEN_KEY = 'blitz.annSeen';
+  let annReq = null;
+  function announcements(fresh) {
+    const cfg = window.FIREBASE_CONFIG;
+    if (!cfg) return Promise.resolve([]);
+    if (annReq && !fresh) return annReq;
+    const url = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/announcements?orderBy=at%20desc&pageSize=5&key=${cfg.apiKey}`;
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 6000);
+    const cut = Date.now() - ANN_DAYS * 864e5;
+    return (annReq = fetch(url, { signal: c.signal, cache: 'no-store' }).then(x => (x.ok ? x.json() : null)).catch(() => null).finally(() => clearTimeout(t))
+      .then(r => ((r && r.documents) || []).map(d => ({ id: d.name.split('/').pop(), title: (d.fields.title || {}).stringValue || '',
+        body: (d.fields.body || {}).stringValue || '', at: new Date((d.fields.at || {}).timestampValue || 0) })).filter(a => a.title && +a.at > cut)));
+  }
+  // "Seen" is remembered per device: the ids of announcements this phone or computer has already shown.
+  const seen = () => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'); } catch (e) { return []; } };
+  function markSeen(ids) {
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify([...new Set([...ids, ...seen()])].slice(0, 50))); } catch (e) { /* private mode: it shows again next time */ }
+  }
+  const annTime = at => at.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  // Any announcement this device hasn't seen yet pops up once, over whatever page is open.
+  async function unreadPopup(fresh) {
+    if (window.top !== window || document.getElementById('ann-pop')) return;
+    const s = new Set(seen()), list = (await announcements(fresh)).filter(a => !s.has(a.id));
+    if (!list.length || document.getElementById('ann-pop')) return;
+    const el = document.createElement('div');
+    el.id = 'ann-pop'; el.className = 'ann-pop';
+    el.innerHTML = `<div class="ann-card" role="dialog" aria-modal="true" aria-labelledby="ann-pop-h">
+      <span class="eyebrow">From the commissioner</span><h2 id="ann-pop-h">${list.length > 1 ? `${list.length} new announcements` : 'New announcement'}</h2>
+      <div class="ann-list">${list.map(a => `<article class="ann"><b>${esc(a.title)}</b><p>${esc(a.body)}</p><span class="pmeta">${annTime(a.at)}</span></article>`).join('')}</div>
+      <button class="btn primary" type="button">Got it</button></div>`;
+    const close = () => { markSeen(list.map(a => a.id)); el.remove(); document.removeEventListener('keydown', esc_); };
+    const esc_ = e => { if (e.key === 'Escape') close(); };
+    el.querySelector('button').onclick = close;
+    el.onclick = e => { if (e.target === el) close(); };
+    document.addEventListener('keydown', esc_);
+    document.body.appendChild(el);
+    el.querySelector('button').focus();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => unreadPopup()); else unreadPopup();
+  // A notification that arrives while the site is open on screen: sw.js tells the page, and it pops up at once.
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.kind === 'announcement') setTimeout(() => unreadPopup(true), 800);
+  });
+
+  window.UI = { announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
 })();

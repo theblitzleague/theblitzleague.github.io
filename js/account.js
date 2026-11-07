@@ -167,7 +167,8 @@ function commishView() {
     if (!title || !body) return;
     if (!confirm(`Send this to the whole league now?\n\n${title}\n${body}`)) return;
     try {
-      await addDoc(collection(db, 'announcements'), { title, body, by: me.uid, at: serverTimestamp() });
+      const ref = await addDoc(collection(db, 'announcements'), { title, body, by: me.uid, at: serverTimestamp() });
+      UI.markSeen([ref.id]);                        // you wrote it; don't pop it up for you
       $('annform').reset(); say('annmsg', 'Sent. Delivery count appears below in a few seconds.');
     } catch (e) { say('annmsg', `Couldn't send (${nice(e)}).`, true); }
   };
@@ -175,6 +176,7 @@ function commishView() {
     $('annlist').innerHTML = s.docs.map(d => { const a = d.data(), at = a.at && a.at.toDate ? a.at.toDate() : null;
       return `<div class="acct-item"><div><b>${esc(a.title)}</b><p>${esc(a.body)}</p><span class="pmeta">${at ? at.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'sending…'} · ${a.done ? `delivered to ${a.sent} device${a.sent === 1 ? '' : 's'}${a.failed ? `, ${a.failed} failed` : ''}` : 'sending…'}</span></div>
         <button class="btn small" data-del="${d.id}" title="Remove from the site (doesn't unsend notifications)">Remove</button></div>`; }).join('') || '<p class="empty">Nothing sent yet.</p>';
+    UI.markSeen(s.docs.map(d => d.id));            // the commissioner sees them here, so they never pop up for you
     for (const b of $('annlist').querySelectorAll('[data-del]')) b.onclick = async () => {
       if (confirm('Remove this announcement from the site? Notifications already delivered stay on phones.')) await deleteDoc(doc(db, 'announcements', b.dataset.del)).catch(e => say('annmsg', nice(e), true));
     };

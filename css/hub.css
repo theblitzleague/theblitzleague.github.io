@@ -1208,3 +1208,12 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .lhero.home .lhero-divs { gap: 28px; align-items: center; }
 .lhero.home .lhero-divs .divmark-lg { width: 112px; height: 88px; }
 @media (max-width: 1280px) { .lhero.home .lhero-divs { gap: 20px; } .lhero.home .lhero-divs .divmark-lg { width: 92px; height: 74px; } }
+/* Homepage banner on tablets and phones: the division logos drop to their own centered row under the title. */
+@media (max-width: 1100px) {
+  .lhero.home .lhero-divs { display: flex; grid-column: 1 / -1; justify-content: center; gap: 22px; padding-top: 6px; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 14px; }
+  .lhero.home .lhero-divs .divmark-lg { width: 96px; height: 76px; }
+}
+@media (max-width: 760px) {
+  .lhero.home .lhero-divs { gap: 14px; }
+  .lhero.home .lhero-divs .divmark-lg { width: 84px; height: 64px; }
+}

@@ -132,6 +132,21 @@
     M._allPlayers = true;
   }
 
+  // ---------- live fantasy points ----------
+  // functions/index.js liveScores writes live/current every 2 minutes while NFL games are on: each player's points in
+  // League scoring, his NFL team and stat line, plus every game's score and clock. Read through Firestore's public REST
+  // endpoint (no sign-in needed; firestore.rules lets anyone read live/). One request per minute at most per page.
+  let liveMemo = null;
+  function liveScores(fresh) {
+    const c = window.FIREBASE_CONFIG;
+    if (!c) return Promise.resolve(null);
+    if (!fresh && liveMemo && Date.now() - liveMemo.at < 55000) return liveMemo.p;
+    const url = `https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/live/current?key=${c.apiKey}`;
+    const p = timed(url, 8000).then(d => { const s = d && d.fields && d.fields.json && d.fields.json.stringValue; return s ? JSON.parse(s) : null; }).catch(() => null);
+    liveMemo = { at: Date.now(), p };
+    return p;
+  }
+
   async function load(M, onLive) {
     const [snap] = await Promise.all([fetch('data/nfl.json').then(r => (r.ok ? r.json() : null)).catch(() => null), fillPlayers(M)]).then(([s]) => [s || {}]);
     Promise.all([
@@ -184,5 +199,5 @@
     return N;
   }
 
-  window.NFL = { load, overlay, POS, OFF, IDP, norm };
+  window.NFL = { load, overlay, liveScores, POS, OFF, IDP, norm };
 })();

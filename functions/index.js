@@ -93,3 +93,57 @@ exports.watchRefresh = onSchedule({ schedule: '30 5 * * *', timeZone: 'America/C
     body: (last ? `The site's NFL data was last updated ${last}. ` : `Couldn't check the site's NFL data (${why}). `)
       + 'Check the "Refresh data" run at github.com/theblitzleague/theblitzleague.github.io/actions, or ask ALFRED to look into it.' });
 });
+
+// liveScores: every 2 minutes, while an NFL game is on, score every player live with the League's scoring and save it for
+// the Hub (live/current, plus live/{season}-w{week} kept per week). Anyone may read it (firestore.rules); only this job writes.
+//   Stats: Sleeper's public live stats feed (same stat names as the scoring settings, so FG distances, pick-sixes and
+//   yardage bonuses score exactly). Game clocks and scores: ESPN's scoreboard. Scoring: the League's settings on Sleeper
+//   for now (to move into the Hub's own settings when the Hub replaces Sleeper).
+// It does nothing between games: it runs when a game is in progress, or once more when one has just gone final.
+const ESPN_NFL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
+const LEAGUE_ID = '1423408541737156608';
+const TEAMFIX = { WSH: 'WAS' };
+const getJSON = async u => { const r = await fetch(u, { headers: { 'User-Agent': 'blitz-hub' } }); if (!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); };
+const num = (s, k) => (typeof s[k] === 'number' ? s[k] : 0);
+const trim = v => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+function statLine(s) {
+  const out = [];
+  if (num(s, 'pass_att')) out.push(`${trim(num(s, 'pass_cmp'))}/${trim(num(s, 'pass_att'))}, ${trim(num(s, 'pass_yd'))} pass yd` + (num(s, 'pass_td') ? `, ${trim(num(s, 'pass_td'))} TD` : '') + (num(s, 'pass_int') ? `, ${trim(num(s, 'pass_int'))} INT` : ''));
+  if (num(s, 'rush_att')) out.push(`${trim(num(s, 'rush_att'))} car, ${trim(num(s, 'rush_yd'))} yd` + (num(s, 'rush_td') ? `, ${trim(num(s, 'rush_td'))} TD` : ''));
+  if (num(s, 'rec') || num(s, 'rec_tgt')) out.push(`${trim(num(s, 'rec'))}/${trim(num(s, 'rec_tgt'))} rec, ${trim(num(s, 'rec_yd'))} yd` + (num(s, 'rec_td') ? `, ${trim(num(s, 'rec_td'))} TD` : ''));
+  if (num(s, 'fga') || num(s, 'xpa')) out.push(`FG ${trim(num(s, 'fgm'))}/${trim(num(s, 'fga'))}, XP ${trim(num(s, 'xpm'))}/${trim(num(s, 'xpa'))}`);
+  const d = [['idp_tkl', 'tkl'], ['idp_tkl_loss', 'TFL'], ['idp_sack', 'sack'], ['idp_qb_hit', 'QB hit'], ['idp_int', 'INT'], ['idp_pass_def', 'PD'], ['idp_ff', 'FF']]
+    .filter(([k]) => num(s, k)).map(([k, l]) => `${trim(num(s, k))} ${l}`);
+  if (d.length) out.push(d.join(', '));
+  if (num(s, 'fum_lost')) out.push(`${trim(num(s, 'fum_lost'))} fum lost`);
+  return out.join(' · ');
+}
+exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 90, memory: '512MiB', maxInstances: 1 }, async () => {
+  const sb = await getJSON(`${ESPN_NFL}/scoreboard`);
+  const games = (sb.events || []).map(e => {
+    const c = e.competitions[0], side = h => { const t = c.competitors.find(x => x.homeAway === h); const a = t.team.abbreviation; return { abbr: TEAMFIX[a] || a, score: Number(t.score || 0) }; };
+    return { id: e.id, at: e.date, state: e.status.type.state, detail: e.status.type.shortDetail, away: side('away'), home: side('home') };
+  });
+  const db = getFirestore(), ref = db.doc('live/current');
+  const prev = (await ref.get()).data() || {};
+  const was = Object.fromEntries((prev.states || []).map(x => x.split(':')));
+  const changed = games.some(g => was[g.id] !== g.state);
+  if (!games.some(g => g.state === 'in') && !changed) return;      // no game on, nothing new since the last run
+
+  const state = await getJSON('https://api.sleeper.app/v1/state/nfl');
+  const season = String(state.season), week = Number(state.week);
+  const scoring = (await getJSON(`https://api.sleeper.app/v1/league/${LEAGUE_ID}?t=${Date.now()}`)).scoring_settings || {};
+  const rows = await getJSON(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&t=${Date.now()}`);
+  const players = {};
+  let newest = 0;
+  for (const r of rows) {
+    const s = r.stats || {};
+    if (!/^\d+$/.test(String(r.player_id)) || !Object.keys(s).length) continue;     // team rows (no team D slot) and empty rows
+    newest = Math.max(newest, r.updated_at || 0);
+    const pts = Object.entries(scoring).reduce((t, [k, v]) => t + (typeof s[k] === 'number' ? v * s[k] : 0), 0);
+    players[r.player_id] = [Math.round(pts * 100) / 100, r.team || null, statLine(s)];
+  }
+  const data = { season, week, updated: new Date().toISOString(), statsAt: newest ? new Date(newest).toISOString() : null, games, players };
+  const doc = { season, week, updated: FieldValue.serverTimestamp(), states: games.map(g => `${g.id}:${g.state}`), json: JSON.stringify(data) };
+  await Promise.all([ref.set(doc), db.doc(`live/${season}-w${week}`).set(doc)]);
+});

@@ -113,6 +113,7 @@
         <div class="pc-own">${t ? `<a href="team.html?team=${t.id}#roster">${markSVG(t.f, 'mini')} ${esc(t.f.location)}${t.f.nickname ? ' ' + esc(t.f.nickname) : ''}</a>` : '<span class="pmeta">Free agent in this league</span>'}</div>
       </div><button class="pc-x" type="button" aria-label="Close">&times;</button></div>
       ${honors(id)}
+      <div class="pc-live" hidden></div>
       <div class="pc-seasons" role="tablist">${seasons.map(s => `<button type="button" role="tab" data-season="${s}">${s}</button>`).join('')}</div>
       <div class="pc-body"><div class="loading">Loading stats from Sleeper</div></div>`;
   }
@@ -168,6 +169,18 @@
     }
   }
 
+  // This week's live points, while the week's games are on or just finished (functions/index.js liveScores).
+  async function liveLine(id) {
+    const L = window.NFL && await NFL.liveScores(), el = dlg.querySelector('.pc-live');
+    const v = L && L.players[id];
+    if (!v || !el || !cur || cur.id !== id || Date.now() - Date.parse(L.updated) > 4 * 864e5) return;
+    const g = L.games.find(x => x.away.abbr === v[1] || x.home.abbr === v[1]);
+    const when = !g || g.state === 'pre' ? '' : `${g.state === 'in' ? `Live · ${esc(g.detail)}` : 'Final'} · ${esc(g.away.abbr)} ${g.away.score}, ${esc(g.home.abbr)} ${g.home.score}`;
+    el.innerHTML = `<div class="pc-live-pts"><b>${f1(v[0])}</b><small>pts</small></div><div><span class="eyebrow">NFL week ${esc(String(L.week))}${when ? ' · ' + when : ''}</span>
+      <div class="pc-live-line">${esc(v[2] || 'No stats yet')}</div><a class="pmeta" href="network.html#live">All live points &rsaquo;</a></div>`;
+    el.hidden = false;
+  }
+
   async function open(id) {
     M = M || await Hub.load();
     if (!dlg) {
@@ -184,6 +197,7 @@
     dlg.innerHTML = `<div class="pc-in">${shell(id)}</div>`;
     if (!dlg.open) dlg.showModal();
     show(id, M.state.season);
+    liveLine(id);
   }
 
   const trigger = e => {

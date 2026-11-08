@@ -1241,3 +1241,23 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 #pl-q { flex: 1 1 260px; }
 .nw-th { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-transform: inherit; letter-spacing: inherit; }
 .nw-th.on { color: var(--text); }
+
+/* Network > Live, and the live line on player cards */
+.lv-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+.lv-game { display: grid; gap: 2px; padding: 6px 9px; border: 1px solid var(--line); background: var(--bg-2); border-radius: var(--radius); }
+.lv-game span { display: flex; justify-content: space-between; font-family: var(--font-display); text-transform: uppercase; }
+.lv-game em { font-style: normal; font-weight: 700; }
+.lv-game small { color: var(--muted); font-size: 12px; }
+.lv-game.in { border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); }
+.lv-game.in small, .lv-gs.in { color: var(--bad); }
+.lv-game.post { opacity: .75; }
+.lv-gs { font-family: var(--font-display); font-size: 13px; text-transform: uppercase; white-space: nowrap; }
+.lv-g small { color: var(--muted); white-space: nowrap; }
+.lv-line { color: var(--muted); font-size: 13px; min-width: 180px; }
+.lv-left { color: var(--muted) !important; }
+.pc-live { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; margin: 10px 0; padding: 10px 12px; border: 1px solid var(--line-2); background: var(--bg-2); border-radius: var(--radius); }
+.pc-live[hidden] { display: none; }
+.pc-live-pts { display: grid; justify-items: center; }
+.pc-live-pts b { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--good); }
+.pc-live-pts small { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+.pc-live-line { font-size: 14px; margin: 2px 0; }

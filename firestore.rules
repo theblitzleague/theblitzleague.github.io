@@ -5,6 +5,7 @@ rules_version = '2';
 //   devices/{id}      one per phone that allowed notifications: its owner and its push registration.
 //   announcements/{id} commissioner messages; anyone may read them (the home page shows them).
 //   notes/{id}        a private commissioner message to one GM; only that GM and the commissioner may read it.
+//   live/{id}         live fantasy points during NFL games, written by the liveScores job; public.
 //   ledger/{id}       dues, prepayments and payouts; members read, only the owner writes, nothing is edited or deleted.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -89,6 +90,12 @@ service cloud.firestore {
         && (request.resource.data.kind != 'void' || text(request.resource.data.ref, 128) && text(request.resource.data.note, 300))
         && request.resource.data.by == request.auth.uid && request.resource.data.at == request.time;
       allow update, delete: if false;
+    }
+
+    // Live fantasy points while NFL games are on (functions/index.js liveScores). Anyone may read; only that job writes.
+    match /live/{id} {
+      allow read: if true;
+      allow write: if false;
     }
 
     match /announcements/{id} {

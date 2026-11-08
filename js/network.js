@@ -1,9 +1,9 @@
 /* The Blitz Network: real NFL news and matchups, read through Blitz League rosters. Data: js/nfl.js.
-   Tabs: #headlines, #players, #injuries, #matchups, #defenses, #slate, #trending, #rookies. */
+   Tabs: #headlines, #live, #players, #injuries, #matchups, #defenses, #slate, #trending, #rookies. */
 (function () {
   const { esc, f1, shot, pid, wash, tabsHTML, boot } = UI;
   let M, N;
-  const TABS = [['headlines', 'Headlines'], ['players', 'Players'], ['injuries', 'Injuries'], ['matchups', 'Matchups'], ['defenses', 'Defense vs position'], ['slate', 'NFL slate'], ['trending', 'Trending'], ['rookies', 'Rookies & College']];
+  const TABS = [['headlines', 'Headlines'], ['live', 'Live'], ['players', 'Players'], ['injuries', 'Injuries'], ['matchups', 'Matchups'], ['defenses', 'Defense vs position'], ['slate', 'NFL slate'], ['trending', 'Trending'], ['rookies', 'Rookies & College']];
   const P = id => M.players[id] || { full_name: `Player ${id}`, position: '?' };
   const WHERE = { starter: 'Starting', bench: 'Bench', taxi: 'Taxi', IR: 'IR' };
   const TYPE = { HeadlineNews: 'News', Story: 'Story', Media: 'Video', Preview: 'Preview', Recap: 'Recap' };
@@ -276,7 +276,52 @@
       <p class="footnote">Points are this season's games scored with The Blitz League's own settings${N.built ? `, as of ${ago(N.built)}` : ''}. Pts/G lists players with 3+ games unless you search. Proj is Sleeper's projection for this week. Tap a player for his card.</p></section></div>`;
   }
 
-  const VIEWS = { headlines, players, injuries, matchups, defenses, slate, trending, rookies };
+  // ---------- Live: this week's fantasy points as the games happen (written by the liveScores job) ----------
+  let LV = null, LVdone = false;
+  const LF = { pos: 'all', own: 'all', limit: 50 };
+  const gameOf = abbr => LV && LV.games.find(g => g.away.abbr === abbr || g.home.abbr === abbr);
+  const gameTag = abbr => { const g = gameOf(abbr); if (!g) return ''; const vs = g.home.abbr === abbr ? `vs ${g.away.abbr}` : `@ ${g.home.abbr}`;
+    return `<span class="lv-gs ${esc(g.state)}">${esc(g.state === 'pre' ? kick(g.at) : g.detail)}</span> <small>${esc(vs)}</small>`; };
+  function liveBody() {
+    if (!LV) return LVdone ? '<div class="empty">No live scores yet. They start with the first NFL game of the week and update every 2 minutes while games are on.</div>' : '<div class="loading">Loading live scores</div>';
+    const pts = id => (LV.players[id] ? LV.players[id][0] : 0);
+    // Blitz head-to-heads this week, each side's starters scored live.
+    const seen = new Set(), h2h = [];
+    for (const t of Object.values(M.teams)) {
+      const g = t.games.find(x => x.week === M.current); if (!g || !g.opp || seen.has(t.id)) continue; seen.add(t.id); seen.add(g.opp.id);
+      const side = tt => { const st = N.starters.filter(s => s.t === tt); const left = st.filter(s => { const gm = gameOf(N.teamOf(s.id)); return gm && gm.state !== 'post'; }).length;
+        return { t: tt, pts: st.reduce((a, s) => a + pts(s.id), 0), left }; };
+      h2h.push([side(t), side(g.opp), g]);
+    }
+    const rows = Object.entries(LV.players).filter(([id]) => M.players[id]).map(([id, v]) => ({ id, p: P(id), pts: v[0], team: v[1], line: v[2], owner: N.owner(id) }))
+      .filter(r => (LF.pos === 'all' || r.p.position === LF.pos) && (LF.own === 'all' || (LF.own === 'fa' ? !r.owner : !!r.owner)))
+      .sort((a, b) => b.pts - a.pts);
+    const live = LV.games.filter(g => g.state === 'in').length, done = LV.games.filter(g => g.state === 'post').length;
+    const chip = (attr, v, label, cur) => `<button data-${attr}="${v}" aria-pressed="${cur === v}">${label}</button>`;
+    return `<section class="panel s12"><header><div><span class="eyebrow">NFL week ${esc(String(LV.week))} · ${live} live · ${done} final · updated ${ago(LV.updated)}</span><h2>Scoreboard</h2></div></header>
+        <div class="lv-games">${LV.games.slice().sort((a, b) => ({ in: 0, pre: 2, post: 1 }[a.state] - { in: 0, pre: 2, post: 1 }[b.state]) || String(a.at).localeCompare(String(b.at))).map(g => `<div class="lv-game ${esc(g.state)}">
+          <span><b>${esc(g.away.abbr)}</b>${g.state !== 'pre' ? `<em>${g.away.score}</em>` : ''}</span><span><b>${esc(g.home.abbr)}</b>${g.state !== 'pre' ? `<em>${g.home.score}</em>` : ''}</span>
+          <small>${esc(g.state === 'pre' ? kick(g.at) : g.detail)}</small></div>`).join('')}</div></section>
+      ${h2h.length ? `<section class="panel s12"><header><div><span class="eyebrow">This week's Blitz lineups, scored live${M.live ? '' : ' · sample league'}</span><h2>Blitz matchups, live</h2></div></header>
+        <div class="nw-h2h">${h2h.map(([a, b, g]) => `<a class="nw-game" href="matchup.html#w${g.week}-t${a.t.id}">
+          ${[a, b].map(x => `<div class="nw-side${x.pts > (x === a ? b : a).pts ? ' fav' : ''}">${markSVG(x.t.f, 'mini')}<span>${esc(x.t.f.location)}</span><b>${f1(x.pts)}</b><em class="lv-left">${x.left ? `${x.left} to play` : 'done'}</em></div>`).join('')}</a>`).join('')}</div>
+        <p class="footnote">Each side is the sum of its starters' live points. "To play" counts starters whose NFL game hasn't finished.</p></section>` : ''}
+      <section class="panel s12"><header><div><span class="eyebrow">Every player with stats this week · Blitz League scoring</span><h2>Live points</h2></div><span class="aside">${rows.length} players</span></header>
+        <div class="nw-filter">${PL_POS.map(x => chip('lv-pos', x, x === 'all' ? 'All' : x, LF.pos)).join('')}</div>
+        <div class="nw-filter">${chip('lv-own', 'all', 'Everyone', LF.own)}${chip('lv-own', 'fa', 'Free agents', LF.own)}${chip('lv-own', 'owned', 'On a Blitz team', LF.own)}</div>
+        ${rows.length ? `<div class="tablewrap"><table class="nw-rk lv-tab"><thead><tr><th>#</th><th>Player</th><th>Game</th><th>Stats</th><th class="num">Pts</th><th>Blitz</th></tr></thead>
+          <tbody>${rows.slice(0, LF.limit).map((r, i) => `<tr><td class="rk">${i + 1}</td><td>${who(r.id)}</td><td class="lv-g">${gameTag(r.team)}</td><td class="lv-line">${esc(r.line || '')}</td>
+            <td class="num strong">${f1(r.pts)}</td><td>${r.owner ? own(r.owner, true) : '<span class="nw-fa">Free agent</span>'}</td></tr>`).join('')}</tbody></table></div>
+          ${rows.length > LF.limit ? `<div class="acct-row"><button class="btn" data-lv-more="1">Show more (${rows.length - LF.limit} left)</button></div>` : ''}` : '<div class="empty">No players match.</div>'}
+        <p class="footnote">Live stats from Sleeper's public feed, scored with The Blitz League's own settings; game clocks from ESPN. Updates every 2 minutes while games are on${LV.statsAt ? `; stats last changed ${ago(LV.statsAt)}` : ''}. NFL stat corrections can still change a total after the week.</p></section>`;
+  }
+  const live = () => `<div class="grid" id="lv-body">${liveBody()}</div>`;
+  async function pullLive(fresh) {
+    const d = await NFL.liveScores(fresh); LVdone = true; if (d) LV = d;
+    const el = document.getElementById('lv-body'); if (el) { el.innerHTML = liveBody(); paintHelmets(el).catch(() => {}); }
+  }
+
+  const VIEWS = { headlines, live, players, injuries, matchups, defenses, slate, trending, rookies };
   function route() {
     const h = location.hash.slice(1), cur = VIEWS[h] ? h : 'headlines';
     document.getElementById('tabs').innerHTML = tabsHTML(TABS, cur);
@@ -290,10 +335,19 @@
     hero();
     route();
     addEventListener('hashchange', route);
+    pullLive();
+    setInterval(() => { if (!document.hidden && location.hash === '#live') pullLive(true); }, 60000);
     // Players tab: filters and sorting redraw only the list, so the search box keeps its focus.
     const plRedraw = () => { const el = document.getElementById('pl-list'); if (el) { el.innerHTML = playerList(); paintHelmets(el).catch(() => {}); } };
     document.addEventListener('input', e => { if (e.target.id === 'pl-q') { PL.q = e.target.value; PL.limit = 50; plRedraw(); } });
     document.addEventListener('click', e => {
+      const lb = e.target.closest('[data-lv-pos], [data-lv-own], [data-lv-more]');
+      if (lb) {
+        if (lb.dataset.lvPos) LF.pos = lb.dataset.lvPos;
+        if (lb.dataset.lvOwn) LF.own = lb.dataset.lvOwn;
+        LF.limit = lb.dataset.lvMore ? LF.limit + 50 : 50;
+        pullLive(); return;
+      }
       const pb = e.target.closest('[data-pl-pos], [data-pl-own], [data-pl-sort], [data-pl-more]');
       if (pb) {
         if (pb.dataset.plPos) PL.pos = pb.dataset.plPos;

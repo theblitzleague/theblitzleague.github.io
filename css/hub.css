@@ -33,6 +33,9 @@ body {
   margin: 0; background: var(--bg); color: var(--text);
   font-family: var(--font-body); font-size: 15px; line-height: 1.45;
   font-variant-numeric: tabular-nums;
+  /* The installed app draws under the phone's status bar: start the page below it, so the sticky top bar (pinned just
+     under the status bar) sits in its own space instead of covering what's beneath it. 0 in a normal browser. */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg-2); }
 a { color: inherit; text-decoration: none; }

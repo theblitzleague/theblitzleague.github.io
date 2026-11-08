@@ -146,6 +146,9 @@ exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-centr
   const data = { season, week, updated: new Date().toISOString(), statsAt: newest ? new Date(newest).toISOString() : null, games, players };
   const doc = { season, week, updated: FieldValue.serverTimestamp(), states: games.map(g => `${g.id}:${g.state}`), json: JSON.stringify(data) };
   await Promise.all([ref.set(doc), db.doc(`live/${season}-w${week}`).set(doc)]);
+  // Keep this week's Hub lineups as they stand during the games (locked players can't change, so the last copy is final).
+  const lu = (await db.doc('league/lineups').get()).data();
+  if (lu && lu.teams) await db.doc(`lineups/${season}-w${week}`).set({ teams: lu.teams, season, week, updated: Date.now() }, { merge: true });
 });
 
 /* ---------- Draft room (draftroom.html) ----------
@@ -170,7 +173,7 @@ async function buildPool(kind) {
   const [players, nfl] = await Promise.all([getJSON(`${SITE}/data/players.json?t=${t}`), getJSON(`${SITE}/data/nfl.json?t=${t}`)]);
   const stats = nfl.players || {}, out = [];
   for (const [id, p] of Object.entries(players)) {
-    if (!p.team || !p.full_name) continue;
+    if (!p.team || !p.full_name || p.full_name.startsWith('Duplicate Player')) continue;   // Sleeper placeholders
     if (kind === 'rookie' && p.years_exp !== 0) continue;
     const g = (p.fantasy_positions || []).find(x => IDP_POS.includes(x)) || IDPMAP[p.position];
     const pos = DRAFT_POS.includes(p.position) ? p.position : g || null;
@@ -395,4 +398,114 @@ exports.draftClock = onSchedule({ schedule: 'every 1 minutes', region: 'us-centr
       await draftAct(db, null, false, { action: 'tick', id: doc.id });
     }
   }
+});
+
+/* ---------- Lineups (team.html Depth Chart) ----------
+   One callable, "lineup", for every lineup, IR and taxi move on the Hub's own rosters (league/rosters, written when a
+   Draft Room draft is made official). Only the team's linked GM (users/{uid}.team) or a commissioner can change a team.
+     league/rosters   rosters {team: [every player]}, ir {team: [...]}, taxi {team: [...]}
+     league/lineups   the standing lineup {team: [14 player ids or null, in SLOTS order]}; it carries over week to week
+     lineups/{season}-w{week}   that week's lineups as they stood (saved on every change, and by liveScores during games)
+   Rulebook: slots 7-2-1; each player locks at his game's kickoff (7-4-2), from ESPN's scoreboard for the current week;
+   24 active players (14 starters + 10 bench) plus up to 5 taxi and 4 IR (8-1-1); taxi is for rookies only, with the
+   Week 4 deadline (8-1-2, not applied to practice rosters from a mock draft); IR only for players listed IR or Out
+   (8-1-3); at most 2 QBs not counting taxi or IR, and a team over that can't change its lineup (8-1-4). */
+const SLOTS = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'SUPER_FLEX', 'K', 'DL', 'LB', 'DB', 'IDP_FLEX'];
+const ELIG = { QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], FLEX: ['RB', 'WR', 'TE'], SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'], K: ['K'], DL: ['DL'], LB: ['LB'], DB: ['DB'], IDP_FLEX: ['DL', 'LB', 'DB'] };
+const ACTIVE_MAX = 24, IR_MAX = 4, TAXI_MAX = 5, TAXI_DEADLINE_WEEK = 4;
+let playerMemo = null, gameMemo = null;
+async function playerInfo() {
+  if (playerMemo && Date.now() - playerMemo.at < 10 * 60000) return playerMemo.v;
+  const all = await getJSON(`${SITE}/data/players.json?t=${Date.now()}`), v = {};
+  for (const [id, p] of Object.entries(all)) {
+    const g = (p.fantasy_positions || []).find(x => IDP_POS.includes(x)) || IDPMAP[p.position];
+    v[id] = { pos: DRAFT_POS.includes(p.position) ? p.position : g || p.position, team: p.team || null, inj: p.injury_status || null, exp: p.years_exp, name: p.full_name || id };
+  }
+  playerMemo = { at: Date.now(), v }; return v;
+}
+// This week's kickoff per NFL team, from ESPN (a game that has started or finished locks its players).
+async function weekGames() {
+  if (gameMemo && Date.now() - gameMemo.at < 60000) return gameMemo.v;
+  const sb = await getJSON(`${ESPN_NFL}/scoreboard`), byTeam = {};
+  for (const e of sb.events || []) {
+    const c = e.competitions[0], started = e.status.type.state !== 'pre' || Date.parse(e.date) <= Date.now();
+    for (const t of c.competitors) { const a = TEAMFIX[t.team.abbreviation] || t.team.abbreviation; byTeam[a] = { at: e.date, started }; }
+  }
+  const v = { season: String((sb.season || {}).year || ''), week: Number((sb.week || {}).number || 0), byTeam };
+  gameMemo = { at: Date.now(), v }; return v;
+}
+
+async function lineupAct(db, uid, commish, myTeam, data) {
+  const team = String(parseInt(data.team, 10));
+  if (!commish && String(myTeam) !== team) throw new HttpsError('permission-denied', 'You can only set your own team.');
+  const [P, G] = await Promise.all([playerInfo(), weekGames()]);
+  const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
+  const nm = id => (P[id] ? P[id].name : id);
+  return db.runTransaction(async tx => {
+    const rRef = db.doc('league/rosters'), lRef = db.doc('league/lineups');
+    const [rs, ls] = await Promise.all([tx.get(rRef), tx.get(lRef)]);
+    const R = rs.data(); if (!R || !R.rosters || !R.rosters[team]) throw new HttpsError('failed-precondition', 'There are no league rosters yet. Make a draft official first.');
+    const L = ls.data() || { teams: {} };
+    const all = R.rosters[team], ir = (R.ir || {})[team] || [], taxi = (R.taxi || {})[team] || [];
+    const active = all.filter(id => !ir.includes(id) && !taxi.includes(id));
+    const cur = ((L.teams || {})[team] || SLOTS.map(() => null)).map(id => (id && active.includes(id) ? id : null));
+    while (cur.length < SLOTS.length) cur.push(null);
+    const qbs = list => list.filter(id => P[id] && P[id].pos === 'QB').length;
+    let slots = cur.slice(), newIr = ir.slice(), newTaxi = taxi.slice();
+    if (data.action === 'set') {
+      if (qbs(active) > 2) throw new HttpsError('failed-precondition', `${active.length} active players include ${qbs(active)} QBs; the most allowed is 2 (rule 8-1-4). Move one to taxi or IR first.`);
+      const want = (data.slots || []).slice(0, SLOTS.length).map(x => (x ? String(x) : null)); while (want.length < SLOTS.length) want.push(null);
+      const seen = new Set();
+      want.forEach((id, i) => {
+        if (!id) return;
+        if (!active.includes(id)) throw new HttpsError('invalid-argument', `${nm(id)} isn't on your active roster.`);
+        if (seen.has(id)) throw new HttpsError('invalid-argument', `${nm(id)} is in two spots.`); seen.add(id);
+        if (!P[id] || !ELIG[SLOTS[i]].includes(P[id].pos)) throw new HttpsError('invalid-argument', `${nm(id)} can't play ${SLOTS[i]}.`);
+      });
+      want.forEach((id, i) => {
+        if (id === cur[i]) return;
+        if (locked(cur[i])) throw new HttpsError('failed-precondition', `${nm(cur[i])}'s game has started; he's locked in (rule 7-4-2).`);
+        if (locked(id)) throw new HttpsError('failed-precondition', `${nm(id)}'s game has started; he can't be moved in now (rule 7-4-2).`);
+      });
+      slots = want;
+    } else if (data.action === 'move') {
+      const id = String(data.player || ''), to = data.to;
+      if (!all.includes(id)) throw new HttpsError('invalid-argument', "That player isn't on your roster.");
+      const i = slots.indexOf(id);
+      if (i >= 0 && locked(id)) throw new HttpsError('failed-precondition', `${nm(id)} is starting and his game has started (rule 7-4-2).`);
+      if (to === 'ir') {
+        if (ir.includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is already on IR.`);
+        if (!['IR', 'Out'].includes(P[id] && P[id].inj)) throw new HttpsError('failed-precondition', `Only players listed IR or Out can go on IR (rule 8-1-3). ${nm(id)} is listed ${(P[id] && P[id].inj) || 'healthy'}.`);
+        if (ir.length >= IR_MAX) throw new HttpsError('failed-precondition', `IR is full (${IR_MAX} spots).`);
+        newTaxi = taxi.filter(x => x !== id); newIr = [...ir, id];
+      } else if (to === 'taxi') {
+        if (taxi.includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is already on the taxi squad.`);
+        if (!(P[id] && P[id].exp === 0)) throw new HttpsError('failed-precondition', `Only rookies can be placed on the taxi squad (rule 8-1-2).`);
+        if (!R.practice && G.week > TAXI_DEADLINE_WEEK) throw new HttpsError('failed-precondition', `The taxi deadline (Week ${TAXI_DEADLINE_WEEK}) has passed (rule 8-1-2).`);
+        if (taxi.length >= TAXI_MAX) throw new HttpsError('failed-precondition', `The taxi squad is full (${TAXI_MAX} spots).`);
+        newIr = ir.filter(x => x !== id); newTaxi = [...taxi, id];
+      } else if (to === 'active') {
+        if (!ir.includes(id) && !taxi.includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is already active.`);
+        if (active.length >= ACTIVE_MAX) throw new HttpsError('failed-precondition', `Your active roster is full (${ACTIVE_MAX}). Move someone to IR or taxi first; releasing players comes with waivers.`);
+        newIr = ir.filter(x => x !== id); newTaxi = taxi.filter(x => x !== id);
+        const nowActive = [...active, id];
+        if (P[id] && P[id].pos === 'QB' && qbs(nowActive) > 2) throw new HttpsError('failed-precondition', 'That would make 3 active QBs; the most allowed is 2 (rule 8-1-4).');
+      } else throw new HttpsError('invalid-argument', 'Unknown move.');
+      if (i >= 0 && to !== 'active') slots[i] = null;
+    } else throw new HttpsError('invalid-argument', 'Unknown action.');
+    const now = Date.now(), wk = `${G.season || 'x'}-w${G.week}`;
+    tx.set(lRef, { teams: { [team]: slots }, season: G.season, week: G.week, updated: now }, { merge: true });
+    tx.set(db.doc(`lineups/${wk}`), { teams: { [team]: slots }, season: G.season, week: G.week, updated: now }, { merge: true });
+    if (data.action === 'move') tx.update(rRef, { [`ir.${team}`]: newIr, [`taxi.${team}`]: newTaxi });
+    return { ok: true, slots, ir: newIr, taxi: newTaxi };
+  });
+}
+
+exports.lineup = onCall({ region: 'us-central1', maxInstances: 10, timeoutSeconds: 30, memory: '512MiB' }, async req => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const db = getFirestore();
+  const [roles, user] = await Promise.all([db.doc('config/roles').get(), db.doc(`users/${uid}`).get()]);
+  const commish = ((roles.data() || {}).commish || []).includes(uid), team = (user.data() || {}).team;
+  return lineupAct(db, uid, commish, team == null ? null : team, req.data || {});
 });

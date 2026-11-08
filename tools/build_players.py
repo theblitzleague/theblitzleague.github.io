@@ -36,6 +36,8 @@ if league.get("sleeperLeagueId"):
         rostered.update((r.get("players") or []) + (r.get("taxi") or []) + (r.get("reserve") or []))
 
 def keep(k, p):
+    if (p.get("full_name") or "").startswith("Duplicate Player"):     # Sleeper's placeholder entries, not real players
+        return False
     if k in rostered:
         return True
     fp = set(p.get("fantasy_positions") or [p.get("position")])

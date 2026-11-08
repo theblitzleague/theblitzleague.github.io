@@ -115,6 +115,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Each week's Hub lineups as they stood (written by the lineup function and liveScores). Anyone may read.
+    match /lineups/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Live fantasy points while NFL games are on (functions/index.js liveScores). Anyone may read; only that job writes.
     match /live/{id} {
       allow read: if true;

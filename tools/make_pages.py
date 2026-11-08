@@ -18,7 +18,7 @@ PAGES = {
     "standings.html": ("Standings · Blitz Hub", "standings.html", "standings.js", [], "", True),
     "awards.html": ("Awards Race · Blitz Hub", "awards.html", "awards.js", [], "", True),
     "teams.html": ("Franchises · Blitz Hub", "teams.html", "teams.js", [], "", True),
-    "team.html": ("Team · Blitz Hub", "teams.html", "team.js", [], ' data-team="1"', True),
+    "team.html": ("Team · Blitz Hub", "teams.html", "team.js", ["lineup.js"], ' data-team="1"', True),
     "matchup.html": ("Matchup · Blitz Hub", "matchup.html", "matchup.js", [], "", False),
     "schedule.html": ("Schedule · Blitz Hub", "schedule.html", "schedule.js", [], "", True),
     "draft.html": ("Draft · Blitz Hub", "draft.html", "draft.js", [], "", True),
@@ -31,7 +31,7 @@ PAGES = {
     "account.html": ("Account · Blitz Hub", None, "account.js", ["firebase-config.js"], "", False),
 }
 # Page scripts loaded as ES modules (they import the Firebase SDK).
-MODULES = {"account.js", "draftroom.js"}
+MODULES = {"account.js", "draftroom.js", "lineup.js"}
 TPL = """<!doctype html>
 <html lang="en">
 <head>
@@ -52,6 +52,7 @@ TPL = """<!doctype html>
 <meta name="apple-mobile-web-app-title" content="Blitz Hub">
 <meta name="blitz-notes" content="{notes}">
 <meta name="blitz-ledger" content="{ledger}">
+<meta name="blitz-version" content="{version}">
 </head>
 <body{body}>
 <header class="topbar"><div class="wrap">
@@ -76,10 +77,19 @@ TPL = """<!doctype html>
 def ver(path):
     return f"{path}?v={hashlib.sha1(open(os.path.join(ROOT, path), 'rb').read()).hexdigest()[:8]}"
 
+# The site's code version: one hash over every stylesheet and script. Each page carries the version it was built with,
+# and version.json holds the newest; js/ui.js compares the two and offers a refresh when the site has been updated.
+import glob, json
+_h = hashlib.sha1()
+for f in sorted(glob.glob(os.path.join(ROOT, "css", "*.css")) + glob.glob(os.path.join(ROOT, "js", "*.js")) + [os.path.join(ROOT, "sw.js")]):
+    _h.update(open(f, "rb").read())
+VERSION = _h.hexdigest()[:10]
+json.dump({"v": VERSION}, open(os.path.join(ROOT, "version.json"), "w"))
+
 for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     cur_attr = ' aria-current="page"'
     nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>' for h, l in NAV)
     scripts = "\n".join(f'<script{' type="module"' if s in MODULES else ""} src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *dict.fromkeys(["nfl.js", "firebase-config.js", *extra]), script])
     crumb = CRUMB.get(fn) or dict(NAV).get(cur, title.split(" · ")[0])
-    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts, notes=ver("js/notes.js"), ledger=ver("js/ledger.js"), acct=' aria-current="page"' if fn == "account.html" else ""))
+    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts, notes=ver("js/notes.js"), ledger=ver("js/ledger.js"), version=VERSION, acct=' aria-current="page"' if fn == "account.html" else ""))
 print("wrote", ", ".join(PAGES))

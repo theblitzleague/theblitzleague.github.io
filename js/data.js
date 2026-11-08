@@ -51,23 +51,36 @@
   // official. Public read through Firestore's REST endpoint, so no sign-in is needed. While the preview league is on,
   // those rosters replace the placeholder ones: every page (teams, player cards, the Network) then shows who drafted
   // whom. Past weeks keep their placeholder scores; this week's and later lineups start empty until Hub lineups exist.
+  // Firestore REST map of arrays ({team: [ids]}) -> plain object; nulls stay null (an empty lineup spot).
+  const lists = m => { const o = {}; for (const [k, v] of Object.entries((m && m.mapValue && m.mapValue.fields) || {})) o[k] = ((v.arrayValue || {}).values || []).map(x => ('stringValue' in x ? x.stringValue : null)); return o; };
   async function hubRosters() {
     const c = window.FIREBASE_CONFIG; if (!c) return null;
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 4000);
     try {
       const r = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/league/rosters?key=${c.apiKey}`, { signal: ctl.signal });
       if (!r.ok) return null;
-      const f = (await r.json()).fields || {}, ro = (f.rosters && f.rosters.mapValue && f.rosters.mapValue.fields) || {};
-      const rosters = {}; for (const [k, v] of Object.entries(ro)) rosters[k] = ((v.arrayValue || {}).values || []).map(x => x.stringValue);
-      return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0), rosters };
+      const f = (await r.json()).fields || {};
+      const lu = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/league/lineups?key=${c.apiKey}`, { signal: ctl.signal })
+        .then(x => (x.ok ? x.json() : {})).catch(() => ({}));
+      return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0),
+        rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((lu.fields || {}).teams) };
     } catch (e) { return null; } finally { clearTimeout(t); }
   }
   async function applyHub(raw, hub) {
-    const all = await getJSON('data/players.json').catch(() => ({}));
+    const [all, nfl] = await Promise.all([getJSON('data/players.json').catch(() => ({})), getJSON('data/nfl.json').catch(() => ({}))]);
+    raw.seasonStats = nfl.players || {};            // {id: [games, points, last-3 average]} in League scoring
     for (const [id, p] of Object.entries(all)) if (!raw.players[id]) raw.players[id] = p;
-    for (const r of raw.rosters) { r.players = hub.rosters[String(r.roster_id)] || []; r.starters = []; r.reserve = []; r.taxi = []; }
+    // Lineups are the Hub's standing lineup (league/lineups), in league.json rosterSlots order; null = an empty spot.
+    for (const r of raw.rosters) {
+      const k = String(r.roster_id), all = hub.rosters[k] || [];
+      r.players = all; r.reserve = (hub.ir[k] || []).filter(id => all.includes(id)); r.taxi = (hub.taxi[k] || []).filter(id => all.includes(id));
+      r.starters = (hub.lineups[k] || []).map(id => (id && all.includes(id) && !r.reserve.includes(id) && !r.taxi.includes(id) ? id : '0'));
+    }
     const wk = raw.state.week;
-    for (const [w, rows] of Object.entries(raw.matchups)) if (+w >= wk) for (const m of rows) { m.starters = []; m.starters_points = []; m.players = []; m.points = 0; }
+    for (const [w, rows] of Object.entries(raw.matchups)) if (+w >= wk) for (const m of rows) {
+      const r = raw.rosters.find(x => x.roster_id === m.roster_id);
+      m.starters = +w === wk && r ? r.starters.slice() : []; m.starters_points = m.starters.map(() => 0); m.players = r ? r.players.slice() : []; m.points = 0;
+    }
   }
 
   const pts = (whole, dec) => (whole || 0) + (dec || 0) / 100;
@@ -249,7 +262,7 @@
         const el = document.querySelector('#sample-flag .wrap'), e = v => String(v || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
         if (el) el.innerHTML = `Preview · rosters are from the official Draft Room draft <a href="draftroom.html?d=${e(hub.source)}">${e(hub.name)}</a>; past scores, trades and picks are placeholders`;
       }
-      return { ...build(league, brand, { ...raw, history }), live, hub };
+      return { ...build(league, brand, { ...raw, history }), live, hub, seasonStats: raw.seasonStats || null };
     },
     headshot: id => `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`,
   };

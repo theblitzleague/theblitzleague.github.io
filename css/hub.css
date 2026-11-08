@@ -1387,3 +1387,36 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .dr-confirm h3 { margin: 0 0 8px; font-family: var(--font-display); text-transform: uppercase; font-size: 22px; }
 .dr-confirm p { margin: 0 0 16px; color: var(--muted); line-height: 1.45; }
 .dr-cbtns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+/* Lineup editing on the Depth Chart (js/lineup.js): every spot on the field is a button for the team's GM. */
+button.slot { font: inherit; color: inherit; background: none; border: 0; padding: 4px; cursor: pointer; border-radius: var(--radius); }
+button.slot:hover, button.slot:focus-visible { background: rgba(255,255,255,.07); outline: none; }
+.lu-empty .lu-plus { width: 58px; height: 58px; border-radius: 50%; border: 2px dashed rgba(255,255,255,.4); display: grid; place-items: center; font-size: 28px; color: rgba(255,255,255,.7); }
+div.lu-empty .lu-plus { border-style: dotted; }
+.lu-game { display: block; font-size: 11px; color: rgba(255,255,255,.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.lu-game.locked { color: var(--muted); }
+.prow .lu-game { display: inline; }
+.lu-under .slot { grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; padding: 8px 10px; border: 1px solid var(--line); background: var(--bg-2); border-radius: var(--radius); align-items: center; column-gap: 10px; }
+.lu-under .slot > .shot, .lu-under .slot > .lu-plus { grid-row: span 3; width: 44px; height: 44px; }
+.lu-under .lu-empty .lu-plus { font-size: 20px; }
+.lu-move { padding: 4px 10px; font-size: 13px; margin-left: 6px; }
+.lu-sheet { width: min(520px, calc(100vw - 24px)); max-height: min(80vh, 720px); padding: 0; background: var(--panel); color: var(--text); border: 1px solid var(--line-2); border-radius: var(--radius); overflow: hidden; }
+.lu-sheet[open] { display: flex; flex-direction: column; }
+.lu-sheet::backdrop { background: rgba(0,0,0,.6); }
+.lu-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.lu-head h3 { margin: 0; font-family: var(--font-display); text-transform: uppercase; font-size: 22px; }
+.lu-items { overflow: auto; padding: 6px; display: grid; gap: 4px; }
+.lu-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; align-items: center; text-align: left; font: inherit; color: var(--text); background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; }
+.lu-item:hover { border-color: var(--accent); }
+.lu-item.off { opacity: .45; cursor: not-allowed; }
+.lu-item .shot { width: 40px; height: 40px; }
+.lu-item > .lu-who:first-child { grid-column: 1 / 3; }
+.lu-who { display: grid; min-width: 0; } .lu-who small { color: var(--muted); font-size: 12px; } .lu-who b { font-size: 15px; }
+.lu-ppg { font-family: var(--font-display); font-size: 17px; text-align: right; display: grid; } .lu-ppg small { font-size: 10px; color: var(--muted); }
+#lu-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; padding: 10px 16px; background: var(--bg-2); border: 1px solid var(--good); border-radius: var(--radius); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.4); max-width: calc(100vw - 32px); }
+#lu-toast.bad { border-color: var(--bad); } #lu-toast[hidden] { display: none; }
+.prow:has(.lu-move) { grid-template-columns: 40px minmax(0, 1fr) auto auto; }
+/* Update banner and pull-to-refresh (js/ui.js) */
+#upd-bar { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70; display: flex; gap: 10px; align-items: center; padding: 8px 8px 8px 16px; background: var(--bg-2); border: 1px solid var(--accent); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.5); max-width: calc(100vw - 24px); white-space: nowrap; }
+#upd-bar .upd-x { background: none; border: 0; color: var(--muted); font-size: 22px; cursor: pointer; padding: 0 6px; }
+#ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); transform: translate(-50%, 0); z-index: 70; padding: 6px 14px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line-2); color: var(--muted); font: 600 13px var(--font-body); pointer-events: none; }
+#ptr.go { color: #fff; border-color: var(--accent); background: var(--accent); }

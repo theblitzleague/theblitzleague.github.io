@@ -247,5 +247,47 @@
     if (e.data && (e.data.kind === 'announcement' || e.data.kind === 'note')) setTimeout(() => unreadPopup(true), 800);
   });
 
+  /* ---------- Staying current in the installed app (it has no reload button) ----------
+     1. Update banner: version.json (written by tools/make_pages.py) names the newest version of the site's code; this page
+        knows the version it was built with (meta blitz-version). Checked when the app comes back on screen and every 5
+        minutes; when they differ, a banner offers a one-tap refresh.
+     2. Pull to refresh: in the installed app, drag down from the very top of the page and let go to reload it. Ignored
+        when the drag starts inside something that scrolls by itself (a list, a table, a dialog). */
+  (function freshness() {
+    const mine = (document.querySelector('meta[name="blitz-version"]') || {}).content;
+    let shown = false, last = 0;
+    async function check() {
+      if (!mine || shown || Date.now() - last < 10000) return; last = Date.now();
+      try {
+        const v = (await (await fetch('version.json', { cache: 'no-store' })).json()).v;
+        if (!v || v === mine) return;
+        shown = true;
+        const b = document.createElement('div'); b.id = 'upd-bar';
+        b.innerHTML = '<span>Blitz Hub was updated.</span><button class="btn primary" type="button">Refresh</button><button class="upd-x" type="button" aria-label="Later">&times;</button>';
+        b.querySelector('.btn').onclick = () => location.reload();
+        b.querySelector('.upd-x').onclick = () => b.remove();
+        document.body.appendChild(b);
+      } catch (e) { /* offline: try again later */ }
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+    setInterval(check, 5 * 60000); setTimeout(check, 5000);
+
+    const app = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    if (!app) return;
+    let y0 = null, pull = 0, pill = null;
+    const inner = el => { for (; el && el !== document.body; el = el.parentElement) { if (el.tagName === 'DIALOG') return true; const o = getComputedStyle(el).overflowY; if ((o === 'auto' || o === 'scroll') && el.scrollHeight > el.clientHeight && el.scrollTop > 0) return true; } return false; };
+    addEventListener('touchstart', e => { y0 = scrollY <= 0 && e.touches.length === 1 && !inner(e.target) && !document.querySelector('dialog[open]') ? e.touches[0].clientY : null; pull = 0; }, { passive: true });
+    addEventListener('touchmove', e => {
+      if (y0 == null) return;
+      pull = Math.max(0, e.touches[0].clientY - y0); if (scrollY > 0) { pull = 0; y0 = null; }
+      if (!pill && pull > 10) { pill = document.createElement('div'); pill.id = 'ptr'; document.body.appendChild(pill); }
+      if (pill) { const d = Math.min(pull, 140); pill.style.transform = `translate(-50%, ${d * 0.6}px)`; pill.style.opacity = Math.min(1, d / 70); pill.textContent = pull > 90 ? 'Release to refresh' : 'Pull to refresh'; pill.classList.toggle('go', pull > 90); }
+    }, { passive: true });
+    addEventListener('touchend', () => {
+      if (pill) { if (pull > 90) { pill.textContent = 'Refreshing…'; location.reload(); } else { pill.remove(); pill = null; } }
+      y0 = null; pull = 0;
+    });
+  })();
+
   window.UI = { announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
 })();

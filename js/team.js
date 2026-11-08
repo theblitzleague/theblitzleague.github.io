@@ -35,6 +35,12 @@
   // Season points per player, counted only from weeks they were in the lineup.
   function seasonPoints() {
     const out = {};
+    // Hub rosters (an official Draft Room draft) don't match the placeholder weeks, so show each player's real season
+    // in League scoring instead of points scored as this team's starter.
+    if (M.hub && M.seasonStats) {
+      for (const id of T.roster.players) { const s = M.seasonStats[id]; if (s && s[0]) out[id] = { pts: s[1], gp: s[0] }; }
+      return out;
+    }
     for (const g of T.games.filter(g => g.final)) {
       (g.me.starters || []).forEach((id, i) => {
         const v = (g.me.starters_points || [])[i];
@@ -127,7 +133,7 @@
       : '<div class="empty">Full strength. No one on the injury report.</div>'}
   </section>
   <section class="panel s8">
-    <header><div><span class="eyebrow">As starters</span><h2>Top performers</h2></div><span class="aside">Weeks 1-${done.length}</span></header>
+    <header><div><span class="eyebrow">${M.hub ? 'This season, League scoring' : 'As starters'}</span><h2>Top performers</h2></div><span class="aside">${M.hub ? 'All NFL games' : `Weeks 1-${done.length}`}</span></header>
     ${top.length ? '' : '<div class="empty">No starter points recorded yet.</div>'}<div class="cards">${top.map(([id, v]) => { const p = P(id); return `
       <div class="pcard"${UI.pid(id)}><span class="num">${p.number != null ? '#' + esc(p.number) : ''}</span><span class="pos ${esc(p.position)}">${esc(p.position)}</span>
         ${shot(id)}<div class="pname">${esc(p.full_name)}</div><div class="pmeta">${esc(p.team || 'FA')}</div>
@@ -163,7 +169,58 @@
 </div>`;
   }
 
+  /* Hub rosters: every lineup spot on the field (defense above the line, offense below; flex spots and the kicker
+     under it), empty ones too. The team's GM and the commissioner can tap a spot to fill it, or a player to move him
+     (js/lineup.js does the editing; it sets window.LineupEdit once it knows who's signed in). */
+  function hubDepth() {
+    const t = T, r = t.roster, sp = seasonPoints(), slots = M.slots, ed = window.LineupEdit && LineupEdit.can(t.id);
+    const st = slots.map((_, i) => (r.starters[i] && r.starters[i] !== '0' ? r.starters[i] : null));
+    const gi = window.LineupEdit ? LineupEdit.game : () => null;
+    const area = (slot, i) => {
+      if (slot === 'IDP_FLEX') { const g = st[i] ? P(st[i]).position : 'LB'; return { DL: 'dl2', LB: 'lb2', DB: 'db2' }[g] || 'lb2'; }
+      const n = slots.slice(0, i).filter(x => x === slot).length;
+      return ({ QB: ['qb'], RB: ['rb1', 'rb2'], WR: ['wr1', 'wr2'], TE: ['te'], DL: ['dl1'], LB: ['lb1'], DB: ['db1'] }[slot] || [])[n] || null;
+    };
+    const game = id => { const g = gi(id); return g ? `<span class="lu-game${g.locked ? ' locked' : ''}">${g.locked ? '🔒 ' : ''}${esc(g.text)}</span>` : ''; };
+    const spot = (slot, i, cls) => {
+      const id = st[i], lab = UI.SLOT_SHORT[slot] || slot, tag = ed ? 'button type="button"' : 'div';
+      if (!id) return `<${tag} class="${cls} lu-empty" data-lslot="${i}"${cls === 'slot' && area(slot, i) ? ` style="grid-area:${area(slot, i)}"` : ''}><span class="lu-plus">${ed ? '+' : ''}</span><div class="pmeta"><span class="pos ${esc(slot)}">${esc(lab)}</span> ${ed ? 'Tap to fill' : 'Empty'}</div></${tag.split(' ')[0]}>`;
+      const p = P(id);
+      return `<${tag} class="${cls}" data-lslot="${i}"${cls === 'slot' && area(slot, i) ? ` style="grid-area:${area(slot, i)}"` : ''}${ed ? '' : UI.pid(id)}>${shot(id)}<div class="pname">${esc(p.full_name)}</div>
+        <div class="pmeta"><span class="pos ${esc(slot)}">${esc(lab)}</span> ${esc(p.team || 'FA')} ${status(p)}</div>${game(id)}</${tag.split(' ')[0]}>`;
+    };
+    const onField = slots.map((s, i) => (area(s, i) && !['FLEX', 'SUPER_FLEX', 'K'].includes(s) ? spot(s, i, 'slot') : '')).join('');
+    const under = slots.map((s, i) => (['FLEX', 'SUPER_FLEX', 'K'].includes(s) ? spot(s, i, 'slot lu-flex') : '')).join('');
+    const inLine = new Set(st.filter(Boolean));
+    const bench = r.players.filter(id => !inLine.has(id) && !r.taxi.includes(id) && !r.reserve.includes(id));
+    const bp = POS_ORDER.map(pos => [pos, bench.filter(id => P(id).position === pos)]).filter(x => x[1].length);
+    const row = (id, where) => { const p = P(id); return `<div class="prow"${UI.pid(id)}>${shot(id)}<div><div class="pname">${esc(p.full_name)} ${status(p)}</div>
+      <div class="pmeta"><span class="pos ${esc(p.position)}">${esc(p.position)}</span> ${esc(pmeta(p))} ${game(id)}</div></div>
+      <div class="pts">${sp[id] ? f1(sp[id].pts) : '-'}<small>Pts</small></div>${ed ? `<button class="btn lu-move" type="button" data-lmove="${esc(id)}" data-where="${where}">${where === 'bench' ? 'Move' : 'Activate'}</button>` : ''}</div>`; };
+    const active = r.players.length - r.taxi.length - r.reserve.length, empty = st.filter(x => !x).length;
+    return `<div class="grid">
+  <section class="panel s12">
+    <header><div><span class="eyebrow">Week ${M.current} lineup${ed ? ' · tap a spot to change it' : ''}</span><h2>Starters</h2></div>
+      <span class="aside">${ed ? `${empty ? `<button class="btn primary" type="button" data-lfill="1">Fill ${empty} empty spot${empty > 1 ? 's' : ''}</button> ` : ''}` : ''}${empty ? `${empty} empty` : 'Full lineup'}</span></header>
+    <div class="field two-way lu-field"><div class="formation"><div class="los" aria-hidden="true"><span>Defense</span><span>Line of scrimmage</span><span>Offense</span></div>${onField}</div></div>
+    <div class="sub">Flex spots and kicker</div><div class="flexrow lu-under">${under}</div>
+    <p class="footnote">Each player locks when his game kicks off (rule 7-4-2). ${ed ? 'Your lineup stays set from week to week until you change it.' : ''}</p>
+  </section>
+  <section class="panel s8">
+    <header><div><span class="eyebrow">Depth · ${active} of 24 active</span><h2>Bench</h2></div><span class="aside">${bench.length} players · Pts = this season</span></header>
+    ${bp.length ? bp.map(([pos, ids]) => `<div class="sub"><span class="pos ${pos}">${pos}</span></div><div class="plist">${ids.map(id => row(id, 'bench')).join('')}</div>`).join('') : '<div class="empty">No one on the bench.</div>'}
+  </section>
+  <section class="panel s4">
+    <header><div><span class="eyebrow">Rookies only · 5 spots</span><h2>Taxi squad</h2></div><span class="aside">${r.taxi.length}/5</span></header>
+    ${r.taxi.length ? `<div class="plist">${r.taxi.map(id => row(id, 'taxi')).join('')}</div>` : '<div class="empty">Taxi squad is empty.</div>'}
+    <div class="sub">Injured reserve · ${r.reserve.length}/4</div>
+    ${r.reserve.length ? `<div class="plist">${r.reserve.map(id => row(id, 'ir')).join('')}</div>` : '<div class="empty">No one on IR.</div>'}
+  </section>
+</div>`;
+  }
+
   function depthChart() {
+    if (M.hub) return hubDepth();
     const t = T, r = t.roster, sp = seasonPoints();
     // Offense below the line of scrimmage, defense above it. Offensive flex spots and the kicker sit under the
     // field; the IDP flex takes the open spot in its own position group.
@@ -439,7 +496,9 @@
       document.getElementById('crumb').innerHTML = `<a href="teams.html">Teams</a> · ${esc(T.division.name)} · <strong>${esc(teamName(T))}</strong>`;
       document.getElementById('hero').innerHTML = hero() + weekStrip();
       route();
-      addEventListener('hashchange', route);   // js/ui.js keeps the tab bar and scroll position sensible
+      addEventListener('hashchange', route);
+      window.TeamPage = { M, T, P, route };
+      addEventListener('hub:lineup', () => { if (location.hash.slice(1) === 'depth-chart') route(); });   // js/ui.js keeps the tab bar and scroll position sensible
       addEventListener('hub:injuries', () => { const h = location.hash.slice(1); if (!RENDER[h] || h === 'overview') route(); });
     } catch (e) {
       content.innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;

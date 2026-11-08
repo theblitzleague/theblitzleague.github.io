@@ -274,19 +274,27 @@
 
     const app = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
     if (!app) return;
-    let y0 = null, pull = 0, pill = null;
-    const inner = el => { for (; el && el !== document.body; el = el.parentElement) { if (el.tagName === 'DIALOG') return true; const o = getComputedStyle(el).overflowY; if ((o === 'auto' || o === 'scroll') && el.scrollHeight > el.clientHeight && el.scrollTop > 0) return true; } return false; };
-    addEventListener('touchstart', e => { y0 = scrollY <= 0 && e.touches.length === 1 && !inner(e.target) && !document.querySelector('dialog[open]') ? e.touches[0].clientY : null; pull = 0; }, { passive: true });
+    // Only a deliberate, straight-down drag counts: it must start below the menu and tab bars (not on anything that
+    // scrolls sideways), stay mostly vertical the whole way (any sideways swipe cancels it), and go about 140px.
+    const NEED = 140;
+    let y0 = null, x0 = 0, pull = 0, pill = null;
+    const inner = el => { for (; el && el !== document.body; el = el.parentElement) {
+      if (el.tagName === 'DIALOG' || el.matches('.topbar, #tabs, .tabs, nav, .weekstrip, [role="tablist"]')) return true;
+      const cs = getComputedStyle(el), oy = cs.overflowY, ox = cs.overflowX;
+      if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight && el.scrollTop > 0) return true;
+      if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth) return true; } return false; };
+    const stop = () => { if (pill) { pill.remove(); pill = null; } y0 = null; pull = 0; };
+    addEventListener('touchstart', e => { const t = e.touches[0]; y0 = scrollY <= 0 && e.touches.length === 1 && !inner(e.target) && !document.querySelector('dialog[open]') ? t.clientY : null; x0 = t.clientX; pull = 0; }, { passive: true });
     addEventListener('touchmove', e => {
       if (y0 == null) return;
-      pull = Math.max(0, e.touches[0].clientY - y0); if (scrollY > 0) { pull = 0; y0 = null; }
-      if (!pill && pull > 10) { pill = document.createElement('div'); pill.id = 'ptr'; document.body.appendChild(pill); }
-      if (pill) { const d = Math.min(pull, 140); pill.style.transform = `translate(-50%, ${d * 0.6}px)`; pill.style.opacity = Math.min(1, d / 70); pill.textContent = pull > 90 ? 'Release to refresh' : 'Pull to refresh'; pill.classList.toggle('go', pull > 90); }
+      const t = e.touches[0], dy = t.clientY - y0, dx = Math.abs(t.clientX - x0);
+      if (scrollY > 0 || dx > 24 || dx > dy * 0.5) { stop(); return; }
+      pull = Math.max(0, dy);
+      if (!pill && pull > 30) { pill = document.createElement('div'); pill.id = 'ptr'; document.body.appendChild(pill); }
+      if (pill) { const d = Math.min(pull, 200); pill.style.transform = `translate(-50%, ${d * 0.5}px)`; pill.style.opacity = Math.min(1, d / NEED); pill.textContent = pull > NEED ? 'Release to refresh' : 'Pull to refresh'; pill.classList.toggle('go', pull > NEED); }
     }, { passive: true });
-    addEventListener('touchend', () => {
-      if (pill) { if (pull > 90) { pill.textContent = 'Refreshing…'; location.reload(); } else { pill.remove(); pill = null; } }
-      y0 = null; pull = 0;
-    });
+    addEventListener('touchend', () => { if (pill && pull > NEED) { pill.textContent = 'Refreshing…'; location.reload(); return; } stop(); });
+    addEventListener('touchcancel', stop);
   })();
 
   window.UI = { announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };

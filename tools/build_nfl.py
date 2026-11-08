@@ -94,6 +94,21 @@ for e in sb.get("events", []):
 byes = []
 for t in (sb.get("week") or {}).get("teamsOnBye", []):
     team_by_id[t["id"]] = ab(t["abbreviation"]); byes.append(ab(t["abbreviation"]))
+# Each team's bye week this season, from Sleeper's schedule (the week a team has no game). Shown on player cards and
+# in the Draft Room.
+bye_weeks = {}
+try:
+    sched = get(f"https://api.sleeper.com/schedule/nfl/regular/{season}")
+    playing = {}
+    for g in sched:
+        for t in (g.get("home"), g.get("away")):
+            if t: playing.setdefault(t, set()).add(int(g["week"]))
+    weeks = set(range(1, max(int(g["week"]) for g in sched) + 1))
+    for t, w in playing.items():
+        off = sorted(weeks - w)
+        if off: bye_weeks[t] = off[0]
+except Exception as e:
+    print("bye weeks skipped:", e)
 if len(team_by_id) < 32:                      # fill in any team not on this week's slate (news can tag them)
     for t in get(f"{ESPN}/teams")["sports"][0]["leagues"][0]["teams"]:
         team_by_id.setdefault(t["team"]["id"], ab(t["team"]["abbreviation"]))
@@ -246,7 +261,7 @@ out = {"_readme": "Built by tools/build_nfl.py; see that file for sources. Don't
        "built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
        "season": season, "week": week, "dvpThrough": week - 1,
        "scoring": "league" if scoring else "sleeper-default",
-       "news": news, "games": games, "byes": byes, "injuries": injuries,
+       "news": news, "games": games, "byes": byes, "byeWeeks": bye_weeks, "injuries": injuries,
        "dvp": dvp, "proj": proj, "trending": trending,
        "rookies": rookies, "players": {pid: [len(v), round(sum(v), 1), round(sum(v[-3:]) / len(v[-3:]), 1)] for pid, v in logs.items()},
        "draftYear": draft_year, "bigBoard": board, "college": college}

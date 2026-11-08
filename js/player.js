@@ -101,16 +101,19 @@
     return badges.length || races.length ? `<div class="pc-honors">${badges.join('')}${races.join('')}</div>` : '';
   }
 
-  function shell(id) {
+  function shell(id, byes) {
     const p = M.players[id] || { full_name: `Player ${id}`, position: '?' }, t = owner(id);
-    const bits = [p.height ? `${Math.floor(p.height / 12)}'${p.height % 12}"` : null, p.weight ? `${p.weight} lb` : null, p.college || null,
+    // A page can say what "owned" means there (the Draft Room: available, or drafted by whom and when).
+    const ctx = window.PlayerCard && PlayerCard.context ? PlayerCard.context(id) : null;
+    const bye = p.team && byes && byes[p.team];
+    const bits = [bye ? `Bye week ${bye}` : null, p.height ? `${Math.floor(p.height / 12)}'${p.height % 12}"` : null, p.weight ? `${p.weight} lb` : null, p.college || null,
       p.years_exp === 0 ? 'Rookie' : p.years_exp != null ? `${p.years_exp} yr${p.years_exp === 1 ? '' : 's'} exp` : null].filter(Boolean);
     const seasons = [M.state.season, String(+M.state.season - 1)];
     return `<div class="pc-head">${shot(id, 'pc-shot')}<div class="pc-id">
         <div class="pc-name">${esc(p.full_name)}</div>
         <div class="pc-sub"><span class="pos ${esc(p.position)}">${esc(p.position)}</span>${p.nflPos ? ` <span class="pmeta">${esc(p.nflPos)}</span>` : ''} ${esc(pmeta(p))} ${status(p)}</div>
         ${bits.length ? `<div class="pmeta">${esc(bits.join(' · '))}</div>` : ''}
-        <div class="pc-own">${t ? `<a href="team.html?team=${t.id}#roster">${markSVG(t.f, 'mini')} ${esc(t.f.location)}${t.f.nickname ? ' ' + esc(t.f.nickname) : ''}</a>` : '<span class="pmeta">Free agent in this league</span>'}</div>
+        <div class="pc-own">${ctx != null ? ctx : t ? `<a href="team.html?team=${t.id}#roster">${markSVG(t.f, 'mini')} ${esc(t.f.location)}${t.f.nickname ? ' ' + esc(t.f.nickname) : ''}</a>` : '<span class="pmeta">Free agent in this league</span>'}</div>
       </div><button class="pc-x" type="button" aria-label="Close">&times;</button></div>
       ${honors(id)}
       <div class="pc-live" hidden></div>
@@ -183,6 +186,8 @@
 
   async function open(id) {
     M = M || await Hub.load();
+    if (!M.players[id] && window.NFL) await NFL.fillPlayers(M);
+    const byes = window.NFL ? await NFL.byeWeeks() : null;
     if (!dlg) {
       dlg = document.createElement('dialog');
       dlg.className = 'pcard-dlg';
@@ -194,7 +199,7 @@
         if (s && cur) show(cur.id, s.dataset.season);
       });
     }
-    dlg.innerHTML = `<div class="pc-in">${shell(id)}</div>`;
+    dlg.innerHTML = `<div class="pc-in">${shell(id, byes)}</div>`;
     if (!dlg.open) dlg.showModal();
     show(id, M.state.season);
     liveLine(id);
@@ -211,5 +216,5 @@
   document.addEventListener('click', trigger);
   document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pid]')) trigger(e); });
 
-  window.PlayerCard = { open };
+  window.PlayerCard = { open, context: null };
 })();

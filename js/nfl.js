@@ -132,6 +132,10 @@
     M._allPlayers = true;
   }
 
+  // Each NFL team's bye week this season (data/nfl.json, built nightly from Sleeper's schedule). Fetched once per page.
+  let byeMemo = null;
+  const byeWeeks = () => byeMemo || (byeMemo = fetch('data/nfl.json').then(r => (r.ok ? r.json() : {})).then(j => j.byeWeeks || {}).catch(() => ({})));
+
   // ---------- live fantasy points ----------
   // functions/index.js liveScores writes live/current every 2 minutes while NFL games are on: each player's points in
   // League scoring, his NFL team and stat line, plus every game's score and clock. Read through Firestore's public REST
@@ -199,5 +203,5 @@
     return N;
   }
 
-  window.NFL = { load, overlay, liveScores, POS, OFF, IDP, norm };
+  window.NFL = { load, overlay, liveScores, fillPlayers, byeWeeks, POS, OFF, IDP, norm };
 })();

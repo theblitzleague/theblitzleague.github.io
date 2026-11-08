@@ -47,6 +47,29 @@
     return Promise.all(drafts.map(async d => ({ ...d, picks: d.status === 'complete' || d.status === 'drafting' ? await getJSON(`${API}/draft/${d.draft_id}/picks`) : [] })));
   }
 
+  // The Hub's own league rosters (league/rosters in Firestore), written when the commissioner marks a Draft Room draft
+  // official. Public read through Firestore's REST endpoint, so no sign-in is needed. While the preview league is on,
+  // those rosters replace the placeholder ones: every page (teams, player cards, the Network) then shows who drafted
+  // whom. Past weeks keep their placeholder scores; this week's and later lineups start empty until Hub lineups exist.
+  async function hubRosters() {
+    const c = window.FIREBASE_CONFIG; if (!c) return null;
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 4000);
+    try {
+      const r = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/league/rosters?key=${c.apiKey}`, { signal: ctl.signal });
+      if (!r.ok) return null;
+      const f = (await r.json()).fields || {}, ro = (f.rosters && f.rosters.mapValue && f.rosters.mapValue.fields) || {};
+      const rosters = {}; for (const [k, v] of Object.entries(ro)) rosters[k] = ((v.arrayValue || {}).values || []).map(x => x.stringValue);
+      return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0), rosters };
+    } catch (e) { return null; } finally { clearTimeout(t); }
+  }
+  async function applyHub(raw, hub) {
+    const all = await getJSON('data/players.json').catch(() => ({}));
+    for (const [id, p] of Object.entries(all)) if (!raw.players[id]) raw.players[id] = p;
+    for (const r of raw.rosters) { r.players = hub.rosters[String(r.roster_id)] || []; r.starters = []; r.reserve = []; r.taxi = []; }
+    const wk = raw.state.week;
+    for (const [w, rows] of Object.entries(raw.matchups)) if (+w >= wk) for (const m of rows) { m.starters = []; m.starters_points = []; m.players = []; m.points = 0; }
+  }
+
   const pts = (whole, dec) => (whole || 0) + (dec || 0) / 100;
 
   // Sleeper lists defenders by exact spot (DE, CB, OLB...); lineups use DL / LB / DB. Every page groups by
@@ -220,8 +243,13 @@
       const [league, brand, history] = await Promise.all([getJSON('data/league.json'), getJSON('data/franchises.json'),
         getJSON('data/history.json').catch(() => ({ seasons: [] }))]);
       const live = !!league.sleeperLeagueId;
-      const raw = live ? await loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : await loadSample(league.scoringLeagueId);
-      return { ...build(league, brand, { ...raw, history }), live };
+      const [raw, hub] = await Promise.all([live ? loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : loadSample(league.scoringLeagueId), live ? null : hubRosters()]);
+      if (hub) {
+        await applyHub(raw, hub);
+        const el = document.querySelector('#sample-flag .wrap'), e = v => String(v || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        if (el) el.innerHTML = `Preview · rosters are from the official Draft Room draft <a href="draftroom.html?d=${e(hub.source)}">${e(hub.name)}</a>; past scores, trades and picks are placeholders`;
+      }
+      return { ...build(league, brand, { ...raw, history }), live, hub };
     },
     headshot: id => `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`,
   };

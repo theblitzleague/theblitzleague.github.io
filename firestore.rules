@@ -108,6 +108,13 @@ service cloud.firestore {
       }
     }
 
+    // The Hub's own league: league/rosters is written by the draft function when the commissioner marks a draft official
+    // (and later by lineups, waivers and trades). Anyone may read it, like the rest of the site; only the functions write.
+    match /league/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Live fantasy points while NFL games are on (functions/index.js liveScores). Anyone may read; only that job writes.
     match /live/{id} {
       allow read: if true;

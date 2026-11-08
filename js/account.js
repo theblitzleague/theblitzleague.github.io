@@ -308,7 +308,7 @@ async function members() {
     for (const u of us.docs) if (u.data().team) { taken[u.data().team] = u.id; (linked[u.data().team] = linked[u.data().team] || []).push({ uid: u.id, ...u.data() }); }
     if ($('pick')) picker();
     const opts = cur => `<option value="">No team</option>` + Object.values(M.teams).sort((a, b) => teamName(a).localeCompare(teamName(b)))
-      .map(t => `<option value="${t.id}"${t.id === cur ? ' selected' : ''}>${esc(teamName(t))}${taken[t.id] && t.id !== cur ? ' (linked)' : ''}</option>`).join('');
+      .map(t => `<option value="${t.id}"${t.id === cur ? ' selected' : ''}${taken[t.id] && t.id !== cur ? ' disabled' : ''}>${esc(teamName(t))}${taken[t.id] && t.id !== cur ? ' (taken)' : ''}</option>`).join('');
     $('members').innerHTML = us.docs.map(u => { const p = u.data();
       return `<div class="acct-item"><div><b>${esc(p.name || p.email || 'Unnamed')}</b><span class="pmeta">${esc(p.email || '')} · ${phones[u.id] ? `${phones[u.id]} device${phones[u.id] > 1 ? 's' : ''} with notifications` : 'no notifications'}${role(u.id)}${u.id === me.uid ? ' · you' : ''}</span>
           ${isOwner && u.id !== owner ? `<label class="acct-co"><input type="checkbox" data-co="${u.id}"${cl.includes(u.id) ? ' checked' : ''}> Co-commissioner</label>` : ''}</div>
@@ -321,7 +321,8 @@ async function members() {
     };
     for (const s of $('members').querySelectorAll('select')) s.onchange = async () => {
       const team = s.value ? +s.value : null;
-      if (team && taken[team] && taken[team] !== s.dataset.uid && !confirm(`${teamLabel(team)} is already linked to someone else. Link this person too?`)) { members(); return; }
+      // One person runs each franchise: a team already linked to someone must be unlinked from them first.
+      if (team && taken[team] && taken[team] !== s.dataset.uid) { say('memmsg', `${teamLabel(team)} is already linked to another account. One person per franchise: unlink them first.`, true); members(); return; }
       try { await updateDoc(doc(db, 'users', s.dataset.uid), { team }); say('memmsg', team ? `Linked to ${teamLabel(team)}.` : 'Unlinked.'); members(); }
       catch (e) { say('memmsg', `Couldn't save (${nice(e)}).`, true); }
     };

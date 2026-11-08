@@ -14,6 +14,7 @@ What it holds, and where each part comes from:
              scoring, with the NFL opponent.
   trending   Sleeper's most-added and most-dropped players over the last 24 hours.
   rookies    Every NFL rookie's week-by-week points (league scoring) and snap share, from the same Sleeper weekly stats.
+  players    Every player who has played this season: [games, total points, average of his last 3 games], league scoring.
   bigBoard   ESPN's ranked NFL draft prospects for next spring (sports.core.api.espn.com .../draft/athletes): overall and
              position rank, school, size, the opening of ESPN's scouting note, and this college season's stats.
   college    The latest finished college football week (ESPN scoreboard, FBS): each game's passing, rushing and receiving
@@ -121,6 +122,7 @@ for team in inj.get("injuries", []):
 allowed = {}      # team -> pos -> points
 played = {}       # team -> set of game ids
 rookies = {}      # player_id -> [[week, points, snap %], ...]
+logs = {}         # player_id -> [points per game played, in week order]
 for w in range(1, week):
     for r in get(STATS.format(season=season, week=w)):
         opp, pl = r.get("opponent"), r.get("player") or {}
@@ -131,6 +133,7 @@ for w in range(1, week):
         if g and (r.get("stats") or {}).get("gp"):
             allowed.setdefault(opp, {}).setdefault(g, 0.0)
             allowed[opp][g] += points(r["stats"], g)
+            logs.setdefault(r["player_id"], []).append(points(r["stats"], g))
             if pl.get("years_exp") == 0:
                 st = r["stats"]
                 snp, tm = (st.get("def_snp"), st.get("tm_def_snp")) if g in ("DL", "LB", "DB") else (st.get("off_snp"), st.get("tm_off_snp"))
@@ -245,8 +248,9 @@ out = {"_readme": "Built by tools/build_nfl.py; see that file for sources. Don't
        "scoring": "league" if scoring else "sleeper-default",
        "news": news, "games": games, "byes": byes, "injuries": injuries,
        "dvp": dvp, "proj": proj, "trending": trending,
-       "rookies": rookies, "draftYear": draft_year, "bigBoard": board, "college": college}
+       "rookies": rookies, "players": {pid: [len(v), round(sum(v), 1), round(sum(v[-3:]) / len(v[-3:]), 1)] for pid, v in logs.items()},
+       "draftYear": draft_year, "bigBoard": board, "college": college}
 if len(dvp) < 30 or not games:
     sys.exit(f"Unexpected data (dvp teams {len(dvp)}, games {len(games)}); not overwriting {OUT}")
 json.dump(out, open(OUT, "w"), separators=(",", ":"))
-print(f"{OUT}: week {week}, {len(news)} stories, {len(games)} games, {len(injuries)} injuries, {len(dvp)} defenses, {len(proj)} projections, {len(rookies)} rookies, {len(board)} prospects, college week {college['week']}")
+print(f"{OUT}: week {week}, {len(news)} stories, {len(games)} games, {len(injuries)} injuries, {len(dvp)} defenses, {len(proj)} projections, {len(rookies)} rookies, {len(logs)} players, {len(board)} prospects, college week {college['week']}")

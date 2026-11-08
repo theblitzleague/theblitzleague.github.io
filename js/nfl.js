@@ -156,7 +156,7 @@
       injuries: inj && inj.injuries ? (live.injuries = true, hurt(inj)) : (snap.injuries || []).map(x => ({ ...x })),
       trending: add && drop ? (live.trending = true, { add, drop }) : snap.trending || { add: [], drop: [] },
       dvp: snap.dvp || {}, proj: snap.proj || {}, live,
-      rookies: snap.rookies || {}, bigBoard: snap.bigBoard || [], draftYear: snap.draftYear, college: snap.college || { leaders: {}, news: [] },
+      rookies: snap.rookies || {}, players: snap.players || {}, bigBoard: snap.bigBoard || [], draftYear: snap.draftYear, college: snap.college || { leaders: {}, news: [] },
     };
     // The snapshot's projections are for one NFL week; never show them against a different one.
     if (snap.week !== N.week) N.proj = {};

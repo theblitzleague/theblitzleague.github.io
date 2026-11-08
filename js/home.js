@@ -254,7 +254,7 @@
         ${a(lead, 'net-lead', `<div class="net-art" style="${lead.t ? `--lw:${wash(lead.t.f)}` : ''}">${art(lead)}</div><div class="net-copy">${tag(lead)}<h3>${lead.head}</h3><p>${lead.dek}</p><span class="pmeta">${meta(lead)}</span></div>`)}
         <div class="net-list">${rest.slice(0, 5).map(s => a(s, 'net-item', `${s.shot ? UI.shot(s.shot, 'mini net-shot') : s.t ? markSVG(s.t.f, 'mini') : (M.league.network || {}).mark ? `<img class="mini net-mark" src="${esc(M.league.network.mark)}" alt="">` : ''}<div>${tag(s)}<b>${s.head}</b><span class="pmeta">${s.dek}</span></div>`)).join('')}</div>
       </div>
-      <div class="net-more">${['headlines:Headlines', 'injuries:Injury report', 'matchups:Matchups', 'defenses:Defense vs position', 'slate:NFL slate', 'trending:Trending', 'rookies:Rookies & College'].map(x => x.split(':')).map(([h, l]) => `<a href="network.html#${h}">${l}</a>`).join('')}</div>
+      <div class="net-more">${['headlines:Headlines', 'players:Players', 'injuries:Injury report', 'matchups:Matchups', 'defenses:Defense vs position', 'slate:NFL slate', 'trending:Trending', 'rookies:Rookies & College'].map(x => x.split(':')).map(([h, l]) => `<a href="network.html#${h}">${l}</a>`).join('')}</div>
       <p class="footnote">NFL stories are ESPN headlines that name Blitz-rostered players, linked to ESPN. Wire stories are written automatically from league results. Blitz Network stories and breaking news go in data/news.json.</p>
     </section>`;
   }

@@ -1,9 +1,9 @@
 /* The Blitz Network: real NFL news and matchups, read through Blitz League rosters. Data: js/nfl.js.
-   Tabs: #headlines, #injuries, #matchups, #defenses, #slate, #trending, #rookies. */
+   Tabs: #headlines, #players, #injuries, #matchups, #defenses, #slate, #trending, #rookies. */
 (function () {
   const { esc, f1, shot, pid, wash, tabsHTML, boot } = UI;
   let M, N;
-  const TABS = [['headlines', 'Headlines'], ['injuries', 'Injuries'], ['matchups', 'Matchups'], ['defenses', 'Defenses'], ['slate', 'NFL slate'], ['trending', 'Trending'], ['rookies', 'Rookies & College']];
+  const TABS = [['headlines', 'Headlines'], ['players', 'Players'], ['injuries', 'Injuries'], ['matchups', 'Matchups'], ['defenses', 'Defense vs position'], ['slate', 'NFL slate'], ['trending', 'Trending'], ['rookies', 'Rookies & College']];
   const P = id => M.players[id] || { full_name: `Player ${id}`, position: '?' };
   const WHERE = { starter: 'Starting', bench: 'Bench', taxi: 'Taxi', IR: 'IR' };
   const TYPE = { HeadlineNews: 'News', Story: 'Story', Media: 'Video', Preview: 'Preview', Recap: 'Recap' };
@@ -244,7 +244,39 @@
     </div>`;
   }
 
-  const VIEWS = { headlines, injuries, matchups, defenses, slate, trending, rookies };
+  // ---------- Players: every NFL player's season so far, in Blitz League scoring ----------
+  const PL = { q: '', pos: 'all', own: 'all', sort: 'ppg', limit: 50 };
+  const PL_POS = ['all', 'QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB'];
+  function playerRows() {
+    return Object.entries(N.players || {}).filter(([id]) => M.players[id]).map(([id, v]) => ({ id, p: P(id), gp: v[0], tot: v[1], ppg: v[1] / (v[0] || 1), l3: v[2], owner: N.owner(id), proj: N.proj[id] ? N.proj[id][0] : null }));
+  }
+  function playerList() {
+    const q = NFL.norm(PL.q || '');
+    let rows = playerRows().filter(r => (PL.pos === 'all' || r.p.position === PL.pos) && (PL.own === 'all' || (PL.own === 'fa' ? !r.owner : !!r.owner))
+      && (!q || NFL.norm(r.p.full_name || '').includes(q) || NFL.norm(N.teamOf(r.id) || '') === q));
+    // Points per game needs a few games to mean much; unless you're searching, it leaves out players with fewer than 3.
+    if (PL.sort === 'ppg' && !q) rows = rows.filter(r => r.gp >= 3);
+    const key = { ppg: r => r.ppg, tot: r => r.tot, l3: r => r.l3, proj: r => (r.proj == null ? -1 : r.proj) }[PL.sort];
+    rows.sort((a, b) => key(b) - key(a));
+    const shown = rows.slice(0, PL.limit);
+    const th = (k, label) => `<th class="num"><button class="nw-th${PL.sort === k ? ' on' : ''}" data-pl-sort="${k}">${label}${PL.sort === k ? ' ▼' : ''}</button></th>`;
+    return rows.length ? `<div class="tablewrap"><table class="nw-rk nw-pl"><thead><tr><th>#</th><th>Player</th><th class="num">GP</th>${th('tot', 'Total')}${th('ppg', 'Pts/G')}${th('l3', 'Last 3')}${th('proj', 'Proj')}<th>Blitz</th></tr></thead>
+      <tbody>${shown.map((r, i) => `<tr><td class="rk">${i + 1}</td><td>${who(r.id)} ${UI.status(r.p)}</td><td class="num">${r.gp}</td><td class="num">${f1(r.tot)}</td><td class="num strong">${f1(r.ppg)}</td>
+        <td class="num">${f1(r.l3)}</td><td class="num">${r.proj != null ? f1(r.proj) : '-'}</td><td>${r.owner ? own(r.owner, true) : '<span class="nw-fa">Free agent</span>'}</td></tr>`).join('')}</tbody></table></div>
+      ${rows.length > PL.limit ? `<div class="acct-row"><button class="btn" data-pl-more="1">Show more (${rows.length - PL.limit} left)</button></div>` : ''}`
+      : '<div class="empty">No players match.</div>';
+  }
+  function players() {
+    const chip = (attr, v, label, cur) => `<button data-${attr}="${v}" aria-pressed="${cur === v}">${label}</button>`;
+    return `<div class="grid"><section class="panel s12"><header><div><span class="eyebrow">Every NFL player · ${esc(String(N.season || ''))} season · Blitz League scoring</span><h2>Players</h2></div></header>
+      <div class="acct-row"><input id="pl-q" type="search" placeholder="Search a player or NFL team (e.g. KC)" value="${esc(PL.q)}" autocomplete="off"></div>
+      <div class="nw-filter">${PL_POS.map(x => chip('pl-pos', x, x === 'all' ? 'All' : x, PL.pos)).join('')}</div>
+      <div class="nw-filter">${chip('pl-own', 'all', 'Everyone', PL.own)}${chip('pl-own', 'fa', 'Free agents', PL.own)}${chip('pl-own', 'owned', 'On a Blitz team', PL.own)}</div>
+      <div id="pl-list">${playerList()}</div>
+      <p class="footnote">Points are this season's games scored with The Blitz League's own settings${N.built ? `, as of ${ago(N.built)}` : ''}. Pts/G lists players with 3+ games unless you search. Proj is Sleeper's projection for this week. Tap a player for his card.</p></section></div>`;
+  }
+
+  const VIEWS = { headlines, players, injuries, matchups, defenses, slate, trending, rookies };
   function route() {
     const h = location.hash.slice(1), cur = VIEWS[h] ? h : 'headlines';
     document.getElementById('tabs').innerHTML = tabsHTML(TABS, cur);
@@ -258,7 +290,19 @@
     hero();
     route();
     addEventListener('hashchange', route);
+    // Players tab: filters and sorting redraw only the list, so the search box keeps its focus.
+    const plRedraw = () => { const el = document.getElementById('pl-list'); if (el) { el.innerHTML = playerList(); paintHelmets(el).catch(() => {}); } };
+    document.addEventListener('input', e => { if (e.target.id === 'pl-q') { PL.q = e.target.value; PL.limit = 50; plRedraw(); } });
     document.addEventListener('click', e => {
+      const pb = e.target.closest('[data-pl-pos], [data-pl-own], [data-pl-sort], [data-pl-more]');
+      if (pb) {
+        if (pb.dataset.plPos) PL.pos = pb.dataset.plPos;
+        if (pb.dataset.plOwn) PL.own = pb.dataset.plOwn;
+        if (pb.dataset.plSort) PL.sort = pb.dataset.plSort;
+        PL.limit = pb.dataset.plMore ? PL.limit + 50 : 50;
+        for (const g of document.querySelectorAll('[data-pl-pos], [data-pl-own]')) g.setAttribute('aria-pressed', String(g.dataset.plPos ? g.dataset.plPos === PL.pos : g.dataset.plOwn === PL.own));
+        plRedraw(); return;
+      }
       const b = e.target.closest('[data-sort], [data-rk], [data-bb]'); if (!b) return;
       if (b.dataset.sort != null) sortBy = b.dataset.sort || null;
       if (b.dataset.rk) rkView = b.dataset.rk;

@@ -1236,3 +1236,8 @@ table.nw-rk { min-width: 720px; } .nw-rk td { padding-block: 6px; } .nw-rk td.rk
 .pc-honor b { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em; font-size: 15px; }
 .pc-honor.won b { color: var(--gold); }
 .pc-honor small { color: var(--muted); }
+
+/* Network > Players */
+#pl-q { flex: 1 1 260px; }
+.nw-th { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-transform: inherit; letter-spacing: inherit; }
+.nw-th.on { color: var(--text); }

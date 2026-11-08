@@ -95,8 +95,10 @@ service cloud.firestore {
 
     // Draft room: anyone signed in may watch; every change goes through the draft function (functions/index.js), which
     // checks turns, the clock and the rules. A team's queue is visible only to its GM and the commissioners.
+    // A finished draft's board is public (the Draft page's Past drafts tab reads it without sign-in); drafts still in
+    // progress, their player pools and queues need sign-in as before.
     match /drafts/{id} {
-      allow read: if signedIn();
+      allow read: if signedIn() || resource.data.status == 'done';
       allow write: if false;
       match /pool/{doc} {
         allow read: if signedIn();

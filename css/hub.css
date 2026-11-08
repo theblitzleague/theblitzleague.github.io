@@ -1432,3 +1432,15 @@ div.lu-empty .lu-plus { border-style: dotted; }
 #upd-bar .upd-x { background: none; border: 0; color: var(--muted); font-size: 22px; cursor: pointer; padding: 0 6px; }
 #ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); transform: translate(-50%, 0); z-index: 70; padding: 6px 14px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line-2); color: var(--muted); font: 600 13px var(--font-body); pointer-events: none; }
 #ptr.go { color: #fff; border-color: var(--accent); background: var(--accent); }
+/* Past drafts: finished Draft Room drafts (js/draft.js), each folded under its title. */
+.hubdraft { margin-bottom: 12px; }
+.hubdraft > summary { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 8px 16px; cursor: pointer; list-style: none; }
+.hubdraft > summary::-webkit-details-marker { display: none; }
+.hubdraft > summary h2::after { content: " ▸"; color: var(--muted); font-size: .7em; } .hubdraft[open] > summary h2::after { content: " ▾"; }
+.hubdraft[open] > summary { margin-bottom: 12px; }
+.hubdraft .aside { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bhead { display: grid; justify-items: center; gap: 2px; font-family: var(--font-display); font-size: 12px; color: var(--muted); text-transform: uppercase; padding-bottom: 2px; }
+.bhead .mini { width: 22px; height: 23px; }
+.hubdraft .tag { border: 1px solid var(--line-2); color: var(--muted); }
+.hubdraft .tag.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, transparent); background: color-mix(in srgb, var(--good) 12%, transparent); }
+.hubdraft .board-grid { grid-template-columns: repeat(var(--cols), minmax(92px, 1fr)); } .hubdraft .bpick { font-size: 12.5px; }

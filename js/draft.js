@@ -62,11 +62,42 @@
   </section>`;
   }
 
+  // Finished Draft Room drafts (Firestore drafts/*, status "done"; public read): the official one first, then newest first.
+  let hubDrafts = null;
+  async function loadHubDrafts() {
+    const c = window.FIREBASE_CONFIG; if (!c) return [];
+    const r = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents:runQuery?key=${c.apiKey}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'drafts' }], where: { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: { stringValue: 'done' } } }, limit: 50 } }) });
+    if (!r.ok) throw new Error(`the database answered ${r.status}`);
+    const v = x => (x == null ? null : 'stringValue' in x ? x.stringValue : 'integerValue' in x ? +x.integerValue : 'doubleValue' in x ? x.doubleValue : 'booleanValue' in x ? x.booleanValue
+      : 'arrayValue' in x ? (x.arrayValue.values || []).map(v) : 'mapValue' in x ? Object.fromEntries(Object.entries(x.mapValue.fields || {}).map(([k, y]) => [k, v(y)])) : null);
+    return (await r.json()).filter(x => x.document).map(x => ({ id: x.document.name.split('/').pop(), ...v({ mapValue: { fields: x.document.fields } }) }))
+      .sort((a, b) => (!!b.official - !!a.official) || (b.updated || 0) - (a.updated || 0));   // the official draft first
+  }
+  function hubBoard(d, open) {
+    const T = d.teams.length, when = new Date(d.officialAt || d.updated || d.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const tag = d.official ? '<span class="tag ok">Official · league rosters</span>' : d.practice ? '<span class="tag">Mock</span>' : '<span class="tag">Official draft</span>';
+    const cells = d.picks.map((p, n) => { const pl = P(p.p), t = M.teams[p.t];
+      return `<div class="bpick pos-${esc(pl.position)}"${UI.pid(p.p)}><span class="pno">${Math.floor(n / T) + 1}.${String(n % T + 1).padStart(2, '0')}</span><b>${esc(pl.full_name)}</b><span class="pmeta">${esc(pl.position)} · ${t ? esc(t.f.abbr) : ''}</span></div>`; }).join('');
+    return `<details class="panel hubdraft"${open ? ' open' : ''}><summary><div><span class="eyebrow">${esc(d.kind === 'rookie' ? 'Rookie draft' : 'Startup draft')} · ${esc(when)}</span><h2>${esc(d.name)}</h2></div>
+      <span class="aside">${tag} ${d.picks.length} picks · ${d.rounds} rounds</span></summary>
+      <div class="board-grid" style="--cols:${T}">${D_HEAD(d)}${cells}</div>
+      <p class="footnote">Linear order: the same team order every round (rule 8-2-1). <a href="draftroom.html?d=${esc(d.id)}">Open in the draft room</a></p></details>`;
+  }
+  const D_HEAD = d => d.teams.map(t => `<div class="bhead">${M.teams[t] ? markSVG(M.teams[t].f, 'mini') : ''}<span>${esc(M.teams[t] ? M.teams[t].f.abbr : t)}</span></div>`).join('');
   function results() {
-    const done = M.drafts.filter(d => (d.picks || []).length);
-    if (!done.length) return `<section class="panel"><header><div><span class="eyebrow">Draft boards</span><h2>Past drafts</h2></div></header>
-      <div class="empty">No drafts have been run in this league yet. Once a draft happens on Sleeper, its full board shows up here automatically.</div></section>`;
-    return done.map(d => {
+    if (hubDrafts === null) {
+      loadHubDrafts().then(list => { hubDrafts = list; }).catch(e => { hubDrafts = { error: e.message }; })
+        .then(() => (window.NFL ? NFL.fillPlayers(M) : null)).then(() => { if (location.hash.slice(1) === 'results') route(); });
+      return '<div class="loading">Loading past drafts</div>';
+    }
+    const sleeper = M.drafts.filter(d => (d.picks || []).length);
+    const hub = Array.isArray(hubDrafts) ? hubDrafts : [];
+    const err = hubDrafts && hubDrafts.error ? `<div class="error">Couldn't load the Draft Room's drafts (${esc(hubDrafts.error)}).</div>` : '';
+    if (!sleeper.length && !hub.length) return `${err}<section class="panel"><header><div><span class="eyebrow">Draft boards</span><h2>Past drafts</h2></div></header>
+      <div class="empty">No drafts have been finished yet. Every completed Draft Room draft, mock or official, shows up here with its full board.</div></section>`;
+    return err + hub.map((d, i) => hubBoard(d, i === 0)).join('') + sleeper.map(d => {
       const rounds = Math.max(...d.picks.map(p => p.round));
       return `<section class="panel"><header><div><span class="eyebrow">${esc(d.season)} · ${esc(d.type || 'draft')}</span><h2>${esc(d.metadata && d.metadata.name || d.season + ' draft')}</h2></div><span class="aside">${d.picks.length} picks</span></header>
       <div class="board-grid" style="--cols:${Math.max(...d.picks.map(p => p.draft_slot))}">${Array.from({ length: rounds }, (_, r) => d.picks.filter(p => p.round === r + 1).sort((a, b) => a.pick_no - b.pick_no).map(p => {

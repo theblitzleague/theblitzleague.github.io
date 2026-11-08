@@ -17,11 +17,21 @@ let myTeam = null, commish = false, games = {}, busy = false;
 
 // ---------- this week's NFL games: opponent, kickoff, lock ----------
 const day = iso => new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+let liveData = null;
+// A player's latest fantasy score: from the newest live scoring (functions/index.js liveScores), with its week. A player
+// whose game in that week has kicked off but has no stats yet scored 0; one whose game hasn't started (or a bye) has none.
+function pts(id) {
+  if (!liveData || !window.TeamPage) return null;
+  const v = liveData.players && liveData.players[id];
+  if (v) return { pts: v[0], week: liveData.week, line: v[2] };
+  const p = TeamPage.P(id), g = p && p.team && (liveData.games || []).find(x => x.away.abbr === p.team || x.home.abbr === p.team);
+  return g && g.state !== 'pre' ? { pts: 0, week: liveData.week, line: '' } : null;
+}
 async function loadGames() {
   const [live, M] = await Promise.all([window.NFL ? NFL.liveScores().catch(() => null) : null, Hub.load()]);
   let list = live && +live.week === +M.current ? live.games : null;      // live/current can still be last week's games
   if (!list) { const snap = await fetch('data/nfl.json').then(r => r.json()).catch(() => ({})); list = (snap.games || []).map(g => ({ ...g, away: { abbr: g.away.abbr, score: g.away.score }, home: { abbr: g.home.abbr, score: g.home.score } })); }
-  games = {};
+  games = {}; liveData = live || null;
   for (const g of list || []) for (const [me, opp, home] of [[g.away.abbr, g.home.abbr, false], [g.home.abbr, g.away.abbr, true]]) games[me] = { ...g, opp, home };
 }
 function game(id) {
@@ -137,14 +147,14 @@ document.addEventListener('click', e => {
   if (f) fill();
 }, true);
 
-window.LineupEdit = { can: () => false, game };
+window.LineupEdit = { can: () => false, game, pts };
 loadGames().then(() => dispatchEvent(new Event('hub:lineup')));
-setInterval(() => loadGames().then(() => dispatchEvent(new Event('hub:lineup'))), 120000);
+setInterval(() => loadGames().then(() => dispatchEvent(new Event('hub:lineup'))), 60000);   // live scores refresh every 2 minutes
 onAuthStateChanged(auth, async user => {
   if (!user) return;
   const [roles, prof] = await Promise.all([getDoc(doc(db, 'config', 'roles')).catch(() => null), getDoc(doc(db, 'users', user.uid)).catch(() => null)]);
   commish = (((roles && roles.data()) || {}).commish || []).includes(user.uid);
   const t = ((prof && prof.data()) || {}).team; myTeam = t == null ? null : +t;
-  window.LineupEdit = { can: id => commish || (myTeam != null && +id === myTeam), game };
+  window.LineupEdit = { can: id => commish || (myTeam != null && +id === myTeam), game, pts };
   dispatchEvent(new Event('hub:lineup'));
 });

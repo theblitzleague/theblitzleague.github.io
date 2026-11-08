@@ -134,7 +134,7 @@
   function honors(teams, history, state, league, weekly) {
     const seasons = (history && history.seasons) || [];
     const careers = {};
-    const C = k => careers[k] || (careers[k] = { key: k, name: null, wins: 0, losses: 0, ties: 0, pf: 0, pa: 0, seasons: 0, titles: [], divs: [], earnings: [], won: 0, teams: new Set() });
+    const C = k => careers[k] || (careers[k] = { key: k, name: null, wins: 0, losses: 0, ties: 0, pf: 0, pa: 0, seasons: 0, titles: [], divs: [], runnerUps: [], poW: 0, poL: 0, earnings: [], won: 0, teams: new Set() });
     const pay = (c, e) => { c.earnings.push(e); c.won += e.amount; };
     for (const t of Object.values(teams)) { t.titles = []; t.divTitles = []; t.runnerUps = []; }
     for (const s of seasons) {
@@ -146,6 +146,8 @@
         if (e.gmName) c.name = e.gmName;
         c.wins += e.wins || 0; c.losses += e.losses || 0; c.ties += e.ties || 0; c.pf += e.pf || 0; c.pa += e.pa || 0; c.seasons++; c.teams.add(id);
         if (won) c.titles.push({ season: s.season, rid: id });
+        if (s.runnerUp === id) c.runnerUps.push({ season: s.season, rid: id });    // lost the Blitz Bowl
+        c.poW += e.playoffWins || 0; c.poL += e.playoffLosses || 0;                // playoff games (history.json, optional)
         if (div) c.divs.push({ season: s.season, rid: id, division: e.division });
       }
       for (const p of payouts(s, s.prizes || league.prizes || {})) {

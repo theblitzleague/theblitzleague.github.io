@@ -2,7 +2,7 @@
 (function () {
   const TABS = [
     ['overview', 'Overview'], ['depth-chart', 'Depth Chart'], ['roster', 'Roster'], ['schedule', 'Schedule'],
-    ['draft-capital', 'Draft Capital'], ['transactions', 'Transactions'], ['front-office', 'Front Office'], ['earnings', 'Earnings'],
+    ['draft-capital', 'Draft Capital'], ['transactions', 'Transactions'], ['front-office', 'Front Office'],
   ];
   const { POS_ORDER, SIL, esc, f1, f2, ord, SLOT_LABEL, lum, shot, teamName, rec, status, pmeta, wash, accentFor } = UI;
 
@@ -176,6 +176,8 @@
     const t = T, r = t.roster, sp = seasonPoints(), slots = M.slots, ed = window.LineupEdit && LineupEdit.can(t.id);
     const st = slots.map((_, i) => (r.starters[i] && r.starters[i] !== '0' ? r.starters[i] : null));
     const gi = window.LineupEdit ? LineupEdit.game : () => null;
+    const lp = window.LineupEdit && LineupEdit.pts ? LineupEdit.pts : () => null;
+    const score = id => { const x = lp(id); return x ? `<div class="lu-pts"${x.line ? ` title="${esc(x.line)}"` : ''}><b>${f1(x.pts)}</b><small>Wk ${esc(x.week)}</small></div>` : ''; };
     const area = (slot, i) => {
       if (slot === 'IDP_FLEX') { const g = st[i] ? P(st[i]).position : 'LB'; return { DL: 'dl2', LB: 'lb2', DB: 'db2' }[g] || 'lb2'; }
       const n = slots.slice(0, i).filter(x => x === slot).length;
@@ -187,7 +189,7 @@
       if (!id) return `<${tag} class="${cls} lu-empty" data-lslot="${i}"${cls === 'slot' && area(slot, i) ? ` style="grid-area:${area(slot, i)}"` : ''}><span class="lu-plus">${ed ? '+' : ''}</span><div class="pmeta"><span class="pos ${esc(slot)}">${esc(lab)}</span> ${ed ? 'Tap to fill' : 'Empty'}</div></${tag.split(' ')[0]}>`;
       const p = P(id);
       return `<${tag} class="${cls}" data-lslot="${i}"${cls === 'slot' && area(slot, i) ? ` style="grid-area:${area(slot, i)}"` : ''}${ed ? '' : UI.pid(id)}>${shot(id)}<div class="pname">${esc(p.full_name)}</div>
-        <div class="pmeta"><span class="pos ${esc(slot)}">${esc(lab)}</span> ${esc(p.team || 'FA')} ${status(p)}</div>${game(id)}</${tag.split(' ')[0]}>`;
+        <div class="pmeta"><span class="pos ${esc(slot)}">${esc(lab)}</span> ${esc(p.team || 'FA')} ${status(p)}</div>${game(id)}${score(id)}</${tag.split(' ')[0]}>`;
     };
     const onField = slots.map((s, i) => (area(s, i) && !['FLEX', 'SUPER_FLEX', 'K'].includes(s) ? spot(s, i, 'slot') : '')).join('');
     const under = slots.map((s, i) => (['FLEX', 'SUPER_FLEX', 'K'].includes(s) ? spot(s, i, 'slot lu-flex') : '')).join('');
@@ -195,8 +197,8 @@
     const bench = r.players.filter(id => !inLine.has(id) && !r.taxi.includes(id) && !r.reserve.includes(id));
     const bp = POS_ORDER.map(pos => [pos, bench.filter(id => P(id).position === pos)]).filter(x => x[1].length);
     const row = (id, where) => { const p = P(id); return `<div class="prow"${UI.pid(id)}>${shot(id)}<div><div class="pname">${esc(p.full_name)} ${status(p)}</div>
-      <div class="pmeta"><span class="pos ${esc(p.position)}">${esc(p.position)}</span> ${esc(pmeta(p))} ${game(id)}</div></div>
-      <div class="pts">${sp[id] ? f1(sp[id].pts) : '-'}<small>Pts</small></div>${ed ? `<button class="btn lu-move" type="button" data-lmove="${esc(id)}" data-where="${where}">${where === 'bench' ? 'Move' : 'Activate'}</button>` : ''}</div>`; };
+      <div class="pmeta"><span class="pos ${esc(p.position)}">${esc(p.position)}</span> ${esc(pmeta(p))} ${game(id)}${sp[id] ? ` · ${f1(sp[id].pts)} season` : ''}</div></div>
+      ${(x => `<div class="pts"${x && x.line ? ` title="${esc(x.line)}"` : ''}>${x ? f1(x.pts) : '-'}<small>${x ? `Wk ${esc(x.week)}` : 'Pts'}</small></div>`)(lp(id))}${ed ? `<button class="btn lu-move" type="button" data-lmove="${esc(id)}" data-where="${where}">${where === 'bench' ? 'Move' : 'Activate'}</button>` : ''}</div>`; };
     const active = r.players.length - r.taxi.length - r.reserve.length, empty = st.filter(x => !x).length;
     return `<div class="grid">
   <section class="panel s12">
@@ -207,7 +209,7 @@
     <p class="footnote">Each player locks when his game kicks off (rule 7-4-2). ${ed ? 'Your lineup stays set from week to week until you change it.' : ''}</p>
   </section>
   <section class="panel s8">
-    <header><div><span class="eyebrow">Depth · ${active} of 24 active</span><h2>Bench</h2></div><span class="aside">${bench.length} players · Pts = this season</span></header>
+    <header><div><span class="eyebrow">Depth · ${active} of 24 active</span><h2>Bench</h2></div><span class="aside">${bench.length} players · latest week's points</span></header>
     ${bp.length ? bp.map(([pos, ids]) => `<div class="sub"><span class="pos ${pos}">${pos}</span></div><div class="plist">${ids.map(id => row(id, 'bench')).join('')}</div>`).join('') : '<div class="empty">No one on the bench.</div>'}
   </section>
   <section class="panel s4">
@@ -371,7 +373,7 @@
     <div class="empty">This franchise's first season is still being played. Finished seasons, titles and records will be added here as they're completed.</div>`}
   </section>
   <section class="panel s4">
-    <header><div><span class="eyebrow">Franchise, not GM</span><h2>GM lineage</h2></div></header>
+    <header><div><h2>GM lineage</h2></div></header>
     ${lineage.length ? `<div class="plist">${lineage.map(g => `
       <div class="prow"><img class="shot" src="${SIL}" alt=""><div><div class="pname">${esc(g.name)} ${g.current ? '<span class="tag ok">Current</span>' : ''}</div>
       <div class="pmeta">${g.from || '?'}-${g.to || 'present'}</div></div><div class="pts">${esc(g.record || '-')}<small>Record</small></div></div>`).join('')}</div>`
@@ -388,23 +390,37 @@
     const img = (src, alt) => `<img class="mark logo-img" src="${esc(src)}" alt="${esc(alt)}">`;
     const palette = t.f.palette || [['Primary', c.primary], ['Secondary', c.secondary], ['Trim', c.trim]];
     const alts = Object.entries(logos.alternates || {});
+    // Records follow the GM (history.json + this season): regular season, playoffs, the Blitz Bowl (titles vs. runner-ups),
+    // and player awards won by the GM's players (each award's season and franchise must be one this GM ran).
+    const runs = new Set(M.history.flatMap(sz => Object.entries(sz.teams || {}).filter(([, e]) => car && e.gm === car.key).map(([rid]) => `${sz.season}:${rid}`)));
+    const tro = M.league.awardTrophies || {}, AW = { opoy: 'Offensive Player of the Year', dpoy: 'Defensive Player of the Year', roy: 'Rookie of the Year' };
+    const won = {}; for (const list of Object.values(M.playerHonors || {})) for (const hh of list) if (runs.has(`${hh.season}:${hh.rid}`)) won[hh.award] = (won[hh.award] || 0) + 1;
+    const records = car ? `<div class="statline fo-rec">
+          <div><span class="big">${recOf(car)}</span><span class="lbl">Regular season</span></div>
+          <div><span class="big">${car.poW}-${car.poL}</span><span class="lbl">Playoffs</span></div>
+          <div><span class="big">${car.titles.length}-${car.runnerUps.length}</span><span class="lbl">Blitz Bowl</span></div>
+        </div>
+        <div class="fo-awards">${Object.keys(AW).filter(k => tro[k]).map(k => `<div class="fo-award${won[k] ? '' : ' none'}" title="${esc(AW[k])}"><img src="${esc(tro[k])}" alt=""><b>×${won[k] || 0}</b><span>${esc(AW[k].replace(' of the Year', '').replace('Player', 'POY'))}</span></div>`).join('')}</div>` : '';
     return `<div class="grid">
-  <section class="panel s7">
+  <div class="s7 fo-col">
+  <section class="panel">
     <header><div><span class="eyebrow">General manager</span><h2>${esc(gm.name || 'Open seat')}</h2></div><span class="aside">${gm.since ? `Since ${gm.since}` : ''}</span></header>
     <div class="fo${rack ? '' : ' bare'}">
       ${gm.portrait ? `<img class="portrait-lg" src="${esc(gm.portrait)}" alt="${esc(gm.name)}">` : '<div class="portrait-lg">Portrait coming</div>'}
       ${rack}
       <div>
         <div class="statline" style="margin-bottom:6px">
-          <div><span class="big">${car ? recOf(car) : '-'}</span><span class="lbl">Career record</span></div>
           <div><span class="big">${car ? f1(car.pf) : '-'}</span><span class="lbl">Points for</span></div>
           <div><span class="big">${car ? f1(car.pa) : '-'}</span><span class="lbl">Points against</span></div>
           <div><a class="big" href="#earnings">${car ? UI.money(car.won) : '-'}</a><span class="lbl">Career earnings</span></div>
         </div>
-        <div class="pmeta" style="margin-bottom:14px">${car ? `Career as a Blitz League GM: ${car.seasons} season${car.seasons === 1 ? '' : 's'}${car.teams.size > 1 ? ` with ${car.teams.size} franchises` : ''}${car.current ? `, ${esc(M.state.season)} so far` : ''}. Titles follow the GM.` : 'No GM has claimed this franchise yet.'}</div>
+        ${records}
+        <div class="pmeta">${car ? `Career as a Blitz League GM: ${car.seasons} season${car.seasons === 1 ? '' : 's'}${car.teams.size > 1 ? ` with ${car.teams.size} franchises` : ''}${car.current ? `, ${esc(M.state.season)} so far` : ''}. Records, titles and awards follow the GM.` : 'No GM has claimed this franchise yet.'}</div>
       </div>
     </div>
   </section>
+  ${earnings()}
+  </div>
   <section class="panel s5">
     <header><div><span class="eyebrow">Brand kit</span><h2>Identity</h2></div></header>
     <div class="swatches">${palette.map(([n, h]) =>
@@ -431,7 +447,7 @@
   // Career earnings: every prize the current GM has won, with any franchise, at the amounts paid that season.
   function earnings() {
     const t = T, gm = t.f.gm || {}, car = t.gmKey && M.careers[t.gmKey];
-    if (!car) return '<section class="panel"><div class="empty">No GM has claimed this franchise yet, so there are no earnings to show.</div></section>';
+    if (!car) return '';
     const money = UI.money, cash = UI.cash, L = UI.PRIZE_LABEL, E = car.earnings;
     const seasons = gmSeasons(car), buyIns = seasons.reduce((n, s) => n + s.buyIn, 0), net = car.won - buyIns;
     const franchise = rid => (M.teams[rid] ? M.teams[rid].f.location : `Team ${rid}`);
@@ -440,8 +456,8 @@
       return k === 'weekly' ? `${x.length} weekly high score${x.length === 1 ? '' : 's'}` : L[k]; }).filter(Boolean).join(' · ');
     const sign = n => `<span class="${n > 0 ? 'up' : n < 0 ? 'down' : ''}">${n > 0 ? '+' : n < 0 ? '−' : ''}${money(Math.abs(n))}</span>`;
     const inMoney = seasons.filter(s => E.some(e => e.season === s.season)).length;
-    return `<div class="grid">
-  <section class="panel s12">
+    return `<div class="fo-earn" id="earnings">
+  <section class="panel">
     <header><div><span class="eyebrow">${esc(gm.name || car.name || 'General manager')} · follows the GM</span><h2>Career earnings</h2></div><span class="aside">${seasons.length} season${seasons.length === 1 ? '' : 's'}</span></header>
     <div class="statline">
       <div><span class="big gold">${money(car.won)}</span><span class="lbl">Won</span></div>
@@ -451,34 +467,34 @@
       <div><span class="big">${inMoney}</span><span class="lbl">Seasons in the money</span></div>
     </div>
   </section>
-  <section class="panel s6">
+  <section class="panel">
     <header><div><span class="eyebrow">What paid</span><h2>By prize</h2></div></header>
     ${kinds.length ? `<div class="tablewrap"><table class="st"><thead><tr><th>Prize</th><th class="num">Times</th><th class="num">Won</th></tr></thead>
       <tbody>${kinds.map(({ k, list }) => `<tr><td>${esc(L[k])}</td><td class="num">${list.length}</td><td class="num">${cash(list.reduce((n, e) => n + e.amount, 0))}</td></tr>`).join('')}</tbody></table></div>`
       : '<div class="empty">Nothing won yet. The first weekly prize goes out once week 1 is final.</div>'}
   </section>
-  <section class="panel s6">
+  <section class="panel">
     <header><div><span class="eyebrow">Year by year</span><h2>By season</h2></div></header>
     <div class="tablewrap"><table class="st"><thead><tr><th>Season</th><th class="hide-sm">Prizes</th><th class="num">Won</th><th class="num">Net</th></tr></thead>
       <tbody>${seasons.slice().reverse().map(s => { const list = E.filter(e => e.season === s.season), won = list.reduce((n, e) => n + e.amount, 0);
         return `<tr><td class="strong">${esc(s.season)}${s.current ? ' <span class="tag taxi">So far</span>' : ''}<div class="pmeta">${esc(franchise(s.rid))}</div>${list.length ? `<div class="pmeta show-sm">${summary(list)}</div>` : ''}</td>
           <td class="pmeta hide-sm">${list.length ? summary(list) : '-'}</td><td class="num">${won ? cash(won) : '-'}</td><td class="num">${sign(won - s.buyIn)}</td></tr>`; }).join('')}</tbody></table></div>
   </section>
-  <p class="footnote s12">Earnings follow the GM between franchises. Each season counts at the prize amounts in force that year. ${car.current ? `${esc(M.state.season)} so far includes only the weekly prizes already won; the division, points-leader, playoff and GM of the Year money is added once it's decided.` : ''}</p>
+  <p class="footnote">Earnings follow the GM between franchises. Each season counts at the prize amounts in force that year. ${car.current ? `${esc(M.state.season)} so far includes only the weekly prizes already won; the division, points-leader, playoff and GM of the Year money is added once it's decided.` : ''}</p>
 </div>`;
   }
 
-  const RENDER = { earnings, overview, 'depth-chart': depthChart, roster, schedule, 'draft-capital': draftCapital, transactions, 'front-office': frontOffice };
+  const RENDER = { overview, 'depth-chart': depthChart, roster, schedule, 'draft-capital': draftCapital, transactions, 'front-office': frontOffice };
 
   function route() {
-    const h = location.hash.slice(1), tab = h === 'history' ? 'front-office' : RENDER[h] ? h : 'overview';
+    const h = location.hash.slice(1), tab = h === 'history' || h === 'earnings' ? 'front-office' : RENDER[h] ? h : 'overview';
     document.getElementById('tabs').innerHTML = tabRow(tab);
     document.getElementById('content').innerHTML = RENDER[tab]();
     document.title = `${teamName(T)} · Blitz Hub`;
     paintHelmets(document).catch(e => console.error(e));
     // #history (old links) = the history section at the foot of Front Office. Logos above it load late and push it
     // down, so land on it again once they have.
-    if (h === 'history') { const go = () => { const el = document.getElementById('history'); if (el && location.hash === '#history') el.scrollIntoView(); };
+    if (h === 'history' || h === 'earnings') { const go = () => { const el = document.getElementById(h); if (el && location.hash === '#' + h) el.scrollIntoView(); };
       requestAnimationFrame(go); if (document.readyState !== 'complete') addEventListener('load', go, { once: true }); else setTimeout(go, 400); }
   }
 

@@ -83,7 +83,6 @@
       ${lg.logo ? `<img class="lhero-logo" src="${esc(lg.logo)}" alt="${esc(lg.name)}">` : ''}
       <div><span class="eyebrow">${esc(lg.name)} · ${esc(M.state.season)}</span><h1>Standings</h1>
       <div class="nick">Week ${M.current} · ${M.league.divisions.length} divisions · ${Object.keys(M.teams).length} franchises</div></div>
-      <div class="lhero-divs">${lg.divisions.map(d => `<div style="--dc:${divInk(d)}">${divMarkHTML(d, 'divmark divmark-lg')}<span>${esc(d.name)}</span></div>`).join('')}</div>
     </div></section>`;
   }
 

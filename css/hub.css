@@ -1448,8 +1448,8 @@ div.lu-empty .lu-plus { border-style: dotted; }
 .nav-item { position: relative; display: flex; }
 .nav-sub { display: none; }
 .my-team { position: relative; flex: none; }
-.my-team-a { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line-2); border-radius: var(--radius); color: var(--text); font: 600 13px var(--font-body); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; text-decoration: none; }
-.my-team-a:hover, .my-team-a[aria-current="page"] { border-color: var(--red); }
+.my-team-a { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: var(--radius); color: var(--muted); font: 600 13px var(--font-body); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; text-decoration: none; }
+.my-team-a:hover, .my-team-a[aria-current="page"] { color: var(--text); background: var(--panel); }   /* like the other menu links: no outline */
 .my-team-a .mini { width: 22px; height: 23px; }
 @media (hover: hover) and (min-width: 1280px) {
   .nav { overflow: visible; }

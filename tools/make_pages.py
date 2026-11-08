@@ -22,6 +22,7 @@ PAGES = {
     "matchup.html": ("Matchup · Blitz Hub", "matchup.html", "matchup.js", [], "", False),
     "schedule.html": ("Schedule · Blitz Hub", "schedule.html", "schedule.js", [], "", True),
     "draft.html": ("Draft · Blitz Hub", "draft.html", "draft.js", [], "", True),
+    "draftroom.html": ("Draft Room · Blitz Hub", "draft.html", "draftroom.js", ["firebase-config.js"], "", False),
     "almanac.html": ("Almanac · Blitz Hub", "almanac.html", "almanac.js", [], "", True),
     "map.html": ("League Map · Blitz Hub", "teams.html", "map.js", ["us-map.js"], "", False),
     "network.html": ("Blitz Network · Blitz Hub", "network.html", "network.js", ["nfl.js"], "", True),
@@ -30,7 +31,7 @@ PAGES = {
     "account.html": ("Account · Blitz Hub", None, "account.js", ["firebase-config.js"], "", False),
 }
 # Page scripts loaded as ES modules (they import the Firebase SDK).
-MODULES = {"account.js"}
+MODULES = {"account.js", "draftroom.js"}
 TPL = """<!doctype html>
 <html lang="en">
 <head>

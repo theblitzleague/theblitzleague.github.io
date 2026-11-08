@@ -81,7 +81,8 @@
     const season = h.startsWith('own-') && seasons.includes(h.slice(4)) ? h.slice(4) : seasons[0];
     document.getElementById('tabs').innerHTML = tabsHTML([['capital', 'Capital'], ['own-' + seasons[0], 'Pick ownership'], ['trades', 'Pick trades'], ['results', 'Past drafts']],
       tab === 'ownership' ? 'own-' + seasons[0] : tab);
-    document.getElementById('content').innerHTML = { capital, ownership: () => ownership(season), trades, results }[tab]();
+    document.getElementById('content').innerHTML = `<a class="dr-enter" href="draftroom.html"><b>Draft room</b><span>Practice drafts now; the startup draft on March 20-21, 2027 &rsaquo;</span></a>`
+      + { capital, ownership: () => ownership(season), trades, results }[tab]();
   }
 
   boot('League · <strong>Draft</strong>', m => {

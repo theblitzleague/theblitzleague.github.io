@@ -147,3 +147,186 @@ exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-centr
   const doc = { season, week, updated: FieldValue.serverTimestamp(), states: games.map(g => `${g.id}:${g.state}`), json: JSON.stringify(data) };
   await Promise.all([ref.set(doc), db.doc(`live/${season}-w${week}`).set(doc)]);
 });
+
+/* ---------- Draft room (draftroom.html) ----------
+   Every draft change goes through the one callable function below, which checks it inside a database transaction, so
+   two people can never take the same player or pick out of turn. Pages only read (firestore.rules).
+     drafts/{id}             settings, seats, every pick so far, whose clock is running (clockEnd, ms since 1970)
+     drafts/{id}/pool/all    the eligible players, best first: "id|POS|Name|NFL team|points per game"
+     drafts/{id}/queues/{t}  team t's queue (its GM and the commissioners can read it)
+   Rulebook 8-2: linear order (the same team order every round); a missed pick is made from the team's queue, else the
+   best available player; no team may hold more than 2 QBs (8-1-4). In a practice draft, a seat with nobody in it is a
+   simulated drafter: it picks automatically after simDelay seconds. Clocks are enforced by whoever is watching (each
+   page calls "tick" when the clock hits zero) and by draftClock, a once-a-minute backstop. */
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const SITE = 'https://theblitzleague.github.io';
+const DRAFT_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB'], IDP_POS = ['DL', 'LB', 'DB'];
+const IDPMAP = { DE: 'DL', DT: 'DL', NT: 'DL', ILB: 'LB', OLB: 'LB', MLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
+const NEED = { QB: 1, RB: 2, WR: 2, TE: 1, K: 1, DL: 1, LB: 1, DB: 1 };   // one of each starting spot (rulebook 7-2-1)
+const CAP = { QB: 2, K: 2, TE: 4 };                                        // QB is the rule (8-1-4); K and TE only steer automatic picks
+
+async function buildPool(kind) {
+  const t = Date.now();
+  const [players, nfl] = await Promise.all([getJSON(`${SITE}/data/players.json?t=${t}`), getJSON(`${SITE}/data/nfl.json?t=${t}`)]);
+  const stats = nfl.players || {}, out = [];
+  for (const [id, p] of Object.entries(players)) {
+    if (!p.team || !p.full_name) continue;
+    if (kind === 'rookie' && p.years_exp !== 0) continue;
+    const g = (p.fantasy_positions || []).find(x => IDP_POS.includes(x)) || IDPMAP[p.position];
+    const pos = DRAFT_POS.includes(p.position) ? p.position : g || null;
+    if (!pos) continue;
+    const s = stats[id], gp = s ? s[0] : 0, ppg = gp ? s[1] / gp : 0;
+    out.push([gp >= 3 ? ppg : ppg * gp / 3, `${id}|${pos}|${p.full_name.replace(/\|/g, '')}|${p.team}|${ppg.toFixed(1)}`]);
+  }
+  return out.sort((a, b) => b[0] - a[0]).slice(0, kind === 'rookie' ? 300 : 1000).map(x => x[1]);
+}
+const parsePool = list => list.map((s, rank) => { const [id, pos, name, team, ppg] = s.split('|'); return { id, pos, name, team, ppg: +ppg, rank }; });
+const onClock = d => d.teams[d.picks.length % d.teams.length];
+
+// Whose turn it is next, and when their clock runs out.
+function advance(d, now) {
+  if (d.picks.length >= d.rounds * d.teams.length) { d.status = 'done'; d.clockEnd = null; return; }
+  const t = String(onClock(d));
+  d.clockEnd = now + 1000 * (d.practice && !d.seats[t] ? d.simDelay : d.clockSec);
+}
+
+function legalFor(d, posOf, team) {
+  const taken = new Set(d.picks.map(x => x.p));
+  const mine = d.picks.filter(x => x.t === team).map(x => posOf[x.p]);
+  const count = pos => mine.filter(x => x === pos).length;
+  return { mine, count, ok: id => !!posOf[id] && !taken.has(id) && !(posOf[id] === 'QB' && count('QB') >= 2) };
+}
+
+// The automatic pick: the team's queue first, then the best available player, filling empty starting spots when the
+// remaining picks only just cover them. Simulated drafters pick from the top three, so practice drafts vary.
+function autoChoice(d, pool, posOf, team, queue) {
+  const { mine, count, ok } = legalFor(d, posOf, team);
+  for (const q of queue || []) if (ok(q)) return q;
+  let avail = pool.filter(e => ok(e.id));
+  if (d.kind !== 'rookie') {
+    avail = avail.filter(e => CAP[e.pos] == null || count(e.pos) < CAP[e.pos]);
+    const open = Object.entries(NEED).filter(([p, k]) => count(p) < k);
+    const openCount = open.reduce((a, [p, k]) => a + k - count(p), 0), left = d.rounds - mine.length;
+    const round = Math.floor(d.picks.length / d.teams.length) + 1;
+    if (left <= openCount + 1 && open.length) avail = avail.filter(e => open.some(([p]) => p === e.pos)).concat(avail);
+    else if (round < d.rounds - 6) avail = avail.filter(e => e.pos !== 'K').concat(avail.filter(e => e.pos === 'K'));
+  }
+  if (!avail.length) return null;
+  if (!d.practice) return avail[0].id;
+  const r = Math.random(), i = r < 0.6 ? 0 : r < 0.85 ? 1 : 2;
+  return (avail[Math.min(i, avail.length - 1)]).id;
+}
+
+async function draftAct(db, uid, commish, data) {
+  const now = Date.now(), action = data.action, only = () => { if (!commish) throw new HttpsError('permission-denied', 'Only the commissioner can do that.'); };
+  if (action === 'create') {
+    only();
+    const kind = data.kind === 'rookie' ? 'rookie' : 'startup';
+    const teams = (data.teams || []).map(Number);
+    if (teams.length < 2 || teams.length > 32 || new Set(teams).size !== teams.length || teams.some(t => !Number.isInteger(t) || t < 1 || t > 32)) throw new HttpsError('invalid-argument', 'Bad draft order.');
+    const rounds = Math.min(30, Math.max(1, parseInt(data.rounds, 10) || (kind === 'rookie' ? 4 : 24)));
+    const clockSec = Math.min(86400, Math.max(10, parseInt(data.clockSec, 10) || 120));
+    const simDelay = Math.min(60, Math.max(1, parseInt(data.simDelay, 10) || 2));
+    const pool = await buildPool(kind);
+    const ref = db.collection('drafts').doc();
+    await db.doc(`drafts/${ref.id}/pool/all`).set({ list: pool });
+    await ref.set({ name: String(data.name || '').slice(0, 60) || `${kind === 'rookie' ? 'Rookie' : 'Startup'} practice draft`, kind, rounds, clockSec, simDelay,
+      practice: data.practice !== false, teams, seats: {}, picks: [], status: 'setup', clockEnd: null, pausedLeft: null, official: false,
+      by: uid, created: now, updated: now });
+    return { id: ref.id };
+  }
+  const id = String(data.id || ''); if (!/^[A-Za-z0-9]{10,40}$/.test(id)) throw new HttpsError('invalid-argument', 'No such draft.');
+  const ref = db.doc(`drafts/${id}`);
+  if (action === 'delete') { only(); await db.recursiveDelete(ref); return { ok: true }; }
+  if (action === 'queue') {
+    const team = String(parseInt(data.team, 10)), list = (data.list || []).map(String).filter(x => /^\d+$/.test(x)).slice(0, 150);
+    const d = (await ref.get()).data(); if (!d) throw new HttpsError('not-found', 'No such draft.');
+    if (d.seats[team] !== uid && !commish) throw new HttpsError('permission-denied', "That isn't your team.");
+    await db.doc(`drafts/${id}/queues/${team}`).set({ list, updated: now });
+    return { ok: true };
+  }
+  return db.runTransaction(async tx => {
+    const snap = await tx.get(ref); if (!snap.exists) throw new HttpsError('not-found', 'No such draft.');
+    const d = snap.data();
+    const needPool = ['pick', 'tick'].includes(action);
+    const pool = needPool ? parsePool((await tx.get(db.doc(`drafts/${id}/pool/all`))).data().list) : null;
+    const posOf = pool ? Object.fromEntries(pool.map(e => [e.id, e.pos])) : null;
+    const team = d.teams.length ? onClock(d) : null;
+    const queue = action === 'tick' ? ((await tx.get(db.doc(`drafts/${id}/queues/${team}`))).data() || {}).list : null;
+    switch (action) {
+      case 'setup': {
+        only(); if (d.status !== 'setup') throw new HttpsError('failed-precondition', 'The draft has started.');
+        if (Array.isArray(data.teams)) { const t = data.teams.map(Number); if (t.length !== d.teams.length || [...t].sort((a, b) => a - b).join() !== [...d.teams].sort((a, b) => a - b).join()) throw new HttpsError('invalid-argument', 'Bad draft order.'); d.teams = t; }
+        if (data.clockSec) d.clockSec = Math.min(86400, Math.max(10, parseInt(data.clockSec, 10)));
+        if (data.simDelay) d.simDelay = Math.min(60, Math.max(1, parseInt(data.simDelay, 10)));
+        break;
+      }
+      case 'seat': {
+        const t = String(parseInt(data.team, 10)); if (!d.teams.map(String).includes(t)) throw new HttpsError('invalid-argument', 'No such team.');
+        const who = data.uid === undefined ? uid : data.uid;
+        if (!commish && !(who === uid && d.practice && !d.seats[t]) && !(who === null && d.seats[t] === uid)) throw new HttpsError('permission-denied', "You can't take that seat.");
+        if (who) for (const k of Object.keys(d.seats)) if (d.seats[k] === who) delete d.seats[k];   // one seat per person
+        if (who) d.seats[t] = who; else delete d.seats[t];
+        if (d.status === 'live' && String(team) === t) advance(d, now);                          // restart the clock for the new occupant
+        break;
+      }
+      case 'start': only(); if (d.status !== 'setup') throw new HttpsError('failed-precondition', 'Already started.'); d.status = 'live'; advance(d, now); break;
+      case 'pause': only(); if (d.status !== 'live') throw new HttpsError('failed-precondition', 'Not running.'); d.status = 'paused'; d.pausedLeft = Math.max(1000, d.clockEnd - now); d.clockEnd = null; break;
+      case 'resume': only(); if (d.status !== 'paused') throw new HttpsError('failed-precondition', 'Not paused.'); d.status = 'live'; d.clockEnd = now + (d.pausedLeft || d.clockSec * 1000); d.pausedLeft = null; break;
+      case 'undo': {
+        only(); if (!d.picks.length) throw new HttpsError('failed-precondition', 'No picks to undo.');
+        d.picks.pop();
+        if (d.status === 'done') d.status = 'live';
+        if (d.status === 'paused') d.pausedLeft = d.clockSec * 1000; else advance(d, now);
+        break;
+      }
+      case 'official': only(); if (d.status !== 'done') throw new HttpsError('failed-precondition', 'Finish the draft first.'); d.official = !!data.on; break;
+      case 'pick': {
+        if (d.status !== 'live') throw new HttpsError('failed-precondition', d.status === 'paused' ? 'The draft is paused.' : 'The draft is not running.');
+        if (Number(data.n) !== d.picks.length) throw new HttpsError('aborted', 'That pick was already made. The board has been updated.');
+        if (d.seats[String(team)] !== uid && !commish) throw new HttpsError('permission-denied', "It isn't your pick.");
+        const p = String(data.player), { ok, count } = legalFor(d, posOf, team);
+        if (!posOf[p]) throw new HttpsError('invalid-argument', "That player isn't eligible in this draft.");
+        if (posOf[p] === 'QB' && count('QB') >= 2) throw new HttpsError('failed-precondition', 'Your team already has 2 QBs, the most allowed (rule 8-1-4).');
+        if (!ok(p)) throw new HttpsError('failed-precondition', 'That player has already been drafted.');
+        d.picks.push({ p, t: team, by: d.seats[String(team)] === uid ? 'gm' : 'commish', at: now });
+        advance(d, now);
+        break;
+      }
+      case 'tick': {
+        if (d.status !== 'live' || d.clockEnd == null || now < d.clockEnd - 400) return { ok: false };
+        const p = autoChoice(d, pool, posOf, team, queue);
+        if (!p) { d.status = 'paused'; d.pausedLeft = d.clockSec * 1000; d.clockEnd = null; break; }
+        d.picks.push({ p, t: team, by: d.practice && !d.seats[String(team)] ? 'sim' : 'auto', at: now });
+        advance(d, now);
+        break;
+      }
+      default: throw new HttpsError('invalid-argument', 'Unknown action.');
+    }
+    d.updated = now;
+    tx.update(ref, { teams: d.teams, seats: d.seats, picks: d.picks, status: d.status, clockEnd: d.clockEnd ?? null, pausedLeft: d.pausedLeft ?? null,
+      clockSec: d.clockSec, simDelay: d.simDelay, official: !!d.official, updated: now });
+    return { ok: true };
+  });
+}
+
+exports.draft = onCall({ region: 'us-central1', maxInstances: 10, timeoutSeconds: 60, memory: '512MiB' }, async req => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const db = getFirestore();
+  const commish = (((await db.doc('config/roles').get()).data() || {}).commish || []).includes(uid);
+  return draftAct(db, uid, commish, req.data || {});
+});
+
+// draftClock: once a minute, make any pick whose clock ran out while nobody had the draft room open.
+exports.draftClock = onSchedule({ schedule: 'every 1 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 120, maxInstances: 1 }, async () => {
+  const db = getFirestore();
+  const live = await db.collection('drafts').where('status', '==', 'live').get();
+  for (const doc of live.docs) {
+    for (let i = 0; i < 30; i++) {
+      const d = (await doc.ref.get()).data();
+      if (!d || d.status !== 'live' || d.clockEnd == null || Date.now() < d.clockEnd) break;
+      await draftAct(db, null, false, { action: 'tick', id: doc.id });
+    }
+  }
+});

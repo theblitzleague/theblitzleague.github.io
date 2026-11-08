@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draft Room · Blitz Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&display=swap">
+<link rel="stylesheet" href="css/hub.css?v=b6512e27">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e131c">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blitz Hub">
+<meta name="blitz-notes" content="js/notes.js?v=2764acdd">
+<meta name="blitz-ledger" content="js/ledger.js?v=86342faa">
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="./"><img class="brand-logo" src="assets/league/blitz-hub.webp" alt="Blitz Hub" width="672" height="132"></a>
+  <nav class="nav" aria-label="League">
+    <a href="./">Home</a><a href="matchup.html">Matchups</a><a href="standings.html">Standings</a><a href="schedule.html">Schedule</a><a href="network.html" class="nav-logo"><img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22"></a><a href="teams.html">Teams</a><a href="draft.html" aria-current="page">Draft</a><a href="awards.html">Awards</a><a href="almanac.html">Almanac</a><a href="rules.html">Rules</a>
+  </nav>
+  <div class="season" id="season"></div>
+  <a class="acct-ico" href="account.html" aria-label="Account"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+</div></header>
+<div class="sample-flag" id="sample-flag"><div class="wrap">Preview · player info is real Sleeper data; rosters, scores, trades and picks are placeholders</div></div>
+<div class="crumb"><div class="wrap" id="crumb">Draft</div></div>
+<div id="hero"></div>
+<main><div class="wrap" id="content"><div class="loading">Loading league data</div></div></main>
+<script src="js/helmet.js?v=562bdbae"></script>
+<script src="js/data.js?v=ccad8848"></script>
+<script src="js/ui.js?v=9964e4fa"></script>
+<script src="js/player.js?v=5c4b669c"></script>
+<script src="js/nfl.js?v=29062be6"></script>
+<script src="js/firebase-config.js?v=411995c0"></script>
+<script type="module" src="js/draftroom.js?v=26a8a758"></script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:' && window.top === window) navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>

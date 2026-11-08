@@ -492,6 +492,7 @@
       T = M.teams[want] || M.teams[1];
       applyColors(T.f);
       document.getElementById('sample-flag').hidden = M.live;
+      UI.myTeam(M);
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       document.getElementById('crumb').innerHTML = `<a href="teams.html">Teams</a> · ${esc(T.division.name)} · <strong>${esc(teamName(T))}</strong>`;
       document.getElementById('hero').innerHTML = hero() + weekStrip();

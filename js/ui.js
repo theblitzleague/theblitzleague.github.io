@@ -70,6 +70,7 @@
     try {
       const M = await Hub.load();
       document.getElementById('sample-flag').hidden = M.live;
+      myTeam(M);
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       if (crumb) document.getElementById('crumb').innerHTML = crumb;
       await run(M);
@@ -221,6 +222,28 @@
     notesMod = notesMod || import(new URL(src, document.baseURI).href);
     return notesMod.then(m => m.mine()).catch(e => (console.error(e), []));
   }
+  // "My team" in the top bar: the signed-in GM's franchise, with quick links (hover on desktop). Remembered on this
+  // device so it shows at once; checked again against the account on every page load.
+  const MY_KEY = 'blitz.myTeam';
+  function myTeam(M) {
+    const el = document.getElementById('my-team'); if (!el || !M) return;
+    const draw = id => {
+      const t = id != null && M.teams[id];
+      if (!t) { el.hidden = true; el.innerHTML = ''; return; }
+      const here = location.pathname.endsWith('team.html') && +new URLSearchParams(location.search).get('team') === t.id;
+      el.innerHTML = `<a href="team.html?team=${t.id}" class="my-team-a"${here ? ' aria-current="page"' : ''} title="${esc(teamName(t))}">${markSVG(t.f, 'mini')}<span>My team</span></a>
+        <div class="nav-sub"><a href="team.html?team=${t.id}">Overview</a><a href="team.html?team=${t.id}#depth-chart">Lineup</a><a href="team.html?team=${t.id}#roster">Roster</a><a href="matchup.html">This week's matchup</a></div>`;
+      el.hidden = false;
+    };
+    let cached = null; try { cached = JSON.parse(localStorage.getItem(MY_KEY) || 'null'); } catch (e) { /* private mode */ }
+    if (cached != null) draw(cached);
+    let on = false; try { on = localStorage.getItem('blitz.signedIn') === '1'; } catch (e) { /* private mode */ }
+    const src = (document.querySelector('meta[name="blitz-notes"]') || {}).content;
+    if (!on || !src || !window.FIREBASE_CONFIG) { if (!on) { draw(null); try { localStorage.removeItem(MY_KEY); } catch (e) { /* */ } } return; }
+    notesMod = notesMod || import(new URL(src, document.baseURI).href);
+    notesMod.then(m => m.myTeam()).then(id => { try { localStorage.setItem(MY_KEY, JSON.stringify(id)); } catch (e) { /* */ } if (id !== cached) draw(id); }).catch(() => {});
+  }
+
   async function unreadPopup(fresh) {
     if (window.top !== window || document.getElementById('ann-pop')) return;
     const s = new Set(seen());
@@ -297,5 +320,5 @@
     addEventListener('touchcancel', stop);
   })();
 
-  window.UI = { announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
+  window.UI = { myTeam, announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
 })();

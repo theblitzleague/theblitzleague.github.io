@@ -91,6 +91,7 @@
     try {
       M = await Hub.load();
       document.getElementById('sample-flag').hidden = M.live;
+      UI.myTeam(M);
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       document.getElementById('crumb').innerHTML = `League · <strong>Standings</strong>`;
       document.getElementById('hero').innerHTML = hero();

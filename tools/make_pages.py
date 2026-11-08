@@ -12,6 +12,16 @@ CRUMB = {"map.html": "League Map", "account.html": "Account"}
 # Nav items shown as a logo instead of their label (the label stays as the image's alt text and the crumb).
 # width/height keep it small even if a stale stylesheet is in use.
 NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22">'}
+# Quick links shown under a menu item on hover (desktop only; css/hub.css hides them on phones). Just the main sections.
+SUB = {
+    "standings.html": [("standings.html#divisions", "Divisions"), ("standings.html#league", "League table")],
+    "schedule.html": [("schedule.html", "By week"), ("schedule.html#grid", "Team grid")],
+    "network.html": [("network.html#live", "Live scores"), ("network.html#players", "Players"), ("network.html#injuries", "Injuries"), ("network.html#headlines", "Headlines"), ("network.html#trending", "Trending")],
+    "teams.html": [("teams.html#franchises", "Franchises"), ("map.html", "League map"), ("teams.html#all-time", "All-time standings")],
+    "draft.html": [("draftroom.html", "Draft room"), ("draft.html#results", "Past drafts"), ("draft.html#capital", "Draft capital"), ("draft.html#ownership", "Pick ownership")],
+    "awards.html": [("awards.html#points", "Points race"), ("awards.html#playoffs", "Playoff race"), ("awards.html#prizes", "Prizes & ledger")],
+    "almanac.html": [("almanac.html#records", "Records"), ("almanac.html#champions", "Champions")],
+}
 # file: (title, nav item it belongs to, page script, extra scripts, body attrs, has tabs)
 PAGES = {
     "index.html": ("Blitz Hub", "./", "home.js", ["nfl.js", "firebase-config.js"], "", False),
@@ -61,6 +71,7 @@ TPL = """<!doctype html>
     {nav}
   </nav>
   <div class="season" id="season"></div>
+  <div class="my-team" id="my-team" hidden></div>
   <a class="acct-ico" href="account.html" aria-label="Account"{acct}><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
 </div></header>
 <div class="sample-flag" id="sample-flag"><div class="wrap">Preview · player info is real Sleeper data; rosters, scores, trades and picks are placeholders</div></div>
@@ -88,7 +99,13 @@ json.dump({"v": VERSION}, open(os.path.join(ROOT, "version.json"), "w"))
 
 for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     cur_attr = ' aria-current="page"'
-    nav = "".join(f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>' for h, l in NAV)
+    def item(h, l):
+        a = f'<a href="{h}"{cur_attr if h == cur else ""}{' class="nav-logo"' if h in NAV_ART else ""}>{NAV_ART.get(h, l)}</a>'
+        if h not in SUB:
+            return a
+        sub = "".join(f'<a href="{sh}">{sl}</a>' for sh, sl in SUB[h])
+        return f'<div class="nav-item">{a}<div class="nav-sub">{sub}</div></div>'
+    nav = "".join(item(h, l) for h, l in NAV)
     scripts = "\n".join(f'<script{' type="module"' if s in MODULES else ""} src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *dict.fromkeys(["nfl.js", "firebase-config.js", *extra]), script])
     crumb = CRUMB.get(fn) or dict(NAV).get(cur, title.split(" · ")[0])
     open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts, notes=ver("js/notes.js"), ledger=ver("js/ledger.js"), version=VERSION, acct=' aria-current="page"' if fn == "account.html" else ""))

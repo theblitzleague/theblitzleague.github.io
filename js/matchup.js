@@ -153,6 +153,7 @@
     try {
       M = await Hub.load();
       document.getElementById('sample-flag').hidden = M.live;
+      UI.myTeam(M);
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       render();
       addEventListener('hashchange', () => { render(); scrollTo({ top: 0 }); });

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&display=swap">
-<link rel="stylesheet" href="css/hub.css?v=031383cc">
+<link rel="stylesheet" href="css/hub.css?v=ac39fd13">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0e131c">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -16,17 +16,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Blitz Hub">
-<meta name="blitz-notes" content="js/notes.js?v=2764acdd">
+<meta name="blitz-notes" content="js/notes.js?v=828ac846">
 <meta name="blitz-ledger" content="js/ledger.js?v=86342faa">
-<meta name="blitz-version" content="411fa699b1">
+<meta name="blitz-version" content="5b3b30762d">
 </head>
 <body>
 <header class="topbar"><div class="wrap">
   <a class="brand" href="./"><img class="brand-logo" src="assets/league/blitz-hub.webp" alt="Blitz Hub" width="672" height="132"></a>
   <nav class="nav" aria-label="League">
-    <a href="./">Home</a><a href="matchup.html">Matchups</a><a href="standings.html">Standings</a><a href="schedule.html">Schedule</a><a href="network.html" class="nav-logo"><img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22"></a><a href="teams.html">Teams</a><a href="draft.html">Draft</a><a href="awards.html">Awards</a><a href="almanac.html" aria-current="page">Almanac</a><a href="rules.html">Rules</a>
+    <a href="./">Home</a><a href="matchup.html">Matchups</a><div class="nav-item"><a href="standings.html">Standings</a><div class="nav-sub"><a href="standings.html#divisions">Divisions</a><a href="standings.html#league">League table</a></div></div><div class="nav-item"><a href="schedule.html">Schedule</a><div class="nav-sub"><a href="schedule.html">By week</a><a href="schedule.html#grid">Team grid</a></div></div><div class="nav-item"><a href="network.html" class="nav-logo"><img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22"></a><div class="nav-sub"><a href="network.html#live">Live scores</a><a href="network.html#players">Players</a><a href="network.html#injuries">Injuries</a><a href="network.html#headlines">Headlines</a><a href="network.html#trending">Trending</a></div></div><div class="nav-item"><a href="teams.html">Teams</a><div class="nav-sub"><a href="teams.html#franchises">Franchises</a><a href="map.html">League map</a><a href="teams.html#all-time">All-time standings</a></div></div><div class="nav-item"><a href="draft.html">Draft</a><div class="nav-sub"><a href="draftroom.html">Draft room</a><a href="draft.html#results">Past drafts</a><a href="draft.html#capital">Draft capital</a><a href="draft.html#ownership">Pick ownership</a></div></div><div class="nav-item"><a href="awards.html">Awards</a><div class="nav-sub"><a href="awards.html#points">Points race</a><a href="awards.html#playoffs">Playoff race</a><a href="awards.html#prizes">Prizes & ledger</a></div></div><div class="nav-item"><a href="almanac.html" aria-current="page">Almanac</a><div class="nav-sub"><a href="almanac.html#records">Records</a><a href="almanac.html#champions">Champions</a></div></div><a href="rules.html">Rules</a>
   </nav>
   <div class="season" id="season"></div>
+  <div class="my-team" id="my-team" hidden></div>
   <a class="acct-ico" href="account.html" aria-label="Account"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
 </div></header>
 <div class="sample-flag" id="sample-flag"><div class="wrap">Preview · player info is real Sleeper data; rosters, scores, trades and picks are placeholders</div></div>
@@ -36,7 +37,7 @@
 <main><div class="wrap" id="content"><div class="loading">Loading league data</div></div></main>
 <script src="js/helmet.js?v=562bdbae"></script>
 <script src="js/data.js?v=a8f5f2af"></script>
-<script src="js/ui.js?v=0b67596c"></script>
+<script src="js/ui.js?v=82549dc1"></script>
 <script src="js/player.js?v=a159e6ce"></script>
 <script src="js/nfl.js?v=4975a9f8"></script>
 <script src="js/firebase-config.js?v=411995c0"></script>

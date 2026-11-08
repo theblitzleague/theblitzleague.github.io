@@ -307,6 +307,7 @@
       const [news, N] = await Promise.all([fetch('data/news.json').then(r => (r.ok ? r.json() : { stories: [] })).catch(() => ({ stories: [] })),
         window.NFL ? NFL.load(M, L => relive(L)).catch(e => (console.error(e), null)) : null]);
       document.getElementById('sample-flag').hidden = M.live;
+      UI.myTeam(M);
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       document.getElementById('crumb').innerHTML = `<strong>Home</strong>`;
       document.getElementById('hero').innerHTML = hero();

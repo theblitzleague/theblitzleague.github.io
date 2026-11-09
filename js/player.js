@@ -115,6 +115,7 @@
         ${bits.length ? `<div class="pmeta">${esc(bits.join(' · '))}</div>` : ''}
         <div class="pc-own">${ctx != null ? ctx : t ? `<a href="team.html?team=${t.id}#roster">${markSVG(t.f, 'mini')} ${esc(t.f.location)}${t.f.nickname ? ' ' + esc(t.f.nickname) : ''}</a>` : '<span class="pmeta">Free agent in this league</span>'}</div>
       </div><button class="pc-x" type="button" aria-label="Close">&times;</button></div>
+      <div class="pc-actions" hidden></div>
       ${honors(id)}
       <div class="pc-live" hidden></div>
       <div class="pc-seasons" role="tablist">${seasons.map(s => `<button type="button" role="tab" data-season="${s}">${s}</button>`).join('')}</div>
@@ -203,6 +204,9 @@
     if (!dlg.open) dlg.showModal();
     show(id, M.state.season);
     liveLine(id);
+    // Roster moves (js/moves.js, loaded where someone is signed in) draw their buttons here: Add, Claim, Drop.
+    const act = dlg.querySelector('.pc-actions');
+    for (const h of PlayerCard.actions) Promise.resolve(h(id, act)).catch(e => console.error(e));
   }
 
   const trigger = e => {
@@ -216,5 +220,5 @@
   document.addEventListener('click', trigger);
   document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pid]')) trigger(e); });
 
-  window.PlayerCard = { open, context: null };
+  window.PlayerCard = { open, context: null, actions: [] };
 })();

@@ -26,7 +26,7 @@ always come from here, since building them takes ~20 MB of downloads. Run it dai
 
 The api.sleeper.com and site.api.espn.com endpoints are the apps' own, not documented APIs, and could change.
 
-Usage: python3 tools/build_nfl.py [--scoring LEAGUE_ID]
+Usage: python3 tools/build_nfl.py   (scores with data/scoring.json)
   Scoring comes from league.json sleeperLeagueId, else --scoring, else Sleeper's PPR + IDP defaults."""
 import json, os, sys, time, urllib.request, datetime
 
@@ -53,8 +53,8 @@ def ab(a):
     return ABBR.get(a, a)
 
 league = json.load(open(os.path.join(ROOT, "data", "league.json")))
-lid = league.get("sleeperLeagueId") or (sys.argv[sys.argv.index("--scoring") + 1] if "--scoring" in sys.argv else None)
-scoring = (get(f"{SLEEPER}/league/{lid}").get("scoring_settings") or {}) if lid else None
+# The League's scoring: the Hub's own settings file (data/scoring.json), not Sleeper's league settings.
+scoring = json.load(open(os.path.join(ROOT, "data", "scoring.json")))["settings"]
 
 def points(stats, pos):
     if scoring:

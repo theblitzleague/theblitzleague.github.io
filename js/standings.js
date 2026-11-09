@@ -1,7 +1,7 @@
 /* Standings: by division, and the whole league with all-play records.
    Order: wins, then points for (same rule as js/data.js). Tabs: #divisions (default), #league. */
 (function () {
-  const { esc, f1, ord, rec } = UI;
+  const { esc, f1, f2, ord, rec } = UI;
   let M;
 
   const pct = t => { const g = t.wins + t.losses + t.ties; return g ? ((t.wins + t.ties / 2) / g).toFixed(3).replace(/^0/, '') : '.000'; };
@@ -67,14 +67,58 @@
   </section></div>`;
   }
 
-  const TABS = [['divisions', 'Divisions'], ['league', 'League']];
-  const RENDER = { divisions, league };
+  /* Playoffs (rule 7-1-2), NFL style: division winners seeds 1-3, wild cards 4-6, seeds 1-2 get a bye; Week 15 wild card (3 v 6, 4 v 5), Week 16 semifinals (1 plays
+     the lowest seed left), Week 17 the Blitz Bowl and the third-place game. The bracket comes from the server (league/bracket,
+     functions/index.js weekResults), which rebuilds it every morning from the official weeks, so it moves with the
+     standings until Week 14 is official on its Tuesday. Before the server has written one, it is projected here. */
+  function bracketData() {
+    if (M.bracket && M.bracket.seeds && M.bracket.seeds.length) return M.bracket;
+    // NFL style (7-1-2): division winners are seeds 1-3, then the three best other records as wild cards.
+    const better = (a, b) => (b.wins + b.ties / 2) - (a.wins + a.ties / 2) || b.pf - a.pf, all = Object.values(M.teams);
+    const winners = M.league.divisions.map(d => all.filter(t => t.division === d).sort(better)[0]).filter(Boolean).sort(better);
+    const wild = all.filter(t => !winners.includes(t)).sort(better).slice(0, 6 - winners.length);
+    const seeds = [...winners.map(t => [t, 'Division winner']), ...wild.map(t => [t, 'Wild card'])].map(([t, how], i) => ({ team: t.id, seed: i + 1, w: t.wins, l: t.losses, t: t.ties, pf: t.pf, how }));
+    const sd = n => seeds[n - 1].team, g = (week, a, b, label) => ({ week, a, b, aSeed: a && seeds.find(x => x.team === a).seed, bSeed: b && seeds.find(x => x.team === b).seed, label, final: false });
+    return { projected: true, local: true, seeds, rounds: [{ week: 15, name: 'Wild card', byes: [sd(1), sd(2)], games: [g(15, sd(3), sd(6), 'Wild card'), g(15, sd(4), sd(5), 'Wild card')] },
+      { week: 16, name: 'Semifinals', games: [g(16, sd(1), null, 'Semifinal'), g(16, sd(2), null, 'Semifinal')] }, { week: 17, name: 'Championship', games: [g(17, null, null, 'Blitz Bowl'), g(17, null, null, 'Third-place game')] }] };
+  }
+  function playoffs() {
+    const B = bracketData(), T = id => M.teams[id];
+    const through = Math.max(0, ...Object.values(M.teams).map(t => t.games.filter(x => x.final).length));
+    const slot = (id, seed, pts, win, final) => id && T(id)
+      ? `<a class="br-team${final ? (win ? ' win' : ' out') : ''}" href="team.html?team=${id}"><span class="br-seed">${seed || ''}</span>${markSVG(T(id).f, 'mini')}<b>${esc(T(id).f.location)}</b><span class="br-pts">${pts != null && (final || pts) ? f2(pts) : ''}</span></a>`
+      : `<div class="br-team tbd"><span class="br-seed">${seed || ''}</span><b>${seed ? '' : 'To be decided'}</b></div>`;
+    const game = x => `<div class="br-game"><div class="br-label">${esc(x.label)} · Week ${x.week}${x.final ? ' · Final' : ''}</div>
+      ${slot(x.a, x.aSeed, x.aPts, x.winner === x.a, x.final)}${slot(x.b, x.bSeed, x.bPts, x.winner === x.b, x.final)}
+      ${x.a && x.b && !B.local ? `<a class="br-link" href="matchup.html#w${x.week}-t${x.a}">Matchup &rsaquo;</a>` : ''}</div>`;
+    const [wc, sf, ch] = B.rounds;
+    const byes = (wc.byes || []).map(id => { const s = B.seeds.find(x => x.team === id); return `<div class="br-game bye"><div class="br-label">First-round bye</div>${slot(id, s && s.seed, null, false, false)}</div>`; }).join('');
+    const champ = B.champion && T(B.champion);
+    return `<div class="grid">
+    ${champ ? `<section class="panel s12 br-champ"><span class="eyebrow">${esc(M.state.season)} Blitz Bowl champion</span><h2>${markSVG(champ.f, 'mini')} ${esc(champ.f.location)}${champ.f.nickname ? ' ' + esc(champ.f.nickname) : ''}</h2></section>` : ''}
+    <section class="panel s12"><header><div><span class="eyebrow">${B.projected ? `Projected · if the season ended today${through ? ` (through Week ${through})` : ''}` : 'Set · Week 14 is official'}</span><h2>Playoff bracket</h2></div>
+      <span class="aside">3 division winners + 3 wild cards · seeds 1-2 get a bye</span></header>
+      <div class="bracket">
+        <div class="br-col"><div class="br-round">Wild card · Week 15</div>${byes}${wc.games.map(game).join('')}</div>
+        <div class="br-col"><div class="br-round">Semifinals · Week 16</div>${sf.games.map(game).join('')}</div>
+        <div class="br-col"><div class="br-round">Championship · Week 17</div>${game(ch.games[0])}<div class="br-third">${game(ch.games[1])}</div></div>
+      </div>
+      <p class="footnote">NFL style (rule 7-1-2): the three division winners are seeds 1-3 by record, then the three best other records are the wild cards, seeds 4-6. Ties are broken by points for. Seeds 1 and 2 get a bye. In the semifinals the 1 seed plays the lowest seed left. A tied playoff game goes to the higher seed. The bracket updates each Tuesday morning once the week's scores are official (2-2-3).</p></section>
+    <section class="panel s12"><header><div><h2>Seeds</h2></div></header>
+      <div class="tablewrap"><table class="st"><thead><tr><th>Seed</th><th>Team</th><th>How</th><th class="num">W-L</th><th class="num">PF</th></tr></thead>
+      <tbody>${B.seeds.map(s => `<tr><td class="rank">${s.seed}</td><td><a class="stteam" href="team.html?team=${s.team}">${markSVG(T(s.team).f, 'mini')}<span><b>${esc(T(s.team).f.location)}</b></span></a></td><td class="pmeta">${esc(s.how || '')}${s.how === 'Division winner' && T(s.team).division ? ` · ${esc(T(s.team).division.name)}` : ''}</td><td class="num">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="num">${f1(s.pf)}</td></tr>`).join('')}</tbody></table></div></section>
+    </div>`;
+  }
+
+  const TABS = [['divisions', 'Divisions'], ['league', 'League'], ['playoffs', 'Playoffs']];
+  const RENDER = { divisions, league, playoffs };
 
   function route() {
     const tab = RENDER[location.hash.slice(1)] ? location.hash.slice(1) : 'divisions';
     document.getElementById('tabs').innerHTML = `<div class="tabs"><div class="wrap" role="tablist">${TABS.map(([id, l]) =>
       `<a class="tab" role="tab" href="#${id}" aria-selected="${id === tab}">${l}</a>`).join('')}</div></div>`;
     document.getElementById('content').innerHTML = RENDER[tab]();
+    paintHelmets(document).catch(() => {});
   }
 
   function hero() {

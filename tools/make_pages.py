@@ -14,7 +14,7 @@ CRUMB = {"map.html": "League Map", "account.html": "Account"}
 NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" alt="Blitz Network" width="84" height="22">'}
 # Quick links shown under a menu item on hover (desktop only; css/hub.css hides them on phones). Just the main sections.
 SUB = {
-    "standings.html": [("standings.html#divisions", "Divisions"), ("standings.html#league", "League table")],
+    "standings.html": [("standings.html#divisions", "Divisions"), ("standings.html#league", "League table"), ("standings.html#playoffs", "Playoff bracket")],
     "schedule.html": [("schedule.html", "By week"), ("schedule.html#grid", "Team grid")],
     "network.html": [("network.html#live", "Live scores"), ("network.html#players", "Players"), ("network.html#injuries", "Injuries"), ("network.html#headlines", "Headlines"), ("network.html#trending", "Trending")],
     "teams.html": [("teams.html#franchises", "Franchises"), ("map.html", "League map"), ("teams.html#all-time", "All-time standings")],
@@ -63,6 +63,8 @@ TPL = """<!doctype html>
 <meta name="blitz-notes" content="{notes}">
 <meta name="blitz-ledger" content="{ledger}">
 <meta name="blitz-version" content="{version}">
+<meta name="blitz-moves" content="{moves}">
+<meta name="blitz-trades" content="{trades}">
 </head>
 <body{body}>
 <header class="topbar"><div class="wrap">
@@ -108,5 +110,5 @@ for fn, (title, cur, script, extra, body, tabs) in PAGES.items():
     nav = "".join(item(h, l) for h, l in NAV)
     scripts = "\n".join(f'<script{' type="module"' if s in MODULES else ""} src="{ver("js/" + s)}"></script>' for s in ["helmet.js", "data.js", "ui.js", "player.js", *dict.fromkeys(["nfl.js", "firebase-config.js", *extra]), script])
     crumb = CRUMB.get(fn) or dict(NAV).get(cur, title.split(" · ")[0])
-    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts, notes=ver("js/notes.js"), ledger=ver("js/ledger.js"), version=VERSION, acct=' aria-current="page"' if fn == "account.html" else ""))
+    open(os.path.join(ROOT, fn), "w").write(TPL.format(css=ver("css/hub.css"), title=title, body=body, nav=nav, crumb=crumb, tabs='<div id="tabs"></div>\n' if tabs else "", scripts=scripts, notes=ver("js/notes.js"), ledger=ver("js/ledger.js"), version=VERSION, moves=ver("js/moves.js"), trades=ver("js/trades.js"), acct=' aria-current="page"' if fn == "account.html" else ""))
 print("wrote", ", ".join(PAGES))

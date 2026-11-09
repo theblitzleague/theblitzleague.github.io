@@ -2,7 +2,7 @@
 (function () {
   const TABS = [
     ['overview', 'Overview'], ['depth-chart', 'Depth Chart'], ['roster', 'Roster'], ['schedule', 'Schedule'],
-    ['draft-capital', 'Draft Capital'], ['transactions', 'Transactions'], ['front-office', 'Front Office'],
+    ['draft-capital', 'Draft Capital'], ['transactions', 'Transactions'], ['trades', 'Trades'], ['front-office', 'Front Office'],
   ];
   const { POS_ORDER, SIL, esc, f1, f2, ord, SLOT_LABEL, lum, shot, teamName, rec, status, pmeta, wash, accentFor } = UI;
 
@@ -484,7 +484,13 @@
 </div>`;
   }
 
-  const RENDER = { overview, 'depth-chart': depthChart, roster, schedule, 'draft-capital': draftCapital, transactions, 'front-office': frontOffice };
+  // Trades (Hub rosters only): js/trades.js fills this in for signed-in GMs.
+  function trades() {
+    if (!M.hub) return '<section class="panel"><div class="empty">Trades open once the league runs on the Hub\'s own rosters.</div></section>';
+    return `<div id="trades-ui" data-team="${T.id}"><section class="panel"><div class="empty">Sign in on the <a href="account.html">Account</a> page to make and answer trade offers.</div></section></div>`;
+  }
+
+  const RENDER = { trades, overview, 'depth-chart': depthChart, roster, schedule, 'draft-capital': draftCapital, transactions, 'front-office': frontOffice };
 
   function route() {
     const h = location.hash.slice(1), tab = h === 'history' || h === 'earnings' ? 'front-office' : RENDER[h] ? h : 'overview';
@@ -515,7 +521,8 @@
       route();
       addEventListener('hashchange', route);
       window.TeamPage = { M, T, P, route };
-      addEventListener('hub:lineup', () => { if (location.hash.slice(1) === 'depth-chart') route(); });   // js/ui.js keeps the tab bar and scroll position sensible
+      addEventListener('hub:lineup', () => { if (location.hash.slice(1) === 'depth-chart') route(); });
+      addEventListener('hub:moves', () => route());   // an add or drop changed a roster   // js/ui.js keeps the tab bar and scroll position sensible
       addEventListener('hub:injuries', () => { const h = location.hash.slice(1); if (!RENDER[h] || h === 'overview') route(); });
     } catch (e) {
       content.innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;

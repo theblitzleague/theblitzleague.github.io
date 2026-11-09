@@ -12,13 +12,13 @@
     return r.json();
   };
 
-  async function loadSample(scoringLeague) {
+  // The League's scoring: the Hub's own settings (data/scoring.json), used in every mode.
+  const hubScoring = () => getJSON('data/scoring.json').then(x => x.settings || null).catch(() => null);
+  async function loadSample() {
     const names = ['rosters', 'users', 'matchups', 'transactions', 'traded_picks', 'players', 'state'];
-    // The placeholder league still scores with the real league's settings, when Sleeper answers.
-    const [got, lg] = await Promise.all([Promise.all(names.map(n => getJSON(`data/sample/${n}.json`))),
-      scoringLeague ? getJSON(`${API}/league/${scoringLeague}`).catch(() => null) : null]);
+    const [got, scoring] = await Promise.all([Promise.all(names.map(n => getJSON(`data/sample/${n}.json`))), hubScoring()]);
     const d = Object.fromEntries(names.map((n, i) => [n, got[i]]));
-    return { ...d, rosterPositions: null, drafts: [], scoring: (lg && lg.scoring_settings) || null };
+    return { ...d, rosterPositions: null, drafts: [], scoring };
   }
 
   // Untested until a real league ID exists.
@@ -36,7 +36,7 @@
       transactions: t.flat().filter(x => x.status === 'complete'),
       rosterPositions: (league.roster_positions || []).filter(p => !['BN', 'IR', 'TAXI'].includes(p)),
       playoffTeams: league.settings && league.settings.playoff_teams,
-      scoring: league.scoring_settings || null,
+      scoring: (await hubScoring()) || league.scoring_settings || null,
       drafts: await loadDrafts(id),
     };
   }
@@ -51,19 +51,28 @@
   // official. Public read through Firestore's REST endpoint, so no sign-in is needed. While the preview league is on,
   // those rosters replace the placeholder ones: every page (teams, player cards, the Network) then shows who drafted
   // whom. Past weeks keep their placeholder scores; this week's and later lineups start empty until Hub lineups exist.
+  // Any Firestore REST value -> plain JS.
+  const val = x => (x == null || 'nullValue' in x ? null : 'stringValue' in x ? x.stringValue : 'integerValue' in x ? +x.integerValue : 'doubleValue' in x ? x.doubleValue
+    : 'booleanValue' in x ? x.booleanValue : 'arrayValue' in x ? (x.arrayValue.values || []).map(val) : 'mapValue' in x ? Object.fromEntries(Object.entries(x.mapValue.fields || {}).map(([k, y]) => [k, val(y)])) : null);
   // Firestore REST map of arrays ({team: [ids]}) -> plain object; nulls stay null (an empty lineup spot).
   const lists = m => { const o = {}; for (const [k, v] of Object.entries((m && m.mapValue && m.mapValue.fields) || {})) o[k] = ((v.arrayValue || {}).values || []).map(x => ('stringValue' in x ? x.stringValue : null)); return o; };
+  // One request for the whole league/ folder (rosters, lineups, waivers, FAAB, picks), plus the week results and the
+  // transactions: lists answer even when a document doesn't exist yet, so nothing shows up as an error.
   async function hubRosters() {
     const c = window.FIREBASE_CONFIG; if (!c) return null;
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 4000);
+    const list = path => fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/${path}&key=${c.apiKey}`, { signal: ctl.signal })
+      .then(x => (x.ok ? x.json() : {})).catch(() => ({}));
     try {
-      const r = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/league/rosters?key=${c.apiKey}`, { signal: ctl.signal });
-      if (!r.ok) return null;
-      const f = (await r.json()).fields || {};
-      const lu = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/league/lineups?key=${c.apiKey}`, { signal: ctl.signal })
-        .then(x => (x.ok ? x.json() : {})).catch(() => ({}));
+      const [lg, res, txs] = await Promise.all([list('league?pageSize=20'), list('results?pageSize=60'), list('transactions?pageSize=300')]);
+      const D = {}; for (const d of lg.documents || []) D[d.name.split('/').pop()] = d.fields || {};
+      const f = D.rosters; if (!f) return null;
+      const obj = k => val({ mapValue: { fields: D[k] || {} } }) || {};
       return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0),
-        rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((lu.fields || {}).teams) };
+        rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((D.lineups || {}).teams), startWeek: f.startWeek ? val(f.startWeek) : null,
+        results: (res.documents || []).map(d => val({ mapValue: { fields: d.fields } })),
+        waivers: obj('waivers').players || {}, faab: obj('faab'), picks: obj('picks').traded || [], bracket: D.bracket ? obj('bracket') : null,
+        transactions: (txs.documents || []).map(d => ({ transaction_id: d.name.split('/').pop(), ...val({ mapValue: { fields: d.fields } }) })) };
     } catch (e) { return null; } finally { clearTimeout(t); }
   }
   async function applyHub(raw, hub) {
@@ -77,10 +86,41 @@
       r.starters = (hub.lineups[k] || []).map(id => (id && all.includes(id) && !r.reserve.includes(id) && !r.taxi.includes(id) ? id : '0'));
     }
     const wk = raw.state.week;
+    // Weeks before startWeek (the first week the official rosters could set a lineup before kickoff) stay placeholder
+    // weeks, scores and all. Until the server records startWeek, rosters made official mid-week start next week.
+    const start = hub.startWeek || wk + 1;
+    raw.hubStart = start;
     for (const [w, rows] of Object.entries(raw.matchups)) if (+w >= wk) for (const m of rows) {
+      if (+w < start) continue;
       const r = raw.rosters.find(x => x.roster_id === m.roster_id);
       m.starters = +w === wk && r ? r.starters.slice() : []; m.starters_points = m.starters.map(() => 0); m.players = r ? r.players.slice() : []; m.points = 0;
     }
+    // Weeks the Hub has scored (results/{season}-w{week}, functions/index.js weekResults) replace the placeholder scores.
+    for (const R of hub.results || []) {
+      if (String(R.season) !== String(raw.state.season) || !(R.week < wk || (R.week === wk && R.final))) continue;
+      for (const m of raw.matchups[String(R.week)] || []) {
+        const x = (R.teams || {})[String(m.roster_id)]; if (!x) continue;
+        m.starters = (x.starters || []).map(id => id || '0'); m.starters_points = x.points || []; m.points = x.pts || 0;
+      }
+    }
+    // Playoff games (weeks 15-17) from the bracket (league/bracket): each side's lineup and points come from that week's
+    // results once scored, otherwise from the team's current lineup (scored live by applyLive during the week).
+    if (hub.bracket && hub.bracket.rounds) for (const rd of hub.bracket.rounds) {
+      const R = (hub.results || []).find(x => String(x.season) === String(raw.state.season) && x.week === rd.week);
+      const rows = []; let mid = 0;
+      for (const g of rd.games) {
+        if (!g.a || !g.b) continue; mid++;
+        for (const t of [g.a, g.b]) {
+          const x = R && R.teams && R.teams[String(t)], r = raw.rosters.find(y => y.roster_id === t);
+          const starters = x ? (x.starters || []).map(id => id || '0') : rd.week >= wk && r ? r.starters.slice() : [];
+          rows.push({ roster_id: t, matchup_id: mid, starters, starters_points: x ? x.points || [] : starters.map(() => 0), points: x ? x.pts || 0 : 0, players: r ? r.players.slice() : [], label: g.label, seed: t === g.a ? g.aSeed : g.bSeed });
+        }
+      }
+      if (rows.length) (raw.playoffs = raw.playoffs || {})[String(rd.week)] = rows;
+    }
+    raw.deriveRecords = true;
+    raw.transactions = hub.transactions || [];          // the Hub league's own adds, drops, claims and trades
+    raw.traded_picks = hub.picks || [];                 // and its own pick trades (league/picks)
   }
 
   const pts = (whole, dec) => (whole || 0) + (dec || 0) / 100;
@@ -199,6 +239,15 @@
         if (final && opp) g.result = me.points > opp.points ? 'W' : me.points < opp.points ? 'L' : 'T';
         t.games.push(g);
       }
+      // Playoff games live apart from the regular season (t.playoffGames), so records, streaks and prizes never count them.
+      t.playoffGames = [];
+      for (const [w, rows] of Object.entries(raw.playoffs || {})) {
+        const me = rows.find(x => x.roster_id === t.id); if (!me) continue;
+        const opp = rows.find(x => x.matchup_id === me.matchup_id && x.roster_id !== t.id), final = +w < current;
+        const g = { week: +w, me, opp: opp && teams[opp.roster_id], oppRow: opp, final, live: +w === current, playoff: true, label: me.label };
+        if (final && opp) g.result = me.points > opp.points ? 'W' : me.points < opp.points ? 'L' : (me.seed < opp.seed ? 'W' : 'L');
+        t.playoffGames.push(g);
+      }
       const done = t.games.filter(g => g.final);
       let streak = '';
       for (let i = done.length - 1; i >= 0; i--) {
@@ -212,6 +261,13 @@
       const scores = done.map(g => g.me.points);
       t.high = scores.length ? Math.max(...scores) : 0;
       t.low = scores.length ? Math.min(...scores) : 0;
+    }
+    // Hub league: records come from the games themselves (placeholder weeks plus the weeks the Hub scored), not from
+    // the placeholder roster settings.
+    if (raw.deriveRecords) for (const t of Object.values(teams)) {
+      const done = t.games.filter(g => g.final && g.opp);
+      t.wins = done.filter(g => g.result === 'W').length; t.losses = done.filter(g => g.result === 'L').length; t.ties = done.filter(g => g.result === 'T').length;
+      t.pf = Math.round(done.reduce((a, g) => a + (g.me.points || 0), 0) * 100) / 100; t.pa = Math.round(done.reduce((a, g) => a + ((g.oppRow && g.oppRow.points) || 0), 0) * 100) / 100;
     }
     // Division standings: wins, then points for.
     const order = (a, b) => (b.wins - a.wins) || (b.pf - a.pf);
@@ -238,7 +294,33 @@
     };
   }
 
+  // Live Hub matchups: this week's starters scored from live/current (functions/index.js liveScores, every 2 minutes
+  // during games). A starter whose NFL game hasn't kicked off gets null (shown as "-"); one whose game has started but
+  // has no stats yet gets 0. Each side's points = the sum of its starters. Only for the Hub's own rosters (M.hub).
+  function applyLive(M, L) {
+    if (!M.hub || !L || !L.players || +L.week !== +M.current || +M.current < +(M.hubStart || 0)) return false;
+    const started = team => { const g = (L.games || []).find(x => x.away.abbr === team || x.home.abbr === team); return !!g && g.state !== 'pre'; };
+    const seen = new Set();
+    for (const t of Object.values(M.teams)) {
+      const g = t.games.find(x => x.week === M.current) || (t.playoffGames || []).find(x => x.week === M.current); if (!g) continue;
+      for (const row of [g.me, g.oppRow]) {
+        if (!row || seen.has(row)) continue; seen.add(row);
+        row.starters_points = (row.starters || []).map(pid => {
+          if (!pid || pid === '0') return 0;
+          const v = L.players[pid]; if (v) return v[0];
+          const p = M.players[pid]; return p && started(p.team) ? 0 : null;
+        });
+        row.points = Math.round(row.starters_points.reduce((a, b) => a + (b || 0), 0) * 100) / 100;
+      }
+    }
+    M.liveAt = L.updated; M.liveScoring = true;
+    return true;
+  }
+
   window.Hub = {
+    applyLive,
+    // Fetch the newest live points and apply them (pages that stay open during games call this every minute or so).
+    async liveRefresh(M) { return window.NFL ? applyLive(M, await NFL.liveScores(true)) : false; },
     // One load per page: the page and the player card share it.
     load() {
       // Injury badges start from data/players.json (rebuilt nightly) and are then corrected from ESPN's live injury
@@ -258,13 +340,16 @@
       const [league, brand, history] = await Promise.all([getJSON('data/league.json'), getJSON('data/franchises.json'),
         getJSON('data/history.json').catch(() => ({ seasons: [] }))]);
       const live = !!league.sleeperLeagueId;
-      const [raw, hub] = await Promise.all([live ? loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : loadSample(league.scoringLeagueId), live ? null : hubRosters()]);
+      const [raw, hub] = await Promise.all([live ? loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : loadSample(), live ? null : hubRosters()]);
       if (hub) {
         await applyHub(raw, hub);
         const el = document.querySelector('#sample-flag .wrap'), e = v => String(v || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
         if (el) el.innerHTML = `Preview · rosters are from the official Draft Room draft <a href="draftroom.html?d=${e(hub.source)}">${e(hub.name)}</a>; past scores, trades and picks are placeholders`;
       }
-      return { ...build(league, brand, { ...raw, history }), live, hub, seasonStats: raw.seasonStats || null };
+      const model = { ...build(league, brand, { ...raw, history }), live, hub, hubStart: raw.hubStart || null, seasonStats: raw.seasonStats || null,
+        waivers: hub ? hub.waivers : {}, faab: hub ? hub.faab : {}, bracket: hub ? hub.bracket : null };
+      if (hub && window.NFL) applyLive(model, await NFL.liveScores().catch(() => null));
+      return model;
     },
     headshot: id => `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`,
   };

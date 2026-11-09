@@ -262,13 +262,17 @@
     const th = (k, label) => `<th class="num"><button class="nw-th${PL.sort === k ? ' on' : ''}" data-pl-sort="${k}">${label}${PL.sort === k ? ' ▼' : ''}</button></th>`;
     return rows.length ? `<div class="tablewrap"><table class="nw-rk nw-pl"><thead><tr><th>#</th><th>Player</th><th class="num">GP</th>${th('tot', 'Total')}${th('ppg', 'Pts/G')}${th('l3', 'Last 3')}${th('proj', 'Proj')}<th>Blitz</th></tr></thead>
       <tbody>${shown.map((r, i) => `<tr><td class="rk">${i + 1}</td><td>${who(r.id)} ${UI.status(r.p)}</td><td class="num">${r.gp}</td><td class="num">${f1(r.tot)}</td><td class="num strong">${f1(r.ppg)}</td>
-        <td class="num">${f1(r.l3)}</td><td class="num">${r.proj != null ? f1(r.proj) : '-'}</td><td>${r.owner ? own(r.owner, true) : '<span class="nw-fa">Free agent</span>'}</td></tr>`).join('')}</tbody></table></div>
+        <td class="num">${f1(r.l3)}</td><td class="num">${r.proj != null ? f1(r.proj) : '-'}</td><td>${r.owner ? own(r.owner, true) : faTag(r.id)}</td></tr>`).join('')}</tbody></table></div>
       ${rows.length > PL.limit ? `<div class="acct-row"><button class="btn" data-pl-more="1">Show more (${rows.length - PL.limit} left)</button></div>` : ''}`
       : '<div class="empty">No players match.</div>';
   }
+  // Not on a Blitz roster: on waivers (dropped in the last two days, rule 8-4-1) or a free agent.
+  const faTag = id => { const w = (M.waivers || {})[id]; return w && w.until > Date.now()
+    ? `<span class="nw-fa wv" title="On waivers until ${esc(new Date(w.until).toLocaleString())}">Waivers · ${esc(new Date(w.until).toLocaleDateString(undefined, { weekday: 'short' }))}</span>` : '<span class="nw-fa">Free agent</span>'; };
   function players() {
     const chip = (attr, v, label, cur) => `<button data-${attr}="${v}" aria-pressed="${cur === v}">${label}</button>`;
     return `<div class="grid"><section class="panel s12"><header><div><span class="eyebrow">Every NFL player · ${esc(String(N.season || ''))} season · Blitz League scoring</span><h2>Players</h2></div></header>
+      ${M.hub ? '<div id="my-moves"></div>' : ''}
       <div class="acct-row"><input id="pl-q" type="search" placeholder="Search a player or NFL team (e.g. KC)" value="${esc(PL.q)}" autocomplete="off"></div>
       <div class="nw-filter">${PL_POS.map(x => chip('pl-pos', x, x === 'all' ? 'All' : x, PL.pos)).join('')}</div>
       <div class="nw-filter">${chip('pl-own', 'all', 'Everyone', PL.own)}${chip('pl-own', 'fa', 'Free agents', PL.own)}${chip('pl-own', 'owned', 'On a Blitz team', PL.own)}</div>
@@ -290,7 +294,7 @@
     for (const t of Object.values(M.teams)) {
       const g = t.games.find(x => x.week === M.current); if (!g || !g.opp || seen.has(t.id)) continue; seen.add(t.id); seen.add(g.opp.id);
       const side = tt => { const st = N.starters.filter(s => s.t === tt); const left = st.filter(s => { const gm = gameOf(N.teamOf(s.id)); return gm && gm.state !== 'post'; }).length;
-        return { t: tt, pts: st.reduce((a, s) => a + pts(s.id), 0), left }; };
+        return { t: tt, pts: st.reduce((a, s) => a + pts(s.id), 0), left, none: !st.length }; };
       h2h.push([side(t), side(g.opp), g]);
     }
     const rows = Object.entries(LV.players).filter(([id]) => M.players[id]).map(([id, v]) => ({ id, p: P(id), pts: v[0], team: v[1], line: v[2], owner: N.owner(id) }))
@@ -302,9 +306,9 @@
         <div class="lv-games">${LV.games.slice().sort((a, b) => ({ in: 0, pre: 2, post: 1 }[a.state] - { in: 0, pre: 2, post: 1 }[b.state]) || String(a.at).localeCompare(String(b.at))).map(g => `<div class="lv-game ${esc(g.state)}">
           <span><b>${esc(g.away.abbr)}</b>${g.state !== 'pre' ? `<em>${g.away.score}</em>` : ''}</span><span><b>${esc(g.home.abbr)}</b>${g.state !== 'pre' ? `<em>${g.home.score}</em>` : ''}</span>
           <small>${esc(g.state === 'pre' ? kick(g.at) : g.detail)}</small></div>`).join('')}</div></section>
-      ${h2h.length ? `<section class="panel s12"><header><div><span class="eyebrow">This week's Blitz lineups, scored live${M.live ? '' : ' · sample league'}</span><h2>Blitz matchups, live</h2></div></header>
+      ${h2h.length ? `<section class="panel s12"><header><div><span class="eyebrow">This week's Blitz lineups, scored live${M.live ? '' : M.hub ? ' · Hub lineups' : ' · sample league'}</span><h2>Blitz matchups, live</h2></div></header>
         <div class="nw-h2h">${h2h.map(([a, b, g]) => `<a class="nw-game" href="matchup.html#w${g.week}-t${a.t.id}">
-          ${[a, b].map(x => `<div class="nw-side${x.pts > (x === a ? b : a).pts ? ' fav' : ''}">${markSVG(x.t.f, 'mini')}<span>${esc(x.t.f.location)}</span><b>${f1(x.pts)}</b><em class="lv-left">${x.left ? `${x.left} to play` : 'done'}</em></div>`).join('')}</a>`).join('')}</div>
+          ${[a, b].map(x => `<div class="nw-side${x.pts > (x === a ? b : a).pts ? ' fav' : ''}">${markSVG(x.t.f, 'mini')}<span>${esc(x.t.f.location)}</span><b>${f1(x.pts)}</b><em class="lv-left">${x.none ? 'no lineup' : x.left ? `${x.left} to play` : 'done'}</em></div>`).join('')}</a>`).join('')}</div>
         <p class="footnote">Each side is the sum of its starters' live points. "To play" counts starters whose NFL game hasn't finished.</p></section>` : ''}
       <section class="panel s12"><header><div><span class="eyebrow">Every player with stats this week · Blitz League scoring</span><h2>Live points</h2></div><span class="aside">${rows.length} players</span></header>
         <div class="nw-filter">${PL_POS.map(x => chip('lv-pos', x, x === 'all' ? 'All' : x, LF.pos)).join('')}</div>
@@ -335,6 +339,8 @@
     hero();
     route();
     addEventListener('hashchange', route);
+    // An add, drop or claim (js/moves.js): ownership changed, so redraw the list (the search and filters stay as they are).
+    addEventListener('hub:moves', () => { if (N.reown) N.reown(); const el = document.getElementById('pl-list'); if (el) { el.innerHTML = playerList(); paintHelmets(el).catch(() => {}); } });
     pullLive();
     setInterval(() => { if (!document.hidden && location.hash === '#live') pullLive(true); }, 60000);
     // Players tab: filters and sorting redraw only the list, so the search box keeps its focus.

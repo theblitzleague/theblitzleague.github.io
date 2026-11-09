@@ -9,7 +9,7 @@
   function parseRoute() {
     const m = /^#w(\d+)-t(\d+)$/.exec(location.hash);
     const team = m ? +m[2] : +(document.body.dataset.team || 1);
-    const week = m ? +m[1] : Math.min(M.current, M.league.regularSeasonWeeks);
+    const week = m ? +m[1] : M.current;
     return { team: M.teams[team] ? team : 1, week };
   }
   const link = (week, team) => `#w${week}-t${team}`;
@@ -55,10 +55,11 @@
 </section>`;
   }
 
+  const gamesOf = t => t.games.concat(t.playoffGames || []);
   function weekStrip(L, week) {
-    return `<nav class="weeks" aria-label="Weeks"><div class="wrap">${L.games.map(g => `
+    return `<nav class="weeks" aria-label="Weeks"><div class="wrap">${gamesOf(L).map(g => `
   <a class="wk${g.week === week ? ' now' : ''}" href="${link(g.week, L.id)}" title="Week ${g.week} vs ${esc(g.opp ? g.opp.f.location : 'TBD')}">
-    W${g.week} <span class="vs">vs</span> ${g.opp ? markSVG(g.opp.f, 'mini') : ''}${g.result ? `<span class="r ${g.result}">${g.result}</span>` : g.live ? '<span class="r live">Live</span>' : ''}
+    ${g.playoff ? 'P' : 'W'}${g.week} <span class="vs">vs</span> ${g.opp ? markSVG(g.opp.f, 'mini') : ''}${g.result ? `<span class="r ${g.result}">${g.result}</span>` : g.live ? '<span class="r live">Live</span>' : ''}
   </a>`).join('')}</div></nav>`;
   }
 
@@ -66,7 +67,8 @@
   function cell(id, pts, st, dir, better) {
     if (!id || id === '0') return `<div class="lp ${dir} empty">Empty slot</div>`;
     const p = P(id);
-    const shown = st === 'upcoming' || (st === 'live' && !pts) ? '<span class="dash">-</span>' : f2(pts || 0);
+    // Hub matchups know each starter's game state: "-" only until his game kicks off. (Sleeper preview: "-" while 0.)
+    const shown = st === 'upcoming' || (M.liveScoring ? pts == null : st === 'live' && !pts) ? '<span class="dash">-</span>' : f2(pts || 0);
     return `<div class="lp ${dir}${better ? ' better' : ''}"${UI.pid(id)}>
       ${shot(id)}
       <div class="lpn"><div class="pname">${esc(p.full_name)} ${status(p)}</div><div class="pmeta">${esc(p.position)} · ${esc(p.team || 'FA')}</div></div>
@@ -85,7 +87,7 @@
       .sort((x, y) => UI.POS_ORDER.indexOf(P(x).position) - UI.POS_ORDER.indexOf(P(y).position))
       .map(id => { const p = P(id); return `<li${UI.pid(id)}><span class="pos ${esc(p.position)}">${esc(p.position)}</span> ${esc(p.full_name)} <small>${esc(p.team || 'FA')}</small> ${status(p)}</li>`; }).join('');
     return `<section class="panel s12" style="--lc:${accentFor(L.f)};--rc:${accentFor(R.f)}">
-    <header><div><span class="eyebrow">Head to head</span><h2>Starting lineups</h2></div><span class="aside">${st === 'live' ? '"-" = yet to play' : st === 'upcoming' ? 'Projected from current lineups' : 'Final scoring'}</span></header>
+    <header><div><span class="eyebrow">Head to head</span><h2>Starting lineups</h2></div><span class="aside">${st === 'live' ? `"-" = yet to play${M.liveScoring && M.liveAt ? ` · updated ${esc(new Date(M.liveAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}` : ''}` : st === 'upcoming' ? 'Projected from current lineups' : 'Final scoring'}</span></header>
     <div class="lhead"><span style="color:var(--lc)">${esc(L.f.location)}</span><span></span><span style="color:var(--rc)">${esc(R.f.location)}</span></div>
     <div class="lineup">${rows}
       <div class="lrow total"><div class="lp l"><div class="lpn"><div class="pname">Total</div></div><div class="lpp">${st === 'upcoming' ? '-' : f2(a.points)}</div></div><span></span><div class="lp r"><div class="lpn"><div class="pname">Total</div></div><div class="lpp">${st === 'upcoming' ? '-' : f2(b.points)}</div></div></div>
@@ -120,7 +122,7 @@
   function around(week, L) {
     const seen = new Set(), out = [];
     for (const t of Object.values(M.teams)) {
-      const g = t.games.find(x => x.week === week);
+      const g = gamesOf(t).find(x => x.week === week);
       if (!g || !g.opp || seen.has(t.id)) continue;
       seen.add(t.id); seen.add(g.opp.id); out.push(g);
     }
@@ -138,11 +140,12 @@
 
   function render() {
     const { team, week } = parseRoute();
-    const L = M.teams[team], g = L.games.find(x => x.week === week) || L.games[0];
+    const L = M.teams[team], playoffWeek = week > M.league.regularSeasonWeeks;
+    const g = gamesOf(L).find(x => x.week === week) || (playoffWeek ? null : L.games[0]);
     const content = document.getElementById('content');
-    if (!g || !g.opp) { content.innerHTML = '<div class="empty">No matchup that week.</div>'; return; }
+    if (!g || !g.opp) { document.getElementById('hero').innerHTML = ''; document.getElementById('crumb').innerHTML = `Matchups · ${esc(M.state.season)} · <strong>Week ${week}</strong>`; content.innerHTML = `<div class="empty">${playoffWeek ? `${esc(L.f.location)} has no playoff game in Week ${week}${(M.bracket && M.bracket.rounds && (M.bracket.rounds[0].byes || []).includes(L.id) && week === M.league.regularSeasonWeeks + 1) ? ' (first-round bye)' : ''}. <a href="standings.html#playoffs">See the bracket</a>` : 'No matchup that week.'}</div>`; return; }
     const R = g.opp;
-    document.getElementById('crumb').innerHTML = `Matchups · ${esc(M.state.season)} · <strong>Week ${g.week}</strong>`;
+    document.getElementById('crumb').innerHTML = `Matchups · ${esc(M.state.season)} · <strong>${g.playoff ? `${esc(g.label)} · ` : ''}Week ${g.week}</strong>`;
     document.getElementById('hero').innerHTML = hero(L, R, g) + weekStrip(L, g.week);
     content.innerHTML = `<div class="grid">${lineups(L, R, g)}${tape(L, R)}${around(g.week, L)}</div>`;
     document.title = `${L.f.location} vs ${R.f.location} · Week ${g.week}`;
@@ -157,6 +160,11 @@
       document.getElementById('season').innerHTML = `<strong>${esc(M.state.season)} season</strong><span>Week ${M.current}</span>`;
       render();
       addEventListener('hashchange', () => { render(); scrollTo({ top: 0 }); });
+      // Hub matchups score live: refresh the points every minute while this week is on screen (the page keeps its place).
+      if (M.hub) setInterval(async () => {
+        if (document.hidden || parseRoute().week !== M.current) return;
+        if (await Hub.liveRefresh(M).catch(() => false)) render();
+      }, 60000);
     } catch (e) {
       document.getElementById('content').innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;
       console.error(e);

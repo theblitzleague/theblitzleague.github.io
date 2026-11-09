@@ -30,11 +30,10 @@ def get(url):
         return json.load(r)
 
 league = json.load(open(os.path.join(ROOT, "data", "league.json")))
-keys = set(CARD_KEYS)
+keys = set(CARD_KEYS) | set(json.load(open(os.path.join(ROOT, "data", "scoring.json")))["settings"])   # every key the League scores
 if league.get("sleeperLeagueId"):
     lid = league["sleeperLeagueId"]
     rosters = get(f"{API}/league/{lid}/rosters")
-    keys |= set((get(f"{API}/league/{lid}").get("scoring_settings") or {}))
     state = get(f"{API}/state/nfl")
 else:
     rosters = json.load(open(os.path.join(ROOT, "data", "sample", "rosters.json")))

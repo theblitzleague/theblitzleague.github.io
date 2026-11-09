@@ -146,7 +146,8 @@
   function billingHTML(M, g, opts = {}) {
     if (!g || !g.opp) return '';
     const L = M.teams[g.me.roster_id], R = g.opp, ab = t => esc(t.f.abbr || t.f.location), tags = [];
-    if (L.division && L.division === R.division) {
+    if (g.playoff) tags.push(`<b class="hot">${esc(g.label || 'Playoffs')}${g.me.seed && g.oppRow && g.oppRow.seed ? ` · ${g.me.seed} seed vs ${g.oppRow.seed} seed` : ''}</b>`);
+    else if (L.division && L.division === R.division) {
       tags.push(`<b style="--tc:${divInk(L.division)}">${esc(L.division.name)} game</b>`);
       if (!g.final && [L.divRank, R.divRank].sort().join() === '1,2') tags.push('<b class="hot">1st place on the line</b>');
     }
@@ -240,6 +241,11 @@
     const src = (document.querySelector('meta[name="blitz-notes"]') || {}).content;
     if (!on || !src || !window.FIREBASE_CONFIG) { if (!on) { draw(null); try { localStorage.removeItem(MY_KEY); } catch (e) { /* */ } } return; }
     notesMod = notesMod || import(new URL(src, document.baseURI).href);
+    // Roster moves (Add / Claim / Drop on player cards, budget and claims on Network > Players) for signed-in GMs.
+    const mv = (document.querySelector('meta[name="blitz-moves"]') || {}).content;
+    if (M.hub && mv) import(new URL(mv, document.baseURI).href).catch(e => console.error(e));
+    const tm = (document.querySelector('meta[name="blitz-trades"]') || {}).content;
+    if (M.hub && tm) import(new URL(tm, document.baseURI).href).catch(e => console.error(e));
     notesMod.then(m => m.myTeam()).then(id => { try { localStorage.setItem(MY_KEY, JSON.stringify(id)); } catch (e) { /* */ } if (id !== cached) draw(id); }).catch(() => {});
   }
 

@@ -54,7 +54,7 @@ Appendix B. League Settings
 
 **Article 4. Franchise.** One of the League's 12 member teams, including its approved identity, roster, draft picks and history.
 
-**Article 5. Platform.** Sleeper, where the League runs its drafts, transactions, lineups and scoring.
+**Article 5. Blitz Hub.** The League's own app, served from the League Website, where the League runs its drafts, transactions, lineups and scoring.
 
 **Article 6. League Website.** theblitzleague.github.io, the League's official site of record.
 
@@ -66,7 +66,7 @@ Appendix B. League Settings
 
 **Article 2. Offseason.** The period from the end of the championship game to the start of the rookie draft.
 
-**Article 3. Final.** A week is final once the Platform has recorded every score for that week, after the last Monday night game.
+**Article 3. Final.** A week is final at 5 AM Central on the Tuesday after its last game, when Blitz Hub records that week's official scores.
 
 **Article 4. In writing.** A message in the League Chat, a text or an email that identifies who sent it.
 
@@ -88,21 +88,21 @@ Appendix B. League Settings
 
 **Article 3. Division assignment.** A Franchise plays in the division for its region. Its division changes only if it relocates with approval under 1-2-1.
 
-### Section 2. Format and Platform
+### Section 2. Format and Blitz Hub
 
 **Article 1. Dynasty format.** Rosters, draft picks and records carry over from Season to Season. No roster is reset.
 
-**Article 2. Official results.** All drafts, transactions, lineups and scoring take place on the Platform. Final scores on the Platform are the official results.
+**Article 2. Official results.** All drafts, transactions, lineups and scoring take place on Blitz Hub. Final scores on Blitz Hub are the official results.
 
-**Article 3. Site of record.** The League Website is the official record of Franchise identities, standings, honors and history. No transaction is valid on the League Website alone.
+**Article 3. Site of record.** The League Website is the official record of Franchise identities, standings, honors and history. It is also where every draft pick, transaction and lineup is made, through Blitz Hub (2-1-5).
 
-**Article 4. Conflicts.** When these rules and the Platform's settings disagree, these rules govern. The Commissioner's Office corrects the Platform to match.
+**Article 4. Conflicts.** When these rules and Blitz Hub's settings disagree, these rules govern. The Commissioner's Office corrects Blitz Hub to match.
 
 ## Rule 4. Commissioner's Office
 
 ### Section 1. Authority
 
-**Article 1. Administration.** The Commissioner's Office runs the League. It holds League funds, controls the Platform's settings, keeps the official records and the League Website, and interprets these rules.
+**Article 1. Administration.** The Commissioner's Office runs the League. It holds League funds, controls Blitz Hub's settings, keeps the official records and the League Website, and interprets these rules.
 
 **Article 2. Situations not covered.** The Commissioner's Office rules on any situation these rules do not cover, in keeping with their intent.
 
@@ -118,7 +118,7 @@ Appendix B. League Settings
 
 **Article 3. Appeal.** Within 24 hours of that ruling, an Owner may appeal it to a vote of the Owners, with the written support of a second Owner. A ruling may be appealed only once, and the vote's result is final. The ruling stands unless a Supermajority votes to overturn it.
 
-**Article 4. Not subject to a vote.** The following may not be appealed or put to a vote: the Commissioner's office and ownership of the League (4-4-2); Franchise names and identities once approved (Rule 1); draft dates, the schedule, and Platform settings these rules already fix; and dues and prizes for a Season already paid for (6-4-5).
+**Article 4. Not subject to a vote.** The following may not be appealed or put to a vote: the Commissioner's office and ownership of the League (4-4-2); Franchise names and identities once approved (Rule 1); draft dates, the schedule, and Blitz Hub settings these rules already fix; and dues and prizes for a Season already paid for (6-4-5).
 
 ### Section 3. Conflicts of Interest
 
@@ -142,7 +142,7 @@ Appendix B. League Settings
 
 ### Section 2. Duties
 
-**Article 1. Football operations.** The Owner directs the Franchise's football operations on the Platform. That covers draft picks, trades and setting a competitive lineup every week.
+**Article 1. Football operations.** The Owner directs the Franchise's football operations on Blitz Hub. That covers draft picks, trades and setting a competitive lineup every week.
 
 **Article 2. Year-round duties.** In the Offseason, the Owner's duties include the rookie draft, League communications and every deadline in Appendix A.
 
@@ -184,7 +184,7 @@ Appendix B. League Settings
 
 ### Section 3. Determining Winners
 
-**Article 1. Weekly high score.** Goes to the Franchise with the highest Platform score in that regular-season week.
+**Article 1. Weekly high score.** Goes to the Franchise with the highest score in that regular-season week.
 
 **Article 2. Division winner.** The Franchise with the best regular-season record in its division. Ties are broken by points for.
 
@@ -216,7 +216,7 @@ Appendix B. League Settings
 
 **Article 1. Regular season.** Weeks 1 through 14 of the NFL season. Each Franchise plays one head-to-head game per week.
 
-**Article 2. Playoffs.** The six Franchises with the best regular-season records qualify, with ties broken by points for. The top two seeds get a first-round bye. The playoffs begin in Week 15, and the winner of the championship game is the League Champion.
+**Article 2. Playoffs.** Six Franchises qualify, seeded as in the NFL. The three division winners (6-3-2) are seeds 1 to 3, ranked by regular-season record. The three Franchises with the best records among the rest are the wild cards, seeds 4 to 6. Ties are broken by points for. Seeds 1 and 2 get a first-round bye. The playoffs begin in Week 15 with seed 3 against seed 6 and seed 4 against seed 5. In Week 16 the top seed plays the lowest seed left and the other seeds meet. In Week 17 the semifinal winners play for the championship and the losers play the third-place game. A tied playoff game goes to the higher seed. The winner of the championship game is the League Champion.
 
 ### Section 2. Starting Lineup
 
@@ -238,15 +238,15 @@ Appendix B. League Settings
 
 ### Section 3. Scoring
 
-**Article 1. Scoring settings.** Points are scored under the League's settings on the Platform, listed in full in Appendix B. They include 1 point per reception, 4 per passing touchdown, minus 2 per interception thrown, 1 per tackle (solo or assisted) and 2 per sack by a defensive player.
+**Article 1. Scoring settings.** Points are scored under the League's scoring settings on Blitz Hub, listed in full in Appendix B. They include 1 point per reception, 4 per passing touchdown, minus 2 per interception thrown, 1 per tackle (solo or assisted) and 2 per sack by a defensive player.
 
 **Article 2. Changes.** A scoring change requires a vote under Rule 13 and takes effect the following Season.
 
-**Article 3. Stat corrections.** Stat corrections the Platform applies before the week goes final are part of the official score. Corrections after that do not change any result or prize.
+**Article 3. Stat corrections.** Stat corrections Blitz Hub applies before the week goes final are part of the official score. Corrections after that do not change any result or prize.
 
 ### Section 4. Lineups
 
-**Article 1. Setting lineups.** Each Owner sets their lineup on the Platform. The League Website displays lineups but cannot set them.
+**Article 1. Setting lineups.** Each Owner sets their lineup on Blitz Hub.
 
 **Article 2. Lock.** Each player locks at his game's kickoff. No lineup is changed after the fact for any reason.
 
@@ -262,27 +262,27 @@ Appendix B. League Settings
 
 **Article 1. Roster.** Each Franchise carries 14 starters, 10 bench players, up to 5 taxi squad players and up to 4 injured reserve players.
 
-**Article 2. Taxi squad.** Only rookies may be placed on the taxi squad. A player may stay there while he is within the Platform's taxi experience limit of 2 years. The taxi squad opens once the startup draft is complete, and is first filled from the founding Season's rookie draft. Taxi moves follow the Platform's taxi deadline in Week 4.
+**Article 2. Taxi squad.** Only rookies may be placed on the taxi squad. A player may stay there while he is within the taxi experience limit of 2 years. The taxi squad opens once the startup draft is complete, and is first filled from the founding Season's rookie draft. Taxi moves follow the taxi deadline in Week 4.
 
-**Article 3. Injured reserve.** Only a player the Platform lists as on injured reserve or out may occupy an IR slot. When his status clears, he must be activated or released before the Owner's next transaction.
+**Article 3. Injured reserve.** Only a player Blitz Hub lists as on injured reserve or out may occupy an IR slot. When his status clears, he must be activated or released before the Owner's next transaction.
 
-**Article 4. Quarterback limit.** A Franchise may carry no more than 2 quarterbacks. Quarterbacks on the taxi squad or injured reserve do not count toward the limit. The Platform enforces it: no Franchise may draft past it, and a Franchise over it cannot change its lineup until it is back within it.
+**Article 4. Quarterback limit.** A Franchise may carry no more than 2 quarterbacks. Quarterbacks on the taxi squad or injured reserve do not count toward the limit. Blitz Hub enforces it: no Franchise may draft past it, and a Franchise over it cannot change its lineup until it is back within it.
 
 ### Section 2. Drafts
 
-**Article 1. Startup draft.** The founding rosters are built in one startup draft of 24 rounds in linear order, one round for each roster spot. Only players already in the NFL are eligible; that year's rookies enter through the rookie draft. It is drafted live on the Platform on March 20 and 21, 2027, one week after NFL free agency opens, at start times the Commissioner's Office announces in writing. The Commissioner's Office announces the draft order in writing.
+**Article 1. Startup draft.** The founding rosters are built in one startup draft of 24 rounds in linear order, one round for each roster spot. Only players already in the NFL are eligible; that year's rookies enter through the rookie draft. It is drafted live on Blitz Hub on March 20 and 21, 2027, one week after NFL free agency opens, at start times the Commissioner's Office announces in writing. The Commissioner's Office announces the draft order in writing.
 
 **Article 2. Rookie draft.** Every Offseason the League holds a rookie draft of 4 rounds.
 
 **Article 3. Rookie draft order.** Franchises that missed the playoffs pick first, worst regular-season record first. Playoff Franchises follow in reverse order of finish. The League Champion picks last in every round.
 
-**Article 4. Pick clock.** Each Owner picks within the clock set by the Commissioner's Office. An Owner who misses a pick receives the Platform's automatic pick, taken from their draft queue if they set one. An Owner who can't attend may instead ask the Commissioner's Office to make their picks from a list they provide; no other Owner may pick for them. Picks made by the clock or by the Commissioner's Office stand, and no draft is redone.
+**Article 4. Pick clock.** Each Owner picks within the clock set by the Commissioner's Office. An Owner who misses a pick receives Blitz Hub's automatic pick, taken from their draft queue if they set one. An Owner who can't attend may instead ask the Commissioner's Office to make their picks from a list they provide; no other Owner may pick for them. Picks made by the clock or by the Commissioner's Office stand, and no draft is redone.
 
 ### Section 3. Trades
 
 **Article 1. Eligible assets.** Owners may trade players and draft picks, including picks up to three Seasons ahead.
 
-**Article 2. Review period.** Every accepted trade sits in a two-day review period on the Platform before it is processed.
+**Article 2. Review period.** Every accepted trade sits in a two-day review period on Blitz Hub before it is processed.
 
 **Article 3. Trade deadline.** No trade may be accepted after the Week 11 trade deadline, which falls when the last NFL game of Week 11 ends. A trade accepted before then still processes after its review period, even if that period ends after the deadline. Trading reopens when the championship game is final.
 
@@ -292,13 +292,13 @@ Appendix B. League Settings
 
 > **A.R. 8.1** In 2027, an Owner offers their 2029 first-round pick in a trade. **Ruling:** The trade cannot be accepted until that Owner has prepaid $50 toward their 2029 dues. They owe the other $50 before the 2029 rookie draft, and they do not need to prepay anything for 2028, since they are not trading a 2028 pick.
 
-> **A.R. 8.2** Two Owners accept a trade during the Monday night game of Week 11, and its two-day review ends on Wednesday of Week 12. **Ruling:** The trade is valid, because it was accepted before the last game of Week 11 ended. The Platform processes it when review ends.
+> **A.R. 8.2** Two Owners accept a trade during the Monday night game of Week 11, and its two-day review ends on Wednesday of Week 12. **Ruling:** The trade is valid, because it was accepted before the last game of Week 11 ended. Blitz Hub processes it when review ends.
 
 ### Section 4. Waivers and Free Agents
 
 **Article 1. Waiver period.** A dropped player is on waivers for two days.
 
-**Article 2. Claims.** Waiver claims are decided by blind bidding from a $100 budget each Season, which does not carry over. The minimum bid is $1. The highest bid wins and is charged to the winner's budget; tied bids are decided by the Platform.
+**Article 2. Claims.** Waiver claims are decided by blind bidding from a $100 budget each Season, which does not carry over. The minimum bid is $1. The highest bid wins and is charged to the winner's budget; a tied bid goes to the Franchise with the worse record (fewer wins, then fewer points for), and if still tied, to the claim placed first.
 
 **Article 3. Offseason.** No free agents may be added in the Offseason.
 
@@ -310,15 +310,9 @@ Appendix B. League Settings
 
 **Article 2. Never against your own Franchise.** An Owner may never wager on their own Franchise to lose, since that rewards losing on purpose. Doing so is tanking under 10-1-3.
 
-**Article 3. Limit.** For Matchup Challenges, amounts, fees and eligibility are set by the Platform. As of November 2026 a challenge is $5 to $250 per Owner, the Platform keeps 5% of the payout (at most $10), and challenges are not offered to residents of Arizona.
+### Section 2. Private Wagers
 
-### Section 2. Posting and Settlement
-
-**Article 1. Matchup Challenges.** A wager on an Owner's own game may be made as a Matchup Challenge on the Platform, which collects, settles and pays it. Any other wager is a private matter between the Owners who make it; the League does not track, settle or enforce it.
-
-**Article 2. Result.** The Platform settles each challenge on the official matchup result. An exact tie, or any other cancellation the Platform applies, refunds both Owners.
-
-**Article 3. Payment.** The Platform collects both buy-ins before the game and pays the winner. Questions about a challenge's payment go to the Platform, not the Commissioner's Office.
+**Article 1. Private wagers.** Every wager is a private matter between the Owners who make it. The League does not track, settle or enforce it.
 
 > **A.R. 9.1** Two Owners agree by text to a $25 wager on another Franchise's game, and the loser never pays. **Ruling:** A private matter between the two Owners. The League does not enforce it.
 
@@ -418,8 +412,7 @@ The Commissioner's Office announces each Season's calendar dates in writing.
 | March 20 and 21, 2027 | Startup draft | 8-2-1 |
 | Early to mid May 2027, after the NFL Draft (April 29 to May 1) | First rookie draft | 8-2-2 |
 | Draft day | Each pick made within the clock | 8-2-4 |
-| Week 4 | Taxi deadline on the Platform | 8-1-2 |
-| By the Platform's challenge deadline each week | Matchup Challenges sent and accepted on the Platform | 9-2-1 |
+| Week 4 | Taxi deadline | 8-1-2 |
 | Each game's kickoff | Player locks | 7-4-2 |
 | Within 7 days of the week going final | Weekly prize paid | 6-4-1 |
 | Week 11 | Trade deadline | 8-3-3 |
@@ -430,7 +423,7 @@ The Commissioner's Office announces each Season's calendar dates in writing.
 
 ## Appendix B. League Settings
 
-These are the League's settings on the Platform, read from Sleeper on November 7, 2026. When a setting changes on the Platform under these rules, this appendix is updated to match.
+These are the League's scoring settings on Blitz Hub, copied exactly from the League's Sleeper settings on November 8, 2026. When a setting changes under these rules, this appendix is updated to match.
 
 ### Roster
 
@@ -444,7 +437,7 @@ Each Franchise has 14 starters (the lineup in 7-2-1), 10 bench spots, 4 injured 
 | Players | Veterans only | Rookies only |
 | Rounds | 24 | 4 |
 | Order | Linear; order to be announced | 8-2-3 |
-| Format | Live on the Platform | To be announced |
+| Format | Live on Blitz Hub | To be announced |
 | Pick clock | 2 minutes (proposed) | To be announced |
 | Rule | 8-2-1 | 8-2-2 |
 
@@ -514,4 +507,4 @@ Full PPR with a tight-end premium (+0.5 per catch) and individual defensive play
 | Safety | 4 |
 | Blocked kick | 3 |
 
-The Platform also stores team-defense scoring (points allowed and the like), but the League has no team defense slot (7-2-1), so it never counts.
+The settings also include team-defense scoring (points allowed and the like), but the League has no team defense slot (7-2-1), so it never counts.

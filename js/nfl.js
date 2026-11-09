@@ -180,8 +180,9 @@
     // The snapshot's projections are for one NFL week; never show them against a different one.
     if (snap.week !== N.week) N.proj = {};
 
-    const P = M.players, ix = nameIndex(P), own = owners(M);
+    const P = M.players, ix = nameIndex(P); let own = owners(M);
     N.owner = id => own[id] || null;
+    N.reown = () => { own = owners(M); };            // after an add or drop (js/moves.js)
     N.teamOf = id => (N.proj[id] && N.proj[id][2]) || (P[id] && P[id].team) || null;
     const opp = {};
     for (const g of N.games) if (g.home && g.away) { opp[g.home.abbr] = { vs: g.away.abbr, home: true, g }; opp[g.away.abbr] = { vs: g.home.abbr, home: false, g }; }

@@ -97,12 +97,13 @@ exports.watchRefresh = onSchedule({ schedule: '30 5 * * *', timeZone: 'America/C
 // liveScores: every 2 minutes, while an NFL game is on, score every player live with the League's scoring and save it for
 // the Hub (live/current, plus live/{season}-w{week} kept per week). Anyone may read it (firestore.rules); only this job writes.
 //   Stats: Sleeper's public live stats feed (same stat names as the scoring settings, so FG distances, pick-sixes and
-//   yardage bonuses score exactly). Game clocks and scores: ESPN's scoreboard. Scoring: the League's settings on Sleeper
-//   for now (to move into the Hub's own settings when the Hub replaces Sleeper).
+//   yardage bonuses score exactly). Game clocks and scores: ESPN's scoreboard. Scoring: the Hub's own settings
+//   (data/scoring.json).
 // It does nothing between games: it runs when a game is in progress, or once more when one has just gone final.
 const ESPN_NFL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
-const LEAGUE_ID = '1423408541737156608';
 const TEAMFIX = { WSH: 'WAS' };
+// The League's scoring: the Hub's own settings file (data/scoring.json on the site), not Sleeper's league settings.
+const leagueScoring = async () => (await getJSON(`https://theblitzleague.github.io/data/scoring.json?t=${Date.now()}`)).settings || {};
 const getJSON = async u => { const r = await fetch(u, { headers: { 'User-Agent': 'blitz-hub' } }); if (!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); };
 const num = (s, k) => (typeof s[k] === 'number' ? s[k] : 0);
 const trim = v => (Number.isInteger(v) ? String(v) : v.toFixed(1));
@@ -132,7 +133,7 @@ exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-centr
 
   const state = await getJSON('https://api.sleeper.app/v1/state/nfl');
   const season = String(state.season), week = Number(state.week);
-  const scoring = (await getJSON(`https://api.sleeper.app/v1/league/${LEAGUE_ID}?t=${Date.now()}`)).scoring_settings || {};
+  const scoring = await leagueScoring();
   const rows = await getJSON(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&t=${Date.now()}`);
   const players = {};
   let newest = 0;
@@ -244,7 +245,9 @@ async function officialWrites(tx, db, id, d, now, uid) {
   const rosters = {}; for (const t of d.teams) rosters[String(t)] = [];
   for (const p of d.picks) rosters[String(p.t)].push(p.p);
   d.official = true; d.officialAt = now;
-  const out = [[db.doc('league/rosters'), { source: id, name: d.name, kind: d.kind, practice: !!d.practice, rosters, picks: d.picks.length, at: now, by: uid || 'auto' }]];
+  let startWeek = null;
+  try { const G = await weekGames(); startWeek = G.week + (Object.values(G.byTeam).some(g => g.started) ? 1 : 0); } catch (e) { /* weekResults sets it */ }
+  const out = [[db.doc('league/rosters'), { source: id, name: d.name, kind: d.kind, practice: !!d.practice, rosters, picks: d.picks.length, at: now, by: uid || 'auto', startWeek }]];
   if (prev && prev.exists) out.push([prevRef, { official: false, updated: now }, 'update']);
   return out;
 }
@@ -436,6 +439,18 @@ async function weekGames() {
 }
 
 async function lineupAct(db, uid, commish, myTeam, data) {
+  if (data.action === 'results') {                     // commissioner: score a week now (see weekResults)
+    if (!commish) throw new HttpsError('permission-denied', 'Only the commissioner can do that.');
+    const week = parseInt(data.week, 10), season = String(data.season || (await getJSON('https://api.sleeper.app/v1/state/nfl')).season);   // the NFL season (Jan games belong to the year before)
+    if (!(week >= 1 && week <= 18)) throw new HttpsError('invalid-argument', 'Pick a week from 1 to 18.');
+    const R = (await db.doc('league/rosters').get()).data() || {}, start = R.startWeek || 99, files = await leagueFiles();
+    const current = Number((await getJSON('https://api.sleeper.app/v1/state/nfl')).week);
+    const bracket = week > REG_WEEKS ? await updateBracket(db, season, start, files, current) : null;
+    const r = await scoreWeek(db, season, week, start, { files, bracket });
+    await updateBracket(db, season, start, files, current);
+    if (!r) return { ok: true, week, skipped: week > REG_WEEKS ? 'That playoff round has no matchups yet.' : 'That placeholder week already has scores.' };
+    return { ok: true, week: r.week, final: r.final, official: r.official, hub: r.hub, teams: Object.keys(r.teams).length };
+  }
   const team = String(parseInt(data.team, 10));
   if (!commish && String(myTeam) !== team) throw new HttpsError('permission-denied', 'You can only set your own team.');
   const [P, G] = await Promise.all([playerInfo(), weekGames()]);
@@ -509,3 +524,452 @@ exports.lineup = onCall({ region: 'us-central1', maxInstances: 10, timeoutSecond
   const commish = ((roles.data() || {}).commish || []).includes(uid), team = (user.data() || {}).team;
   return lineupAct(db, uid, commish, team == null ? null : team, req.data || {});
 });
+
+/* ---------- Week results, standings and the playoff bracket ----------
+   results/{season}-w{week}: each team's score for the week, from its Hub lineup (lineups/{season}-w{week}, else the
+   standing lineup) scored with that week's NFL stats (Sleeper's feed, which carries the NFL's stat corrections) in League
+   scoring (data/scoring.json).  {season, week, final, official, hub, kind: regular|playoff, teams: {team: {opp, pts, starters, points}}}
+     final    = every NFL game that week is over
+     official = rule 2-2-3: 5 AM Central on the Tuesday after the week's last game. An official week is never scored again;
+                stat corrections before then count, later ones don't (7-3-3).
+   Regular season (Weeks 1-14): pairs from the Hub's schedule (data/schedule.json). Weeks before league/rosters.startWeek
+   belong to the placeholder league (data/sample/matchups.json) and keep their scores.
+   Playoffs (rule 7-1-2), NFL style: the three division winners are seeds 1-3 (by record, ties by points for), the three
+   best other records are the wild cards, seeds 4-6; seeds 1-2 get a bye. Week 15: 3 v 6, 4 v 5. Week 16 (reseeded):
+   seed 1 plays the lowest seed left, seed 2 the other. Week 17: the championship and the third-place game (6-3-4). A tied
+   playoff game goes to the higher seed.
+   league/bracket: the seeds and every playoff game, rewritten each run, so it moves with the standings during the season
+   (a projection until Week 14 is official) and fills in as playoff weeks go official.
+   weekResults runs at 5:00 AM Central every day; the commissioner can also score any week now (lineup, action "results"). */
+const REG_WEEKS = 14, PLAYOFF_TEAMS = 6;
+const chiParts = ms => Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short', hour: 'numeric', hourCycle: 'h23' })
+  .formatToParts(new Date(ms)).filter(x => x.type !== 'literal').map(x => [x.type, x.value]));
+function chiTime(y, m, d, h) { const guess = Date.UTC(y, m - 1, d, h), p = chiParts(guess); return guess + (guess - Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour)); }
+// 5 AM Central on the first Tuesday after the week's last kickoff (rule 2-2-3).
+function officialAt(lastKick) {
+  for (let i = 0; i < 9; i++) { const p = chiParts(lastKick + i * 864e5); if (p.weekday === 'Tue') { const at = chiTime(+p.year, +p.month, +p.day, 5); if (at > lastKick + 3 * 3600e3) return at; } }
+  return lastKick + 7 * 864e5;
+}
+async function leagueFiles() {
+  const t = Date.now();
+  const [schedule, sample, fr] = await Promise.all([getJSON(`${SITE}/data/schedule.json?t=${t}`), getJSON(`${SITE}/data/sample/matchups.json?t=${t}`), getJSON(`${SITE}/data/franchises.json?t=${t}`)]);
+  const divOf = Object.fromEntries(Object.entries(fr.franchises || {}).map(([rid, f]) => [Number(rid), f.division]));
+  return { schedule, sample, divOf };
+}
+const samplePts = (sample, w, t) => ((sample[String(w)] || []).find(m => m.roster_id === Number(t)) || {}).points || 0;
+
+// Regular-season standings from the Hub's results (official weeks only) and the placeholder weeks' scores.
+function standingsFrom(season, files, results, startWeek, current = 99) {
+  const weeks = (files.schedule[String(season)] || {}).weeks || {}, out = {};
+  const T = t => (out[t] = out[t] || { team: Number(t), w: 0, l: 0, t: 0, pf: 0, pa: 0, gp: 0 });
+  for (let w = 1; w <= REG_WEEKS; w++) {
+    const R = results[w], hubWeek = w >= startWeek;
+    if (hubWeek ? !(R && R.official) : (w >= current || !(files.sample[String(w)] || []).some(m => m.points))) continue;   // placeholder weeks count once played
+    for (const [a, b] of weeks[String(w)] || []) {
+      const pa = hubWeek ? ((R.teams[String(a)] || {}).pts || 0) : samplePts(files.sample, w, a);
+      const pb = hubWeek ? ((R.teams[String(b)] || {}).pts || 0) : samplePts(files.sample, w, b);
+      for (const [x, px, py] of [[a, pa, pb], [b, pb, pa]]) { const s = T(x); s.gp++; s.pf += px; s.pa += py; if (px > py) s.w++; else if (px < py) s.l++; else s.t++; }
+    }
+  }
+  return Object.values(out).map(s => ({ ...s, pf: Math.round(s.pf * 100) / 100, pa: Math.round(s.pa * 100) / 100 }))
+    .sort((x, y) => (y.w + y.t / 2) - (x.w + x.t / 2) || y.pf - x.pf);
+}
+// Seeding, NFL style (rule 7-1-2): the three division winners are seeds 1-3 by record (ties: points for), whatever a
+// wild card's record; the three best of the rest are the wild cards, seeds 4-6. Seeds 1 and 2 get the byes.
+const better = (x, y) => (y.w + y.t / 2) - (x.w + x.t / 2) || y.pf - x.pf;
+function seedsFrom(standings, divOf) {
+  const byDiv = {}; for (const s of standings) (byDiv[divOf[s.team] || 'none'] = byDiv[divOf[s.team] || 'none'] || []).push(s);
+  const winners = Object.values(byDiv).map(list => list.slice().sort(better)[0]).sort(better);
+  const wild = standings.filter(s => !winners.includes(s)).sort(better).slice(0, PLAYOFF_TEAMS - winners.length);
+  return [...winners.map(s => ({ ...s, how: 'Division winner' })), ...wild.map(s => ({ ...s, how: 'Wild card' }))].map((s, i) => ({ ...s, seed: i + 1 }));
+}
+// The bracket: seeds from the standings, then each playoff round from the results already in.
+function bracketFrom(season, standings, results, divOf = {}) {
+  const seeds = seedsFrom(standings, divOf), seedOf = t => (seeds.find(s => s.team === t) || {}).seed;
+  const regDone = (() => { for (let w = 1; w <= REG_WEEKS; w++) if (!(standings.length && standings[0].gp >= w)) return false; return true; })();
+  const game = (week, a, b, label) => {
+    const R = results[week], ok = !!(R && R.official && a && b);
+    const pa = R && a ? ((R.teams[String(a)] || {}).pts ?? null) : null, pb = R && b ? ((R.teams[String(b)] || {}).pts ?? null) : null;
+    const winner = ok ? (pa > pb ? a : pb > pa ? b : (seedOf(a) < seedOf(b) ? a : b)) : null;
+    return { week, label, a, b, aSeed: seedOf(a) || null, bSeed: seedOf(b) || null, aPts: pa, bPts: pb, final: ok, winner, loser: winner ? (winner === a ? b : a) : null };
+  };
+  const s = n => (seeds[n - 1] || {}).team || null;
+  const qf = [game(REG_WEEKS + 1, s(3), s(6), 'Wild card'), game(REG_WEEKS + 1, s(4), s(5), 'Wild card')];
+  const alive = qf.every(g => g.final) ? qf.map(g => g.winner).sort((x, y) => seedOf(y) - seedOf(x)) : [null, null];   // lowest seed first
+  const sf = [game(REG_WEEKS + 2, s(1), alive[0], 'Semifinal'), game(REG_WEEKS + 2, s(2), alive[1], 'Semifinal')];
+  const sfDone = sf.every(g => g.final);
+  const fin = [game(REG_WEEKS + 3, sfDone ? sf[0].winner : null, sfDone ? sf[1].winner : null, 'Blitz Bowl'), game(REG_WEEKS + 3, sfDone ? sf[0].loser : null, sfDone ? sf[1].loser : null, 'Third-place game')];
+  return { season: String(season), projected: !regDone, seeds, rounds: [{ week: REG_WEEKS + 1, name: 'Wild card', byes: [s(1), s(2)], games: qf }, { week: REG_WEEKS + 2, name: 'Semifinals', games: sf }, { week: REG_WEEKS + 3, name: 'Championship', games: fin }],
+    champion: fin[0].winner, runnerUp: fin[0].loser, third: fin[1].winner, updated: Date.now() };
+}
+
+async function scoreWeek(db, season, week, startWeek, ctx = {}) {
+  const ref = db.doc(`results/${season}-w${week}`), prev = (await ref.get()).data();
+  if (prev && prev.official) return prev;                                   // official weeks never change (2-2-3)
+  const files = ctx.files || await leagueFiles();
+  const [scoring, rows, sb, L, snap] = await Promise.all([
+    leagueScoring(),
+    getJSON(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&t=${Date.now()}`),
+    getJSON(`${ESPN_NFL}/scoreboard?seasontype=2&week=${week}&dates=${season}`),
+    db.doc('league/lineups').get().then(d => d.data() || {}),
+    db.doc(`lineups/${season}-w${week}`).get().then(d => d.data() || {}),
+  ]);
+  const playoff = week > REG_WEEKS, hubWeek = week >= startWeek;
+  if (!playoff && !hubWeek && (files.sample[String(week)] || []).some(m => m.points)) return null;   // placeholder week with scores
+  let pairs;
+  if (playoff) {
+    const br = ctx.bracket; if (!br || br.projected) return null;
+    pairs = (br.rounds.find(r => r.week === week) || { games: [] }).games.filter(g => g.a && g.b).map(g => [g.a, g.b]);
+    if (!pairs.length) return null;
+  } else pairs = ((files.schedule[String(season)] || {}).weeks || {})[String(week)] || [];
+  const pts = {};
+  for (const r of rows) {
+    const st = r.stats || {}; if (!/^\d+$/.test(String(r.player_id))) continue;
+    pts[r.player_id] = Math.round(Object.entries(scoring).reduce((t, [k, v]) => t + (typeof st[k] === 'number' ? v * st[k] : 0), 0) * 100) / 100;
+  }
+  const events = sb.events || [], final = events.length > 0 && events.every(e => e.status.type.state === 'post');
+  const lastKick = Math.max(0, ...events.map(e => Date.parse(e.date)));
+  const placeholder = Object.fromEntries((files.sample[String(week)] || []).map(m => [String(m.roster_id), m.starters || []]));
+  const lineupOf = t => (hubWeek ? ((snap.teams || {})[t] || (L.teams || {})[t] || []) : placeholder[t] || []);
+  const teams = {};
+  for (const [a, b] of pairs) for (const [t, o] of [[a, b], [b, a]]) {
+    const starters = lineupOf(String(t)).map(x => x || null), points = starters.map(x => (x ? pts[x] || 0 : 0));
+    teams[String(t)] = { opp: o, pts: Math.round(points.reduce((x, y) => x + y, 0) * 100) / 100, starters, points };
+  }
+  const official = final && lastKick > 0 && Date.now() >= officialAt(lastKick);
+  const doc = { season: String(season), week: Number(week), kind: playoff ? 'playoff' : 'regular', final, official, officialAt: lastKick ? officialAt(lastKick) : null, hub: hubWeek, teams, at: Date.now() };
+  await ref.set(doc);
+  return doc;
+}
+
+// Recompute the bracket from everything recorded so far and save it.
+async function updateBracket(db, season, startWeek, files, current) {
+  const res = await db.collection('results').where('season', '==', String(season)).get(), results = {};
+  for (const d of res.docs) { const r = d.data(); results[r.week] = r; }
+  const br = bracketFrom(season, standingsFrom(season, files, results, startWeek, current), results, files.divOf);
+  await db.doc('league/bracket').set(br);
+  return br;
+}
+
+exports.weekResults = onSchedule({ schedule: '0 5 * * *', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 1, timeoutSeconds: 180, memory: '512MiB', maxInstances: 1 }, async () => {
+  const db = getFirestore(), rRef = db.doc('league/rosters'), R = (await rRef.get()).data();
+  if (!R) return;                                                          // no Hub league yet
+  const state = await getJSON('https://api.sleeper.app/v1/state/nfl');
+  const season = String(state.season), week = Number(state.week), files = await leagueFiles();
+  let start = R.startWeek;
+  if (!start) { start = week + 1; await rRef.update({ startWeek: start }); }   // rosters made official mid-week: next week
+  // This week and the two before it, oldest first, so a playoff round sees the round before it once it is official.
+  for (const w of [week - 2, week - 1, week]) {
+    if (w < 1 || w > REG_WEEKS + 3) continue;
+    const bracket = w > REG_WEEKS ? await updateBracket(db, season, start, files, week) : null;
+    await scoreWeek(db, season, w, start, { files, bracket });
+  }
+  await updateBracket(db, season, start, files, week);
+});
+/* ---------- Waivers and free agents (rule 8-4) ----------
+   One callable, "moves": add a free agent, drop a player, place or cancel a blind FAAB claim. waiverRun settles claims.
+     league/waivers     players: {id: {until: ms, from: team}}  (a dropped player sits on waivers for two days, 8-4-1)
+     league/faab        spent: {team: dollars}, season          ($100 a season, never carried over, 8-4-2)
+     claims/{id}        {team, player, bid, drop, at, status: pending | won | lost | failed | cancelled, note}
+                        blind: only that team's GM and the commissioners can read it (firestore.rules)
+     transactions/{id}  every completed add / drop / claim, in Sleeper's transaction format (team pages show them)
+   Rules checked here: the player is a free agent (or on waivers for a claim); 24 active players after the move (a full
+   roster names a player to drop); at most 2 active QBs (8-1-4); a player whose game this week has kicked off can't be
+   dropped until next week; no adds in the offseason (8-4-3); bids are whole dollars from $1 to what's left of the budget.
+   Ties: the team with the worse record (fewer wins, then fewer points) wins; still tied, the earlier claim. */
+const FAAB_BUDGET = 100, WAIVER_MS = 2 * 864e5;
+const ownerOf = (R, id) => Object.keys(R.rosters || {}).find(t => (R.rosters[t] || []).includes(id)) || null;
+
+// Apply an add and/or drop to the roster doc's data (mutates R and the standing lineups LU); returns the changes made.
+function rosterMove(R, LU, team, add, drop, P, locked) {
+  const all = R.rosters[team] || (R.rosters[team] = []), ir = ((R.ir = R.ir || {})[team] = R.ir[team] || []), taxi = ((R.taxi = R.taxi || {})[team] = R.taxi[team] || []);
+  const nm = id => (P[id] ? P[id].name : id);
+  if (drop) {
+    if (!all.includes(drop)) throw new HttpsError('failed-precondition', `${nm(drop)} isn't on your roster.`);
+    if (locked(drop)) throw new HttpsError('failed-precondition', `${nm(drop)}'s game this week has started; he can't be dropped until next week.`);
+  }
+  if (add && ownerOf(R, add)) throw new HttpsError('failed-precondition', `${nm(add)} is already on a roster.`);
+  const after = all.filter(x => x !== drop).concat(add ? [add] : []);
+  const active = after.filter(x => !ir.includes(x) && !taxi.includes(x));
+  if (add && active.length > ACTIVE_MAX) throw new HttpsError('failed-precondition', `Your active roster is full (${ACTIVE_MAX}). Pick a player to drop.`);
+  if (add && P[add] && P[add].pos === 'QB' && active.filter(x => P[x] && P[x].pos === 'QB').length > 2) throw new HttpsError('failed-precondition', 'That would make 3 active QBs; the most allowed is 2 (rule 8-1-4). Drop a QB with him.');
+  R.rosters[team] = after;
+  if (drop) { R.ir[team] = ir.filter(x => x !== drop); R.taxi[team] = taxi.filter(x => x !== drop);
+    const slots = (LU.teams = LU.teams || {})[team]; if (slots) LU.teams[team] = slots.map(x => (x === drop ? null : x)); }
+}
+const txDoc = (type, team, week, add, drop, bid) => ({ type, status: 'complete', leg: week, created: Date.now(), roster_ids: [Number(team)],
+  adds: add ? { [add]: Number(team) } : {}, drops: drop ? { [drop]: Number(team) } : {}, draft_picks: [], settings: bid != null ? { waiver_bid: bid } : {} });
+
+async function movesAct(db, uid, commish, myTeam, data) {
+  const team = String(parseInt(data.team, 10));
+  if (!commish && String(myTeam) !== team) throw new HttpsError('permission-denied', 'You can only make moves for your own team.');
+  const [P, G, state] = await Promise.all([playerInfo(), weekGames(), getJSON('https://api.sleeper.app/v1/state/nfl')]);
+  const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
+  const nm = id => (P[id] ? P[id].name : id);
+  const add = data.player ? String(data.player) : null, drop = data.drop ? String(data.drop) : null;
+  if (['add', 'claim'].includes(data.action) && state.season_type === 'off') throw new HttpsError('failed-precondition', 'No free agents may be added in the offseason (rule 8-4-3).');
+  if (add && !P[add]) throw new HttpsError('invalid-argument', "That player isn't in the NFL player list.");
+  if (data.action === 'cancel') {
+    const ref = db.doc(`claims/${String(data.claim || '').replace(/[^A-Za-z0-9-]/g, '')}`), c = (await ref.get()).data();
+    if (!c || String(c.team) !== team || c.status !== 'pending') throw new HttpsError('not-found', 'No such pending claim.');
+    await ref.update({ status: 'cancelled', done: Date.now() }); return { ok: true };
+  }
+  return db.runTransaction(async tx => {
+    const rRef = db.doc('league/rosters'), wRef = db.doc('league/waivers'), lRef = db.doc('league/lineups'), fRef = db.doc('league/faab');
+    const [rs, ws, ls, fs] = await Promise.all([tx.get(rRef), tx.get(wRef), tx.get(lRef), tx.get(fRef)]);
+    const R = rs.data(); if (!R || !R.rosters || !R.rosters[team]) throw new HttpsError('failed-precondition', 'There are no league rosters yet.');
+    const W = ws.data() || { players: {} }, LU = ls.data() || { teams: {} }, FA = fs.data() || { spent: {} };
+    W.players = W.players || {};
+    const onWaivers = id => W.players[id] && W.players[id].until > Date.now();
+    const week = G.week || Number(state.week);
+    if (data.action === 'claim') {
+      if (!add || !onWaivers(add)) throw new HttpsError('failed-precondition', `${nm(add)} isn't on waivers. Free agents can be added right away.`);
+      const bid = parseInt(data.bid, 10), left = FAAB_BUDGET - ((FA.season === String(state.season) ? FA.spent : {})[team] || 0);
+      if (!(bid >= 1)) throw new HttpsError('invalid-argument', 'The minimum bid is $1 (rule 8-4-2).');
+      if (bid > left) throw new HttpsError('failed-precondition', `You have $${left} of FAAB left.`);
+      if (drop && !(R.rosters[team] || []).includes(drop)) throw new HttpsError('failed-precondition', `${nm(drop)} isn't on your roster.`);
+      const ref = db.doc(`claims/${team}-${add}`);
+      tx.set(ref, { team: Number(team), player: add, bid, drop, at: Date.now(), until: W.players[add].until, status: 'pending', season: String(state.season), by: uid });
+      return { ok: true, claim: ref.id, until: W.players[add].until };
+    }
+    if (data.action === 'add') {
+      if (!add) throw new HttpsError('invalid-argument', 'Pick a player.');
+      if (onWaivers(add)) throw new HttpsError('failed-precondition', `${nm(add)} is on waivers until ${new Date(W.players[add].until).toUTCString()}. Place a claim instead.`);
+      rosterMove(R, LU, team, add, drop, P, locked);
+      if (W.players[add]) delete W.players[add];
+    } else if (data.action === 'drop') {
+      if (!drop) throw new HttpsError('invalid-argument', 'Pick a player to drop.');
+      rosterMove(R, LU, team, null, drop, P, locked);
+    } else throw new HttpsError('invalid-argument', 'Unknown move.');
+    if (drop) W.players[drop] = { until: Date.now() + WAIVER_MS, from: Number(team) };
+    tx.set(rRef, R); tx.set(wRef, W); tx.set(lRef, LU);
+    tx.set(db.collection('transactions').doc(), txDoc('free_agent', team, week, add, drop, null));
+    return { ok: true, roster: R.rosters[team], ir: R.ir[team], taxi: R.taxi[team], slots: (LU.teams || {})[team] || null, waivers: W.players };
+  });
+}
+
+exports.moves = onCall({ region: 'us-central1', maxInstances: 10, timeoutSeconds: 30, memory: '512MiB' }, async req => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const db = getFirestore();
+  const [roles, user] = await Promise.all([db.doc('config/roles').get(), db.doc(`users/${uid}`).get()]);
+  const commish = ((roles.data() || {}).commish || []).includes(uid), team = (user.data() || {}).team;
+  return movesAct(db, uid, commish, team == null ? null : team, req.data || {});
+});
+
+// Season record per team (for waiver tie-breaks): the same standings the bracket uses.
+async function records(db, season) {
+  const files = await leagueFiles(), R = (await db.doc('league/rosters').get()).data() || {}, current = Number((await getJSON('https://api.sleeper.app/v1/state/nfl')).week);
+  const res = await db.collection('results').where('season', '==', String(season)).get(), results = {};
+  for (const d of res.docs) { const r = d.data(); results[r.week] = r; }
+  return Object.fromEntries(standingsFrom(season, files, results, R.startWeek || 99, current).map(x => [x.team, { w: x.w + x.t / 2, pf: x.pf }]));
+}
+
+// waiverRun: every 10 minutes, settle every player whose two days on waivers are up. Highest bid wins (ties: worse record,
+// then the earlier claim). A winning claim that no longer fits (budget, roster room, its drop) fails and the next one gets
+// a turn. A player nobody wins becomes a free agent.
+async function settleWaivers(db) {
+  const now = Date.now(), W = (await db.doc('league/waivers').get()).data() || { players: {} };
+  const due = Object.entries(W.players || {}).filter(([, v]) => v.until <= now).sort((a, b) => a[1].until - b[1].until).map(([id]) => id);
+  if (!due.length) return { settled: 0 };
+  const [P, G, state] = await Promise.all([playerInfo(), weekGames(), getJSON('https://api.sleeper.app/v1/state/nfl')]);
+  const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
+  const rec = await records(db, state.season).catch(() => ({}));
+  const nm2 = id => (P[id] ? P[id].name : id);
+  let settled = 0;
+  for (const id of due) {
+    await db.runTransaction(async tx => {
+      const rRef = db.doc('league/rosters'), wRef = db.doc('league/waivers'), lRef = db.doc('league/lineups'), fRef = db.doc('league/faab');
+      const claimsQ = db.collection('claims').where('player', '==', id).where('status', '==', 'pending');
+      const [rs, ws, ls, fs, cs] = await Promise.all([tx.get(rRef), tx.get(wRef), tx.get(lRef), tx.get(fRef), tx.get(claimsQ)]);
+      const R = rs.data(), W2 = ws.data() || { players: {} }, LU = ls.data() || { teams: {} };
+      let FA = fs.data() || {}; if (FA.season !== String(state.season)) FA = { season: String(state.season), spent: {} };
+      if (!R || !W2.players[id] || W2.players[id].until > Date.now()) return;
+      const claims = cs.docs.map(d => ({ ref: d.ref, ...d.data() })).sort((a, b) => (b.bid - a.bid)
+        || ((rec[a.team] || {}).w || 0) - ((rec[b.team] || {}).w || 0) || ((rec[a.team] || {}).pf || 0) - ((rec[b.team] || {}).pf || 0) || a.at - b.at);
+      let winner = null; const done = new Set();
+      for (const c of claims) {
+        const t = String(c.team), left = FAAB_BUDGET - (FA.spent[t] || 0);
+        let note = null;
+        if (c.bid > left) note = `Not enough FAAB left ($${left}).`;
+        else { try { rosterMove(R, LU, t, id, c.drop || null, P, locked); } catch (e) { note = e.message; } }
+        if (note) { tx.update(c.ref, { status: 'failed', note, done: Date.now() }); done.add(c); continue; }
+        winner = c; FA.spent[t] = (FA.spent[t] || 0) + c.bid;
+        tx.update(c.ref, { status: 'won', done: Date.now() }); done.add(c);
+        if (c.drop) W2.players[c.drop] = { until: Date.now() + WAIVER_MS, from: c.team };
+        tx.set(db.collection('transactions').doc(), txDoc('waiver', t, G.week, id, c.drop || null, c.bid));
+        break;
+      }
+      for (const c of claims) if (!done.has(c)) tx.update(c.ref, { status: 'lost', note: `${nm2(id)} went to a higher bid.`, done: Date.now() });
+      delete W2.players[id];
+      tx.set(rRef, R); tx.set(wRef, W2); tx.set(lRef, LU); tx.set(fRef, FA);
+      settled++;
+    });
+  }
+  return { settled };
+}
+exports.waiverRun = onSchedule({ schedule: 'every 10 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 120, memory: '512MiB', maxInstances: 1 }, async () => {
+  await settleWaivers(getFirestore());
+});
+
+/* ---------- Trades (rule 8-3) ----------
+   One callable, "trades": propose, cancel, reject, counter, accept, veto. tradeRun processes trades whose review is over.
+     trades/{id}   {from, to, give: {players, picks}, get: {players, picks}, dropsFrom, dropsTo, status, at, reviewUntil, note}
+                   status: offered -> accepted ("review", two days, 8-3-2) -> processed | vetoed | failed;
+                           or cancelled (by the proposer) / rejected / countered (by the other team)
+                   picks are {season, round, roster_id} (roster_id = the team the pick originally belonged to)
+     league/picks  traded: [{season, round, roster_id, owner_id, previous_owner_id}]  (Sleeper's traded_picks format)
+   Checked at acceptance and again when processed: every asset still belongs to its side; both teams stay within 24
+   active players and 2 QBs after the swap and their named drops; the trade deadline (8-3-3: none accepted after the last
+   game of Week 11 until the championship is final); a team trading away a pick in a future season has that season's $50
+   prepay (or its dues) in the ledger (8-3-5). The commissioner can veto during review, for collusion or a rules
+   violation only (8-3-4). */
+const TRADE_REVIEW_MS = 2 * 864e5, TRADE_DEADLINE_WEEK = 11, PICK_SEASONS = 3, PICK_ROUNDS = 4;
+const pickKey = p => `${p.season}-${p.round}-${p.roster_id}`;
+function pickOwner(traded, p) { const t = (traded || []).find(x => pickKey(x) === pickKey(p)); return t ? t.owner_id : p.roster_id; }
+// The deadline (8-3-3): closed from the end of the last NFL game of Week 11 until the championship game (league week 17,
+// three playoff rounds after the 14-week regular season) is final. Open again from then through the offseason.
+async function deadlinePassed() {
+  const sb = await getJSON(`${ESPN_NFL}/scoreboard`), week = Number((sb.week || {}).number || 0), type = Number((sb.season || {}).type || 2);
+  const allPost = (sb.events || []).length > 0 && (sb.events || []).every(e => e.status.type.state === 'post');
+  if (type !== 2) return { passed: false, week };                        // NFL postseason / offseason: open
+  if (week < TRADE_DEADLINE_WEEK) return { passed: false, week };
+  if (week === TRADE_DEADLINE_WEEK) return { passed: allPost, week };
+  if (week < 17) return { passed: true, week };
+  if (week === 17) return { passed: !allPost, week };
+  return { passed: false, week };
+}
+async function prepaid(db, team, season) {
+  const s = await db.collection('ledger').where('season', '==', Number(season)).get();
+  const all = s.docs.map(d => ({ id: d.id, ...d.data() })), voided = new Set(all.filter(e => e.kind === 'void').map(e => e.ref));
+  return all.some(e => !voided.has(e.id) && Number(e.team) === Number(team) && ['prepay', 'dues'].includes(e.kind));
+}
+// Check a trade against the current rosters and picks; returns the after-trade rosters (does not save).
+async function checkTrade(db, T, R, picks, P, state, opts = {}) {
+  const nm = id => (P[id] ? P[id].name : id), from = String(T.from), to = String(T.to);
+  const own = t => R.rosters[t] || [];
+  for (const [side, t] of [['give', from], ['get', to]]) {
+    for (const id of T[side].players) if (!own(t).includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is no longer on that roster.`);
+    for (const pk of T[side].picks) if (String(pickOwner(picks, pk)) !== t) throw new HttpsError('failed-precondition', `The ${pk.season} round ${pk.round} pick no longer belongs to that team.`);
+  }
+  const season = Number(state.season);
+  for (const pk of T.give.picks.concat(T.get.picks)) {
+    if (!(pk.season > season && pk.season <= season + PICK_SEASONS) || !(pk.round >= 1 && pk.round <= PICK_ROUNDS)) throw new HttpsError('invalid-argument', `Only picks in the next ${PICK_SEASONS} seasons can be traded (8-3-1).`);
+  }
+  if (opts.prepay) for (const [side, t] of [['give', from], ['get', to]]) for (const season2 of new Set(T[side].picks.map(p => p.season)))
+    if (!(await prepaid(db, t, season2))) throw new HttpsError('failed-precondition', `${t === from ? 'The proposing team' : 'The accepting team'} must prepay $50 of its ${season2} dues before trading a ${season2} pick (rule 8-3-5).`);
+  const after = {};
+  for (const [t, out, inn, drops] of [[from, T.give.players, T.get.players, T.dropsFrom || []], [to, T.get.players, T.give.players, T.dropsTo || []]]) {
+    for (const d of drops) if (!own(t).includes(d) || out.includes(d)) throw new HttpsError('failed-precondition', `${nm(d)} can't be dropped in this trade.`);
+    const ir = (R.ir || {})[t] || [], taxi = (R.taxi || {})[t] || [];
+    const list = own(t).filter(x => !out.includes(x) && !drops.includes(x)).concat(inn);
+    const active = list.filter(x => !ir.includes(x) && !taxi.includes(x));
+    const label = t === from ? 'The proposing team' : 'The accepting team';
+    if (active.length > ACTIVE_MAX) throw new HttpsError('failed-precondition', `${label} would have ${active.length} active players; the most is ${ACTIVE_MAX}. Add ${active.length - ACTIVE_MAX} drop${active.length - ACTIVE_MAX > 1 ? 's' : ''}.`);
+    if (active.filter(x => P[x] && P[x].pos === 'QB').length > 2) throw new HttpsError('failed-precondition', `${label} would have 3 active QBs; the most is 2 (rule 8-1-4).`);
+    after[t] = list;
+  }
+  return after;
+}
+const cleanAssets = a => ({ players: [...new Set(((a || {}).players || []).map(String))].slice(0, 30),
+  picks: ((a || {}).picks || []).slice(0, 20).map(p => ({ season: Number(p.season), round: Number(p.round), roster_id: Number(p.roster_id) })) });
+
+async function tradesAct(db, uid, commish, myTeam, data) {
+  const [P, state] = await Promise.all([playerInfo(), getJSON('https://api.sleeper.app/v1/state/nfl')]);
+  const me = String(myTeam);
+  const [rs, ps] = await Promise.all([db.doc('league/rosters').get(), db.doc('league/picks').get()]);
+  const R = rs.data(); if (!R) throw new HttpsError('failed-precondition', 'There are no league rosters yet.');
+  const picks = (ps.data() || {}).traded || [];
+  if (data.action === 'propose' || data.action === 'counter') {
+    let from = String(parseInt(data.from ?? myTeam, 10)), to = String(parseInt(data.to, 10)), prev = null;
+    if (data.action === 'counter') {
+      prev = db.doc(`trades/${String(data.id || '').replace(/[^A-Za-z0-9]/g, '')}`);
+      const t0 = (await prev.get()).data(); if (!t0 || t0.status !== 'offered' || (String(t0.to) !== me && !commish)) throw new HttpsError('failed-precondition', 'You can only counter an open offer made to you.');
+      from = String(t0.to); to = String(t0.from);
+    }
+    if (!commish && from !== me) throw new HttpsError('permission-denied', 'You can only offer trades from your own team.');
+    if (from === to || !R.rosters[to]) throw new HttpsError('invalid-argument', 'Pick another team to trade with.');
+    const T = { from: Number(from), to: Number(to), give: cleanAssets(data.give), get: cleanAssets(data.get), dropsFrom: [...new Set((data.drops || []).map(String))].slice(0, 10), dropsTo: [] };
+    if (!T.give.players.length && !T.give.picks.length && !T.get.players.length && !T.get.picks.length) throw new HttpsError('invalid-argument', 'Add at least one player or pick.');
+    if (!T.give.players.length && !T.give.picks.length || !T.get.players.length && !T.get.picks.length) throw new HttpsError('invalid-argument', 'Each side has to send something.');
+    await checkTrade(db, { ...T, dropsTo: [] }, R, picks, P, state, { prepay: false, lenient: true }).catch(e => { if (!/active players/.test(e.message) || !/accepting/.test(e.message)) throw e; });
+    const ref = db.collection('trades').doc();
+    await ref.set({ ...T, status: 'offered', at: Date.now(), by: uid, note: String(data.note || '').slice(0, 300), season: String(state.season), counterOf: prev ? prev.id : null });
+    if (prev) await prev.update({ status: 'countered', done: Date.now(), counter: ref.id });
+    return { ok: true, id: ref.id };
+  }
+  const ref = db.doc(`trades/${String(data.id || '').replace(/[^A-Za-z0-9]/g, '')}`), T = (await ref.get()).data();
+  if (!T) throw new HttpsError('not-found', 'No such trade.');
+  const isFrom = String(T.from) === me, isTo = String(T.to) === me;
+  if (data.action === 'cancel') { if (!(isFrom || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer can be withdrawn, by the team that made it.'); await ref.update({ status: 'cancelled', done: Date.now() }); return { ok: true }; }
+  if (data.action === 'reject') { if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be rejected.'); await ref.update({ status: 'rejected', done: Date.now() }); return { ok: true }; }
+  if (data.action === 'veto') { if (!commish || T.status !== 'review') throw new HttpsError('failed-precondition', 'Only a trade in review can be vetoed, by the commissioner (rule 8-3-4).'); await ref.update({ status: 'vetoed', done: Date.now(), note: String(data.reason || 'Vetoed by the commissioner (rule 8-3-4).').slice(0, 300) }); return { ok: true }; }
+  if (data.action === 'accept') {
+    if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be accepted.');
+    const dl = await deadlinePassed();
+    if (dl.passed) throw new HttpsError('failed-precondition', `The trade deadline has passed (rule 8-3-3: the last game of Week ${TRADE_DEADLINE_WEEK}); trading reopens when the championship game is final.`);
+    const T2 = { ...T, dropsTo: [...new Set((data.drops || []).map(String))].slice(0, 10) };
+    await checkTrade(db, T2, R, picks, P, state, { prepay: true });
+    await ref.update({ status: 'review', dropsTo: T2.dropsTo, acceptedAt: Date.now(), reviewUntil: Date.now() + TRADE_REVIEW_MS });
+    return { ok: true, reviewUntil: Date.now() + TRADE_REVIEW_MS };
+  }
+  throw new HttpsError('invalid-argument', 'Unknown action.');
+}
+exports.trades = onCall({ region: 'us-central1', maxInstances: 10, timeoutSeconds: 30, memory: '512MiB' }, async req => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const db = getFirestore();
+  const [roles, user] = await Promise.all([db.doc('config/roles').get(), db.doc(`users/${uid}`).get()]);
+  const commish = ((roles.data() || {}).commish || []).includes(uid), team = (user.data() || {}).team;
+  if (team == null && !commish) throw new HttpsError('permission-denied', "Your account isn't linked to a team yet.");
+  return tradesAct(db, uid, commish, team == null ? null : team, req.data || {});
+});
+
+// Process every accepted trade whose two-day review is over: check it again, then swap players and picks, drop the named
+// players to waivers, clear moved players from the old team's lineup and log it (transactions, type "trade").
+async function processTrades(db) {
+  const due = (await db.collection('trades').where('status', '==', 'review').get()).docs.filter(d => d.data().reviewUntil <= Date.now());
+  if (!due.length) return { processed: 0 };
+  const [P, state, G] = await Promise.all([playerInfo(), getJSON('https://api.sleeper.app/v1/state/nfl'), weekGames()]);
+  let processed = 0;
+  for (const d of due) {
+    await db.runTransaction(async tx => {
+      const rRef = db.doc('league/rosters'), pRef = db.doc('league/picks'), lRef = db.doc('league/lineups'), wRef = db.doc('league/waivers');
+      const [ts, rs, ps, ls, ws] = await Promise.all([tx.get(d.ref), tx.get(rRef), tx.get(pRef), tx.get(lRef), tx.get(wRef)]);
+      const T = ts.data(); if (!T || T.status !== 'review') return;
+      const R = rs.data(), PK = ps.data() || { traded: [] }, LU = ls.data() || { teams: {} }, W = ws.data() || { players: {} };
+      let after;
+      try { after = await checkTrade(db, T, R, PK.traded, P, state, { prepay: false }); }
+      catch (e) { tx.update(d.ref, { status: 'failed', note: e.message, done: Date.now() }); return; }
+      const from = String(T.from), to = String(T.to);
+      R.rosters[from] = after[from]; R.rosters[to] = after[to];
+      for (const t of [from, to]) for (const k of ['ir', 'taxi']) if (R[k] && R[k][t]) R[k][t] = R[k][t].filter(x => after[t].includes(x));
+      const gone = { [from]: T.give.players.concat(T.dropsFrom || []), [to]: T.get.players.concat(T.dropsTo || []) };
+      for (const t of [from, to]) if (LU.teams && LU.teams[t]) LU.teams[t] = LU.teams[t].map(x => (gone[t].includes(x) ? null : x));
+      W.players = W.players || {};
+      for (const [t, drops] of [[from, T.dropsFrom || []], [to, T.dropsTo || []]]) for (const x of drops) W.players[x] = { until: Date.now() + WAIVER_MS, from: Number(t) };
+      const moved = [];
+      for (const [pk, newOwner, oldOwner] of [...T.give.picks.map(p => [p, T.to, T.from]), ...T.get.picks.map(p => [p, T.from, T.to])]) {
+        PK.traded = (PK.traded || []).filter(x => pickKey(x) !== pickKey(pk));
+        if (newOwner !== pk.roster_id) PK.traded.push({ season: String(pk.season), round: pk.round, roster_id: pk.roster_id, owner_id: newOwner, previous_owner_id: oldOwner });
+        moved.push({ season: String(pk.season), round: pk.round, roster_id: pk.roster_id, owner_id: newOwner, previous_owner_id: oldOwner });
+      }
+      const adds = {}, drops = {};
+      for (const x of T.give.players) { adds[x] = T.to; drops[x] = T.from; }
+      for (const x of T.get.players) { adds[x] = T.from; drops[x] = T.to; }
+      for (const x of T.dropsFrom || []) drops[x] = T.from;
+      for (const x of T.dropsTo || []) drops[x] = T.to;
+      tx.set(rRef, R); tx.set(pRef, PK); tx.set(lRef, LU); tx.set(wRef, W);
+      tx.set(db.collection('transactions').doc(), { type: 'trade', status: 'complete', leg: G.week, created: Date.now(), roster_ids: [T.from, T.to], adds, drops, draft_picks: moved, settings: {}, trade: d.id });
+      tx.update(d.ref, { status: 'processed', done: Date.now() });
+      processed++;
+    });
+  }
+  return { processed };
+}
+exports.tradeRun = onSchedule({ schedule: 'every 10 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 120, memory: '512MiB', maxInstances: 1 }, async () => {
+  await processTrades(getFirestore());
+});
+
+// Tests only (never set in production): the pure helpers, for checking the bracket and the Tuesday cutoff.
+if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts };

@@ -117,6 +117,31 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Waiver claims are blind: a claim is readable only by its team's GM (users/{uid}.team) and the commissioners.
+    // Every change goes through the moves function. Transactions (completed adds, drops, claims, trades) are public.
+    match /claims/{id} {
+      allow read: if signedIn() && (isCommish() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('team', -1) == resource.data.team);
+      allow write: if false;
+    }
+    // Trades: an open offer is visible to the two teams and the commissioners; once accepted (in review) or decided, everyone.
+    match /trades/{id} {
+      allow read: if resource.data.status in ['review', 'processed', 'vetoed', 'failed']
+        || signedIn() && (isCommish()
+          || resource.data.from == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('team', -1)
+          || resource.data.to == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('team', -1));
+      allow write: if false;
+    }
+    match /transactions/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Each week's final Hub scores (functions/index.js weekResults). Anyone may read; standings are built from them.
+    match /results/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Each week's Hub lineups as they stood (written by the lineup function and liveScores). Anyone may read.
     match /lineups/{id} {
       allow read: if true;

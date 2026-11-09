@@ -147,7 +147,12 @@
     const R = g.opp;
     document.getElementById('crumb').innerHTML = `Matchups · ${esc(M.state.season)} · <strong>${g.playoff ? `${esc(g.label)} · ` : ''}Week ${g.week}</strong>`;
     document.getElementById('hero').innerHTML = hero(L, R, g) + weekStrip(L, g.week);
-    content.innerHTML = `<div class="grid">${lineups(L, R, g)}${tape(L, R)}${around(g.week, L)}</div>`;
+    // Weeks before the Hub took over (startWeek) were played by the placeholder league: its scores count, but its
+    // lineups are of players who aren't on these rosters any more, so they aren't shown.
+    const placeholder = M.hub && g.week < (M.hubStart || 0);
+    const note = placeholder ? `<section class="panel s12"><header><div><span class="eyebrow">Week ${g.week} · placeholder league</span><h2>${g.final ? 'Played before the Hub took over' : 'Hub matchups start in Week ' + M.hubStart}</h2></div></header>
+      <p class="pmeta">The 2026 test season's first weeks were played by a placeholder league. ${g.final ? 'Its score stands in the standings and the record book, but its lineups belonged to placeholder rosters, so they aren\'t shown.' : 'This week still belongs to it, so nothing here counts for your Hub roster.'} From Week ${M.hubStart} on, every matchup is your Hub lineup, scored live.</p></section>` : '';
+    content.innerHTML = `<div class="grid">${placeholder ? note : lineups(L, R, g)}${tape(L, R)}${around(g.week, L)}</div>`;
     document.title = `${L.f.location} vs ${R.f.location} · Week ${g.week}`;
     paintHelmets(document).catch(e => console.error(e));
   }

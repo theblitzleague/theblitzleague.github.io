@@ -14,10 +14,15 @@
 
   // The League's scoring: the Hub's own settings (data/scoring.json), used in every mode.
   const hubScoring = () => getJSON('data/scoring.json').then(x => x.settings || null).catch(() => null);
+  // The NFL's current season and week, live from Sleeper (it moves to the next week early each week); the saved copy
+  // only if Sleeper can't be reached.
+  const nflState = () => { const c = new AbortController(), t = setTimeout(() => c.abort(), 4000);
+    return fetch(`${API}/state/nfl`, { signal: c.signal }).then(r => (r.ok ? r.json() : null)).catch(() => null).finally(() => clearTimeout(t)); };
   async function loadSample() {
     const names = ['rosters', 'users', 'matchups', 'transactions', 'traded_picks', 'players', 'state'];
-    const [got, scoring] = await Promise.all([Promise.all(names.map(n => getJSON(`data/sample/${n}.json`))), hubScoring()]);
+    const [got, scoring, live] = await Promise.all([Promise.all(names.map(n => getJSON(`data/sample/${n}.json`))), hubScoring(), nflState()]);
     const d = Object.fromEntries(names.map((n, i) => [n, got[i]]));
+    if (live && live.season && live.week) d.state = { season: String(live.season), week: Number(live.week), display_week: live.display_week, season_type: live.season_type };
     return { ...d, rosterPositions: null, drafts: [], scoring };
   }
 

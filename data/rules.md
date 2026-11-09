@@ -190,7 +190,7 @@ Appendix B. League Settings
 
 **Article 3. Points leader.** The Franchise with the most regular-season points for. Playoff points do not count.
 
-**Article 4. General Manager of the Year.** Honor only, with no prize money: chosen by a vote of the Owners at the end of the Season. Third place goes to the winner of the third-place game between the two semifinal losers.
+**Article 4. General Manager of the Year.** Honor only, with no prize money: chosen by a vote of the Owners at the end of the Season. Third place goes to the winner of the third-place game between the two divisional-round losers.
 
 **Article 5. Ties.** Franchises that tie for a prize split it equally.
 
@@ -216,7 +216,7 @@ Appendix B. League Settings
 
 **Article 1. Regular season.** Weeks 1 through 14 of the NFL season. Each Franchise plays one head-to-head game per week.
 
-**Article 2. Playoffs.** Six Franchises qualify, seeded as in the NFL. The three division winners (6-3-2) are seeds 1 to 3, ranked by regular-season record. The three Franchises with the best records among the rest are the wild cards, seeds 4 to 6. Ties are broken by points for. Seeds 1 and 2 get a first-round bye. The playoffs begin in Week 15 with seed 3 against seed 6 and seed 4 against seed 5. In Week 16 the top seed plays the lowest seed left and the other seeds meet. In Week 17 the semifinal winners play for the championship and the losers play the third-place game. A tied playoff game goes to the higher seed. The winner of the championship game is the League Champion.
+**Article 2. Playoffs.** Six Franchises qualify, seeded as in the NFL. The three division winners (6-3-2) are seeds 1 to 3, ranked by regular-season record. The three Franchises with the best records among the rest are the wild cards, seeds 4 to 6. Ties are broken by points for. Seeds 1 and 2 get a first-round bye. The playoffs begin in Week 15 with the wild card round: seed 3 against seed 6 and seed 4 against seed 5. Week 16 is the divisional round: the top seed plays the lowest seed left and the other seeds meet. In Week 17 the divisional winners play in the Blitz Bowl for the championship, and the losers play the third-place game. A tied playoff game goes to the higher seed. The winner of the championship game is the League Champion.
 
 ### Section 2. Starting Lineup
 

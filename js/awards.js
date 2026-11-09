@@ -360,7 +360,7 @@
         <div class="tablewrap"><table class="st prizes"><thead><tr><th>Prize</th><th class="num">Pays</th><th>Right now</th></tr></thead><tbody>
           ${z.champion ? row('Champion', `Wins the title game. Playoffs start week ${W + 1}`, cash(z.champion), 'Decided in the playoffs') : ''}
           ${z.runnerUp ? row('Runner-up', 'Loses the title game', cash(z.runnerUp), 'Decided in the playoffs') : ''}
-          ${z.third ? row('Third place', 'Wins the third-place game between the two semifinal losers', cash(z.third), 'Decided in the playoffs') : ''}
+          ${z.third ? row('Third place', 'Wins the third-place game between the two divisional-round losers', cash(z.third), 'Decided in the playoffs') : ''}
           ${z.division ? row('Division winners', 'Best record in the division, ties broken by points for. Paid whether or not they make the playoffs', `${divs.length} × ${cash(z.division)}`, pending || `Leading: ${divLead.map(x => `${esc(x.t.f.location)} <small>(${esc(x.d.name)})</small>`).join(', ')}`) : ''}
           ${z.weekly ? row('Weekly high score', `Highest score each week, weeks 1-${W}. A tie splits it`, `${W} × ${cash(z.weekly)}`, pending || `${ww.length} paid, ${W - ww.length} to go`) : ''}
           ${z.pointsLeader ? row('Points leader', 'Most points for over the regular season', cash(z.pointsLeader), pending || `Leading: ${names(pfLead)} (${f1(pfLead[0].pf)})`) : ''}

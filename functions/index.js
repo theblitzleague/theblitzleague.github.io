@@ -535,7 +535,7 @@ exports.lineup = onCall({ region: 'us-central1', maxInstances: 10, timeoutSecond
    Regular season (Weeks 1-14): pairs from the Hub's schedule (data/schedule.json). Weeks before league/rosters.startWeek
    belong to the placeholder league (data/sample/matchups.json) and keep their scores.
    Playoffs (rule 7-1-2), NFL style: the three division winners are seeds 1-3 (by record, ties by points for), the three
-   best other records are the wild cards, seeds 4-6; seeds 1-2 get a bye. Week 15: 3 v 6, 4 v 5. Week 16 (reseeded):
+   best other records are the wild cards, seeds 4-6; seeds 1-2 get a bye. Week 15, the wild card round: 3 v 6, 4 v 5. Week 16, the divisional round (reseeded):
    seed 1 plays the lowest seed left, seed 2 the other. Week 17: the championship and the third-place game (6-3-4). A tied
    playoff game goes to the higher seed.
    league/bracket: the seeds and every playoff game, rewritten each run, so it moves with the standings during the season
@@ -594,12 +594,12 @@ function bracketFrom(season, standings, results, divOf = {}) {
     return { week, label, a, b, aSeed: seedOf(a) || null, bSeed: seedOf(b) || null, aPts: pa, bPts: pb, final: ok, winner, loser: winner ? (winner === a ? b : a) : null };
   };
   const s = n => (seeds[n - 1] || {}).team || null;
-  const qf = [game(REG_WEEKS + 1, s(3), s(6), 'Wild card'), game(REG_WEEKS + 1, s(4), s(5), 'Wild card')];
+  const qf = [game(REG_WEEKS + 1, s(3), s(6), 'Wild card round'), game(REG_WEEKS + 1, s(4), s(5), 'Wild card round')];
   const alive = qf.every(g => g.final) ? qf.map(g => g.winner).sort((x, y) => seedOf(y) - seedOf(x)) : [null, null];   // lowest seed first
-  const sf = [game(REG_WEEKS + 2, s(1), alive[0], 'Semifinal'), game(REG_WEEKS + 2, s(2), alive[1], 'Semifinal')];
+  const sf = [game(REG_WEEKS + 2, s(1), alive[0], 'Divisional round'), game(REG_WEEKS + 2, s(2), alive[1], 'Divisional round')];
   const sfDone = sf.every(g => g.final);
   const fin = [game(REG_WEEKS + 3, sfDone ? sf[0].winner : null, sfDone ? sf[1].winner : null, 'Blitz Bowl'), game(REG_WEEKS + 3, sfDone ? sf[0].loser : null, sfDone ? sf[1].loser : null, 'Third-place game')];
-  return { season: String(season), projected: !regDone, seeds, rounds: [{ week: REG_WEEKS + 1, name: 'Wild card', byes: [s(1), s(2)], games: qf }, { week: REG_WEEKS + 2, name: 'Semifinals', games: sf }, { week: REG_WEEKS + 3, name: 'Championship', games: fin }],
+  return { season: String(season), projected: !regDone, seeds, rounds: [{ week: REG_WEEKS + 1, name: 'Wild card round', byes: [s(1), s(2)], games: qf }, { week: REG_WEEKS + 2, name: 'Divisional round', games: sf }, { week: REG_WEEKS + 3, name: 'Championship', games: fin }],
     champion: fin[0].winner, runnerUp: fin[0].loser, third: fin[1].winner, updated: Date.now() };
 }
 

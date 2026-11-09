@@ -67,7 +67,7 @@
   </section></div>`;
   }
 
-  /* Playoffs (rule 7-1-2), NFL style: division winners seeds 1-3, wild cards 4-6, seeds 1-2 get a bye; Week 15 wild card (3 v 6, 4 v 5), Week 16 semifinals (1 plays
+  /* Playoffs (rule 7-1-2), NFL style: division winners seeds 1-3, wild cards 4-6, seeds 1-2 get a bye; Week 15 wild card (3 v 6, 4 v 5), Week 16 divisional round (1 plays
      the lowest seed left), Week 17 the Blitz Bowl and the third-place game. The bracket comes from the server (league/bracket,
      functions/index.js weekResults), which rebuilds it every morning from the official weeks, so it moves with the
      standings until Week 14 is official on its Tuesday. Before the server has written one, it is projected here. */
@@ -79,8 +79,8 @@
     const wild = all.filter(t => !winners.includes(t)).sort(better).slice(0, 6 - winners.length);
     const seeds = [...winners.map(t => [t, 'Division winner']), ...wild.map(t => [t, 'Wild card'])].map(([t, how], i) => ({ team: t.id, seed: i + 1, w: t.wins, l: t.losses, t: t.ties, pf: t.pf, how }));
     const sd = n => seeds[n - 1].team, g = (week, a, b, label) => ({ week, a, b, aSeed: a && seeds.find(x => x.team === a).seed, bSeed: b && seeds.find(x => x.team === b).seed, label, final: false });
-    return { projected: true, local: true, seeds, rounds: [{ week: 15, name: 'Wild card', byes: [sd(1), sd(2)], games: [g(15, sd(3), sd(6), 'Wild card'), g(15, sd(4), sd(5), 'Wild card')] },
-      { week: 16, name: 'Semifinals', games: [g(16, sd(1), null, 'Semifinal'), g(16, sd(2), null, 'Semifinal')] }, { week: 17, name: 'Championship', games: [g(17, null, null, 'Blitz Bowl'), g(17, null, null, 'Third-place game')] }] };
+    return { projected: true, local: true, seeds, rounds: [{ week: 15, name: 'Wild card round', byes: [sd(1), sd(2)], games: [g(15, sd(3), sd(6), 'Wild card round'), g(15, sd(4), sd(5), 'Wild card round')] },
+      { week: 16, name: 'Divisional round', games: [g(16, sd(1), null, 'Divisional round'), g(16, sd(2), null, 'Divisional round')] }, { week: 17, name: 'Championship', games: [g(17, null, null, 'Blitz Bowl'), g(17, null, null, 'Third-place game')] }] };
   }
   function playoffs() {
     const B = bracketData(), T = id => M.teams[id];
@@ -99,11 +99,11 @@
     <section class="panel s12"><header><div><span class="eyebrow">${B.projected ? `Projected · if the season ended today${through ? ` (through Week ${through})` : ''}` : 'Set · Week 14 is official'}</span><h2>Playoff bracket</h2></div>
       <span class="aside">3 division winners + 3 wild cards · seeds 1-2 get a bye</span></header>
       <div class="bracket">
-        <div class="br-col"><div class="br-round">Wild card · Week 15</div>${byes}${wc.games.map(game).join('')}</div>
-        <div class="br-col"><div class="br-round">Semifinals · Week 16</div>${sf.games.map(game).join('')}</div>
+        <div class="br-col"><div class="br-round">Wild card round · Week 15</div>${byes}${wc.games.map(game).join('')}</div>
+        <div class="br-col"><div class="br-round">Divisional round · Week 16</div>${sf.games.map(game).join('')}</div>
         <div class="br-col"><div class="br-round">Championship · Week 17</div>${game(ch.games[0])}<div class="br-third">${game(ch.games[1])}</div></div>
       </div>
-      <p class="footnote">NFL style (rule 7-1-2): the three division winners are seeds 1-3 by record, then the three best other records are the wild cards, seeds 4-6. Ties are broken by points for. Seeds 1 and 2 get a bye. In the semifinals the 1 seed plays the lowest seed left. A tied playoff game goes to the higher seed. The bracket updates each Tuesday morning once the week's scores are official (2-2-3).</p></section>
+      <p class="footnote">NFL style (rule 7-1-2): the three division winners are seeds 1-3 by record, then the three best other records are the wild cards, seeds 4-6. Ties are broken by points for. Seeds 1 and 2 get a bye. In the divisional round the 1 seed plays the lowest seed left. A tied playoff game goes to the higher seed. The bracket updates each Tuesday morning once the week's scores are official (2-2-3).</p></section>
     <section class="panel s12"><header><div><h2>Seeds</h2></div></header>
       <div class="tablewrap"><table class="st"><thead><tr><th>Seed</th><th>Team</th><th>How</th><th class="num">W-L</th><th class="num">PF</th></tr></thead>
       <tbody>${B.seeds.map(s => `<tr><td class="rank">${s.seed}</td><td><a class="stteam" href="team.html?team=${s.team}">${markSVG(T(s.team).f, 'mini')}<span><b>${esc(T(s.team).f.location)}</b></span></a></td><td class="pmeta">${esc(s.how || '')}${s.how === 'Division winner' && T(s.team).division ? ` · ${esc(T(s.team).division.name)}` : ''}</td><td class="num">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="num">${f1(s.pf)}</td></tr>`).join('')}</tbody></table></div></section>

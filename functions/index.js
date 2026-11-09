@@ -1151,8 +1151,11 @@ exports.backup = onCall({ region: 'us-central1', maxInstances: 2, timeoutSeconds
   const db = getFirestore(), roles = (await db.doc('config/roles').get()).data() || {};
   if (!(roles.commish || []).includes(uid)) throw new HttpsError('permission-denied', 'Only the commissioner can download the league backup.');
   const a = (req.data || {}).action;
-  if (a === 'now') { const L = await collectLeague(db); return { name: `blitz-league-${new Date().toISOString().slice(0, 10)}.xlsx`, data: (await buildWorkbook(L)).toString('base64') }; }
   const { getStorage } = require('firebase-admin/storage'), bucket = getStorage().bucket();
+  if (a === 'now') {                                    // a fresh copy: saved like the nightly one, then handed over
+    const r = await saveBackup(db), [buf] = await bucket.file(`backups/${r.day}/blitz-league.xlsx`).download();
+    return { name: `blitz-league-${r.day}.xlsx`, data: buf.toString('base64'), saved: r.day };
+  }
   if (a === 'list') { const [files] = await bucket.getFiles({ prefix: 'backups/' }), dirs = [...new Set(files.map(f => f.name.split('/')[1]))];
     return { finals: dirs.filter(d => /^season-\d{4}-final$/.test(d)).sort().reverse(), days: dirs.filter(d => /^\d{4}-\d\d-\d\d$/.test(d)).sort().reverse() }; }
   if (a === 'get') {

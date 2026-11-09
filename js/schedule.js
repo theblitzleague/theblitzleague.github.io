@@ -54,11 +54,35 @@
     </section></div>`;
   }
 
+  // Next season's schedule (data/schedule.json, built by tools/build_schedule.py), once the Commissioner's Office has
+  // published it: every team's opponent each week, then the week-by-week games.
+  let SCHED = null;
+  const next = () => String(+M.state.season + 1);
+  function nextSeason() {
+    if (!SCHED) { fetch('data/schedule.json').then(r => r.json()).then(j => { SCHED = j; route(); }).catch(() => { SCHED = {}; route(); }); return '<div class="loading">Loading the schedule</div>'; }
+    const S = SCHED[next()];
+    if (!S || S.status !== 'published') return `<section class="panel"><div class="empty">The ${esc(next())} schedule hasn't been published yet.</div></section>`;
+    const W = Object.keys(S.weeks).map(Number).sort((a, b) => a - b), T = id => M.teams[id];
+    const opp = (t, w) => { const g = S.weeks[String(w)].find(p => p.includes(t)); return g ? g.find(x => x !== t) : null; };
+    const teams = M.league.divisions.flatMap(d => Object.values(M.teams).filter(t => t.division === d).sort((a, b) => a.f.location.localeCompare(b.f.location)));
+    const head = `<tr><th>Team</th>${W.map(w => `<th>W${w}</th>`).join('')}</tr>`;
+    const rows = teams.map(t => `<tr><td class="gteam" style="--dc:${UI.divInk(t.division)}"><a href="team.html?team=${t.id}">${markSVG(t.f, 'mini')}<span>${esc(t.f.abbr || t.f.location)}</span></a></td>${W.map(w => {
+      const o = T(opp(t.id, w)); return `<td>${o ? `<span class="gc${o.division === t.division ? ' div' : ''}" title="Week ${w} vs ${esc(o.f.location)}"><span>${esc(o.f.abbr || o.f.location)}</span></span>` : '<span class="gc bye">-</span>'}</td>`; }).join('')}</tr>`).join('');
+    const weekList = W.map(w => `<div class="ns-week"><b>Week ${w}</b>${S.weeks[String(w)].map(([a, b]) => `<span class="ns-game${T(a).division === T(b).division ? ' div' : ''}">${markSVG(T(a).f, 'mini')} ${esc(T(a).f.location)} <em>vs</em> ${esc(T(b).f.location)} ${markSVG(T(b).f, 'mini')}</span>`).join('')}</div>`).join('');
+    return `<div class="grid"><section class="panel s12">
+      <header><div><span class="eyebrow">${esc(next())} regular season · published</span><h2>${esc(next())} schedule</h2></div><span class="aside">${W.length} weeks</span></header>
+      <div class="tablewrap"><table class="sgrid"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
+      <p class="footnote">Each team plays its three division rivals twice (underlined) and every other team once. First division meetings come in Weeks 1-9, rematches in Weeks 10-14, and Weeks 13-14 are all division games.</p>
+    </section><section class="panel s12"><header><div><h2>Week by week</h2></div></header><div class="ns-weeks">${weekList}</div></section></div>`;
+  }
+
   function route() {
     const h = location.hash.slice(1), m = /^w(\d+)$/.exec(h), w = m && +m[1];
-    const isGrid = h === 'grid', week = w >= 1 && w <= M.league.regularSeasonWeeks ? w : thisWeek();
-    document.getElementById('tabs').innerHTML = tabsHTML([['w' + week, 'By week'], ['grid', 'Team grid']], isGrid ? 'grid' : 'w' + week);
-    document.getElementById('content').innerHTML = isGrid ? grid() : byWeek(week);
+    const isGrid = h === 'grid', isNext = h === 'next', week = w >= 1 && w <= M.league.regularSeasonWeeks ? w : thisWeek();
+    document.getElementById('tabs').innerHTML = tabsHTML([['w' + week, 'By week'], ['grid', 'Team grid'], ['next', `${next()} schedule`]], isGrid ? 'grid' : isNext ? 'next' : 'w' + week);
+    document.getElementById('content').innerHTML = isNext ? nextSeason() : isGrid ? grid() : byWeek(week);
+    paintHelmets(document).catch(() => {});
+    if (isNext) return;
     // Phones: start the grid (and the week strip) scrolled to this week instead of week 1.
     const box = document.querySelector(isGrid ? '.tablewrap' : '.sched-weeks .wrap'), at = document.querySelector(isGrid ? 'th.now' : '.wk.now');
     if (box && at) box.scrollLeft = Math.max(0, at.offsetLeft - box.clientWidth / 2 + at.offsetWidth / 2);

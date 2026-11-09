@@ -15,7 +15,7 @@ NAV_ART = {"network.html": '<img src="assets/league/blitz-network-white.webp" al
 # Quick links shown under a menu item on hover (desktop only; css/hub.css hides them on phones). Just the main sections.
 SUB = {
     "standings.html": [("standings.html#divisions", "Divisions"), ("standings.html#league", "League table"), ("standings.html#playoffs", "Playoff bracket")],
-    "schedule.html": [("schedule.html", "By week"), ("schedule.html#grid", "Team grid")],
+    "schedule.html": [("schedule.html", "By week"), ("schedule.html#grid", "Team grid"), ("schedule.html#next", "2027 schedule")],
     "network.html": [("network.html#live", "Live scores"), ("network.html#players", "Players"), ("network.html#injuries", "Injuries"), ("network.html#headlines", "Headlines"), ("network.html#trending", "Trending")],
     "teams.html": [("teams.html#franchises", "Franchises"), ("map.html", "League map"), ("teams.html#all-time", "All-time standings")],
     "draft.html": [("draftroom.html", "Draft room"), ("draft.html#results", "Past drafts"), ("draft.html#capital", "Draft capital"), ("draft.html#ownership", "Pick ownership")],

@@ -1531,3 +1531,10 @@ div.lu-empty .lu-plus { border-style: dotted; }
 .br-third { margin-top: 10px; opacity: .9; }
 .br-champ h2 { display: flex; gap: 10px; align-items: center; } .br-champ .mini { width: 34px; height: 36px; }
 @media (max-width: 900px) { .bracket { grid-template-columns: minmax(0, 1fr); } }
+/* Next season's schedule (Schedule > 2027 schedule) */
+.ns-weeks { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+.ns-week { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-2); }
+.ns-week b { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; }
+.ns-game { display: flex; align-items: center; gap: 6px; font-size: 14px; } .ns-game em { color: var(--muted); font-style: normal; font-size: 12px; }
+.ns-game.div { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.ns-game .mini { width: 20px; height: 21px; }

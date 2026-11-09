@@ -972,4 +972,197 @@ exports.tradeRun = onSchedule({ schedule: 'every 10 minutes', region: 'us-centra
 });
 
 // Tests only (never set in production): the pure helpers, for checking the bracket and the Tuesday cutoff.
-if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts };
+
+
+/* ---------- League backup and workbook ----------
+   Everything the League has, in two forms, every night at 2:30 AM Central (leagueBackup), into private Cloud Storage:
+     backups/<YYYY-MM-DD>/blitz-league.json   every collection and the site's league files, raw (enough to rebuild from)
+     backups/<YYYY-MM-DD>/blitz-league.xlsx   the same as an Excel workbook, one sheet per subject
+   plus backups/latest/..., and once a season's Blitz Bowl is official, backups/season-<year>-final/ (kept as that
+   season's record book). The commissioner downloads them from the Account page (callable "backup": now, list, get).
+   Nothing here goes to the public site repository: the ledger, members, blind claims and private notes are in it.
+   The database itself also has Firestore's own daily backups (kept 14 weeks). */
+const ExcelJS = require('exceljs');
+const BACKUP_COLLECTIONS = ['league', 'results', 'lineups', 'transactions', 'trades', 'claims', 'drafts', 'ledger', 'users', 'devices', 'notes', 'announcements', 'config'];
+
+async function collectLeague(db) {
+  const out = { exportedAt: new Date().toISOString(), state: await getJSON('https://api.sleeper.app/v1/state/nfl').catch(() => null), collections: {}, files: {} };
+  for (const c of BACKUP_COLLECTIONS) {
+    const s = await db.collection(c).get(), docs = {};
+    for (const d of s.docs) {
+      const v = d.data();
+      for (const [k, x] of Object.entries(v)) if (x && typeof x.toDate === 'function') v[k] = x.toDate().toISOString();   // timestamps as text
+      docs[d.id] = v;
+      if (c === 'drafts') {                                                    // a draft's queues (pools are rebuilt from players.json)
+        const q = await d.ref.collection('queues').get();
+        if (!q.empty) v._queues = Object.fromEntries(q.docs.map(x => [x.id, x.data()]));
+      }
+    }
+    out.collections[c] = docs;
+  }
+  const t = Date.now();
+  for (const f of ['franchises', 'league', 'history', 'schedule', 'scoring', 'players']) out.files[f] = await getJSON(`${SITE}/data/${f}.json?t=${t}`).catch(() => null);
+  out.files.sampleMatchups = await getJSON(`${SITE}/data/sample/matchups.json?t=${t}`).catch(() => null);
+  return out;
+}
+
+async function buildWorkbook(L) {
+  const C = L.collections, F = L.files, fr = (F.franchises || {}).franchises || {}, P = F.players || {};
+  const team = id => (id == null || id === '' ? '' : fr[String(id)] ? `${fr[String(id)].location}${fr[String(id)].nickname ? ' ' + fr[String(id)].nickname : ''}` : `Team ${id}`);
+  const pl = id => (id && P[id] ? P[id].full_name : id || '');
+  const pos = id => (id && P[id] ? ((P[id].fantasy_positions || []).find(x => ['DL', 'LB', 'DB'].includes(x)) || P[id].position || '') : '');
+  const nfl = id => (id && P[id] ? P[id].team || 'FA' : '');
+  const when = ms => (ms ? new Date(typeof ms === 'number' ? ms : Date.parse(ms)) : '');
+  const R = C.league.rosters || {}, LU = C.league.lineups || {}, W = (C.league.waivers || {}).players || {}, FAAB = C.league.faab || {}, PK = (C.league.picks || {}).traded || [], BR = C.league.bracket;
+  const SLOTS = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'SUPER_FLEX', 'K', 'DL', 'LB', 'DB', 'IDP_FLEX'];
+  const wb = new ExcelJS.Workbook(); wb.creator = 'Blitz Hub'; wb.created = new Date();
+  const sheet = (name, cols, rows) => {
+    const ws = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] });
+    ws.columns = cols.map(([header, key, width, fmt]) => ({ header, key, width: width || 14, style: fmt ? { numFmt: fmt } : {} }));
+    ws.getRow(1).font = { bold: true }; ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE7F1FB' } };
+    for (const r of rows) ws.addRow(r);
+    if (rows.length) ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+    return ws;
+  };
+  const DT = 'yyyy-mm-dd hh:mm';
+  // About
+  sheet('About', [['Item', 'k', 30], ['Value', 'v', 70]], [
+    { k: 'League', v: ((F.league || {}).name) || 'The Blitz League' }, { k: 'Exported', v: L.exportedAt },
+    { k: 'Official rosters from draft', v: R.name ? `${R.name} (${R.source})` : 'none yet' }, { k: 'Hub scoring starts', v: R.startWeek ? `Week ${R.startWeek}` : '' },
+    { k: 'Contents', v: 'Franchises, Members, Rosters, Lineups, Results, Standings, Schedule, Playoffs, Drafts, Draft picks, Transactions, Trades, Waiver claims, FAAB, Pick ownership, Season history, Ledger, Announcements, Notes, Scoring, Players' },
+    { k: 'Note', v: 'Built from the live database every night. The matching blitz-league.json holds the same data raw.' }]);
+  // Franchises and members
+  const users = C.users || {}, roles = C.config.roles || {};
+  sheet('Franchises', [['Team id', 'id', 9], ['Location', 'loc', 16], ['Nickname', 'nick', 18], ['Abbr', 'abbr', 7], ['Division', 'div', 12], ['GM', 'gm', 20], ['Linked account', 'acct', 26], ['Founded', 'founded', 9]],
+    Object.entries(fr).map(([id, f]) => ({ id: +id, loc: f.location, nick: f.nickname || '', abbr: f.abbr || '', div: f.division, gm: (f.gm || {}).name || '', founded: f.founded || '',
+      acct: Object.values(users).filter(u => +u.team === +id).map(u => u.name || u.email || '').join(', ') })));
+  sheet('Members', [['Account', 'uid', 30], ['Name', 'name', 20], ['Email', 'email', 28], ['Team', 'team', 22], ['Role', 'role', 16], ['Joined', 'at', 18, DT]],
+    Object.entries(users).map(([uid, u]) => ({ uid, name: u.name || '', email: u.email || '', team: team(u.team), role: roles.owner === uid ? 'Owner' : (roles.commish || []).includes(uid) ? 'Commissioner' : 'GM', at: when(u.at) })));
+  // Rosters: who's where
+  const rosterRows = [];
+  for (const [t, ids] of Object.entries(R.rosters || {})) {
+    const lu = (LU.teams || {})[t] || [], ir = (R.ir || {})[t] || [], taxi = (R.taxi || {})[t] || [];
+    for (const id of ids) { const i = lu.indexOf(id);
+      rosterRows.push({ team: team(t), player: pl(id), pos: pos(id), nfl: nfl(id), age: P[id] ? P[id].age || '' : '', status: ir.includes(id) ? 'IR' : taxi.includes(id) ? 'Taxi' : i >= 0 ? `Starter (${SLOTS[i]})` : 'Bench', injury: P[id] ? P[id].injury_status || '' : '', id }); }
+  }
+  sheet('Rosters', [['Team', 'team', 22], ['Player', 'player', 24], ['Pos', 'pos', 6], ['NFL', 'nfl', 6], ['Age', 'age', 6], ['Status', 'status', 18], ['Injury', 'injury', 12], ['Player id', 'id', 10]], rosterRows);
+  // Lineups by week, with points where scored
+  const res = Object.values(C.results || {}).sort((a, b) => a.week - b.week);
+  const luRows = [];
+  for (const [k, doc] of Object.entries(C.lineups || {})) {
+    const [season, wk] = k.split('-w'), rr = res.find(r => String(r.season) === season && +r.week === +wk);
+    for (const [t, slots] of Object.entries(doc.teams || {})) (slots || []).forEach((id, i) => {
+      const x = rr && rr.teams && rr.teams[t]; luRows.push({ season, week: +wk, team: team(t), slot: SLOTS[i] || '', player: pl(id) || '(empty)', pos: pos(id), nfl: nfl(id), pts: x && x.starters && x.starters[i] === id ? x.points[i] : '' }); });
+  }
+  for (const [t, slots] of Object.entries(LU.teams || {})) (slots || []).forEach((id, i) => luRows.push({ season: 'current', week: 'standing', team: team(t), slot: SLOTS[i] || '', player: pl(id) || '(empty)', pos: pos(id), nfl: nfl(id), pts: '' }));
+  sheet('Lineups', [['Season', 'season', 8], ['Week', 'week', 8], ['Team', 'team', 22], ['Slot', 'slot', 11], ['Player', 'player', 24], ['Pos', 'pos', 6], ['NFL', 'nfl', 6], ['Points', 'pts', 8, '0.00']], luRows);
+  // Results: Hub weeks plus the placeholder weeks that came before them
+  const resultRows = [];
+  const sm = F.sampleMatchups || {}, start = R.startWeek || 99;
+  for (const [w, rows] of Object.entries(sm)) if (+w < start) for (const m of rows) {
+    if (!m.points) continue; const o = rows.find(x => x.matchup_id === m.matchup_id && x.roster_id !== m.roster_id); if (!o) continue;
+    resultRows.push({ season: '2026', week: +w, kind: 'placeholder', team: team(m.roster_id), opp: team(o.roster_id), pts: m.points, opppts: o.points, result: m.points > o.points ? 'W' : m.points < o.points ? 'L' : 'T', status: 'placeholder league' });
+  }
+  for (const r of res) for (const [t, x] of Object.entries(r.teams || {})) { const o = (r.teams || {})[String(x.opp)] || {};
+    resultRows.push({ season: r.season, week: r.week, kind: r.kind || 'regular', team: team(t), opp: team(x.opp), pts: x.pts, opppts: o.pts ?? '', result: o.pts == null ? '' : x.pts > o.pts ? 'W' : x.pts < o.pts ? 'L' : 'T', status: r.official ? 'official' : r.final ? 'final' : 'in progress' }); }
+  sheet('Results', [['Season', 'season', 8], ['Week', 'week', 7], ['Kind', 'kind', 12], ['Team', 'team', 22], ['Opponent', 'opp', 22], ['Points', 'pts', 9, '0.00'], ['Opp points', 'opppts', 10, '0.00'], ['W/L', 'result', 5], ['Status', 'status', 18]], resultRows);
+  // Standings, from the same rule the bracket uses
+  const results = {}; for (const r of res) results[r.week] = r;
+  const st = standingsFrom(String((L.state || {}).season || '2026'), { schedule: F.schedule || {}, sample: sm }, results, start, Number((L.state || {}).week || 99));
+  sheet('Standings', [['Rank', 'rank', 6], ['Team', 'team', 22], ['Division', 'div', 12], ['W', 'w', 5], ['L', 'l', 5], ['T', 't', 5], ['PF', 'pf', 10, '0.00'], ['PA', 'pa', 10, '0.00'], ['Games', 'gp', 7]],
+    st.map((s, i) => ({ rank: i + 1, team: team(s.team), div: (fr[String(s.team)] || {}).division || '', w: s.w, l: s.l, t: s.t, pf: s.pf, pa: s.pa, gp: s.gp })));
+  // Schedule
+  const schedRows = [];
+  for (const [season, S] of Object.entries(F.schedule || {})) if (S && S.weeks) for (const [w, games] of Object.entries(S.weeks)) for (const [a, b] of games)
+    schedRows.push({ season, status: S.status, week: +w, a: team(a), b: team(b), div: (fr[String(a)] || {}).division === (fr[String(b)] || {}).division ? 'yes' : '' });
+  sheet('Schedule', [['Season', 'season', 8], ['Status', 'status', 11], ['Week', 'week', 7], ['Team', 'a', 22], ['Opponent', 'b', 22], ['Division game', 'div', 13]], schedRows);
+  // Playoffs
+  const poRows = [];
+  if (BR) { for (const s of BR.seeds || []) poRows.push({ round: 'Seed', week: '', game: s.how || '', seed: s.seed, team: team(s.team), pts: '', winner: `${s.w}-${s.l}${s.t ? '-' + s.t : ''}, ${s.pf} PF` });
+    for (const rd of BR.rounds || []) for (const g of rd.games || []) for (const [t, sd, p] of [[g.a, g.aSeed, g.aPts], [g.b, g.bSeed, g.bPts]]) poRows.push({ round: rd.name, week: rd.week, game: g.label, seed: sd || '', team: team(t) || 'To be decided', pts: p ?? '', winner: g.winner ? (g.winner === t ? 'Won' : 'Lost') : '' }); }
+  sheet('Playoffs', [['Round', 'round', 16], ['Week', 'week', 7], ['Game', 'game', 18], ['Seed', 'seed', 6], ['Team', 'team', 22], ['Points', 'pts', 9, '0.00'], ['Result', 'winner', 22]], poRows);
+  // Drafts and every pick
+  const drafts = Object.entries(C.drafts || {});
+  sheet('Drafts', [['Draft id', 'id', 24], ['Name', 'name', 26], ['Kind', 'kind', 9], ['Mode', 'mode', 9], ['Status', 'status', 9], ['Official', 'official', 9], ['Rounds', 'rounds', 7], ['Picks made', 'picks', 10], ['Created', 'created', 18, DT], ['Order', 'order', 60]],
+    drafts.map(([id, d]) => ({ id, name: d.name, kind: d.kind, mode: d.mode || (d.practice ? 'mock' : 'official'), status: d.status, official: d.official ? 'yes' : '', rounds: d.rounds, picks: (d.picks || []).length, created: when(d.created), order: (d.teams || []).map(team).join(', ') })));
+  const pickRows = [];
+  for (const [id, d] of drafts) (d.picks || []).forEach((p, n) => { const T = (d.teams || []).length || 12;
+    pickRows.push({ draft: d.name, id, overall: n + 1, round: Math.floor(n / T) + 1, pick: n % T + 1, team: team(p.t), player: pl(p.p), pos: pos(p.p), nfl: nfl(p.p), by: p.by || '', at: when(p.at) }); });
+  sheet('Draft picks', [['Draft', 'draft', 26], ['Draft id', 'id', 24], ['Overall', 'overall', 8], ['Round', 'round', 7], ['Pick', 'pick', 6], ['Team', 'team', 22], ['Player', 'player', 24], ['Pos', 'pos', 6], ['NFL', 'nfl', 6], ['How', 'by', 10], ['Time', 'at', 18, DT]], pickRows);
+  // Transactions, trades, claims, FAAB, picks
+  sheet('Transactions', [['Time', 'at', 18, DT], ['Week', 'leg', 7], ['Type', 'type', 11], ['Teams', 'teams', 30], ['Added', 'adds', 40], ['Dropped', 'drops', 40], ['Picks', 'picks', 40], ['Bid', 'bid', 6]],
+    Object.values(C.transactions || {}).sort((a, b) => a.created - b.created).map(x => ({ at: when(x.created), leg: x.leg, type: x.type, teams: (x.roster_ids || []).map(team).join(' / '),
+      adds: Object.entries(x.adds || {}).map(([p, t]) => `${pl(p)} → ${team(t)}`).join('; '), drops: Object.entries(x.drops || {}).map(([p, t]) => `${pl(p)} (from ${team(t)})`).join('; '),
+      picks: (x.draft_picks || []).map(p => `${p.season} R${p.round} (${team(p.roster_id)}) → ${team(p.owner_id)}`).join('; '), bid: (x.settings || {}).waiver_bid ?? '' })));
+  const assets = a => [...((a || {}).players || []).map(pl), ...((a || {}).picks || []).map(p => `${p.season} R${p.round} (${team(p.roster_id)})`)].join('; ');
+  sheet('Trades', [['Trade id', 'id', 22], ['Status', 'status', 11], ['From', 'from', 22], ['To', 'to', 22], ['From sends', 'give', 40], ['To sends', 'get', 40], ['Drops', 'drops', 30], ['Offered', 'at', 18, DT], ['Review until', 'rev', 18, DT], ['Note', 'note', 40]],
+    Object.entries(C.trades || {}).map(([id, t]) => ({ id, status: t.status, from: team(t.from), to: team(t.to), give: assets(t.give), get: assets(t.get), drops: [...(t.dropsFrom || []), ...(t.dropsTo || [])].map(pl).join('; '), at: when(t.at), rev: when(t.reviewUntil), note: t.note || '' })));
+  sheet('Waiver claims', [['Team', 'team', 22], ['Player', 'player', 24], ['Bid', 'bid', 6], ['Drop', 'drop', 24], ['Status', 'status', 11], ['Note', 'note', 40], ['Placed', 'at', 18, DT], ['Settles', 'until', 18, DT], ['Settled', 'done', 18, DT]],
+    Object.values(C.claims || {}).sort((a, b) => a.at - b.at).map(c => ({ team: team(c.team), player: pl(c.player), bid: c.bid, drop: pl(c.drop), status: c.status, note: c.note || '', at: when(c.at), until: when(c.until), done: when(c.done) })));
+  sheet('FAAB', [['Team', 'team', 22], ['Spent', 'spent', 8], ['Left', 'left', 8], ['Season', 'season', 8]],
+    Object.keys(fr).map(t => ({ team: team(t), spent: (FAAB.spent || {})[t] || 0, left: 100 - ((FAAB.spent || {})[t] || 0), season: FAAB.season || '' })));
+  const onWaivers = Object.entries(W).map(([p, v]) => ({ player: pl(p), from: team(v.from), until: when(v.until) }));
+  sheet('On waivers', [['Player', 'player', 24], ['Dropped by', 'from', 22], ['Clears', 'until', 18, DT]], onWaivers);
+  sheet('Pick ownership', [['Season', 'season', 8], ['Round', 'round', 7], ['Original team', 'orig', 22], ['Owner', 'owner', 22], ['From', 'prev', 22]],
+    PK.map(p => ({ season: p.season, round: p.round, orig: team(p.roster_id), owner: team(p.owner_id), prev: team(p.previous_owner_id) })));
+  // History, ledger, announcements, notes
+  const H = (F.history || {}).seasons || [];
+  sheet('Season history', [['Season', 'season', 8], ['Champion', 'champ', 22], ['Runner-up', 'ru', 22], ['Third', 'third', 22], ['Division winners', 'divs', 40], ['Team', 'team', 22], ['GM', 'gm', 18], ['W', 'w', 5], ['L', 'l', 5], ['PF', 'pf', 10]],
+    H.flatMap(s => Object.entries(s.teams || {}).map(([t, e]) => ({ season: s.season, champ: team(s.champion), ru: team(s.runnerUp), third: team(s.third), divs: (s.divisionWinners || []).map(team).join(', '), team: team(t), gm: e.gmName || '', w: e.wins, l: e.losses, pf: e.pf }))));
+  const led = Object.entries(C.ledger || {}), voided = new Set(led.filter(([, e]) => e.kind === 'void').map(([, e]) => e.ref));
+  sheet('Ledger', [['Time', 'at', 18, DT], ['Season', 'season', 8], ['Kind', 'kind', 9], ['Team', 'team', 22], ['Amount', 'amount', 9, '$#,##0.00'], ['Prize', 'prize', 14], ['Week', 'week', 7], ['Note', 'note', 40], ['Voided', 'void', 8], ['Entry id', 'id', 22]],
+    led.sort((a, b) => String(a[1].at).localeCompare(String(b[1].at))).map(([id, e]) => ({ at: when(e.at), season: e.season, kind: e.kind, team: team(e.team), amount: e.amount, prize: e.prize || '', week: e.week ?? '', note: e.note || '', void: voided.has(id) ? 'yes' : '', id })));
+  sheet('Announcements', [['Time', 'at', 18, DT], ['Title', 'title', 30], ['Message', 'body', 80]], Object.values(C.announcements || {}).map(a => ({ at: when(a.at), title: a.title, body: a.body })));
+  sheet('Notes', [['Time', 'at', 18, DT], ['To team', 'team', 22], ['Title', 'title', 30], ['Message', 'body', 80]], Object.values(C.notes || {}).map(n => ({ at: when(n.at), team: team(n.team), title: n.title, body: n.body })));
+  sheet('Scoring', [['Stat', 'k', 24], ['Points', 'v', 9]], Object.entries((F.scoring || {}).settings || {}).filter(([, v]) => v).map(([k, v]) => ({ k, v })));
+  const seen = new Set([...Object.values(R.rosters || {}).flat(), ...pickRows.map(() => null)]);
+  for (const [, d] of drafts) for (const p of d.picks || []) seen.add(p.p);
+  sheet('Players', [['Player id', 'id', 10], ['Name', 'name', 24], ['Pos', 'pos', 6], ['NFL', 'nfl', 6], ['Age', 'age', 6], ['Exp', 'exp', 5], ['College', 'college', 18]],
+    [...seen].filter(id => id && P[id]).map(id => ({ id, name: P[id].full_name, pos: pos(id), nfl: nfl(id), age: P[id].age || '', exp: P[id].years_exp ?? '', college: P[id].college || '' })));
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}
+
+async function saveBackup(db) {
+  const { getStorage } = require('firebase-admin/storage');
+  const L = await collectLeague(db), xlsx = await buildWorkbook(L), json = Buffer.from(JSON.stringify(L));
+  const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
+  const bucket = getStorage().bucket();
+  const dirs = [day, 'latest'];
+  // Once the Blitz Bowl is official, a permanent "season final" copy is saved once: that season's record book.
+  const br = L.collections.league.bracket, fin = br && br.rounds && br.rounds[2] && br.rounds[2].games[0];
+  if (br && br.champion && fin && fin.final) {
+    const name = `season-${br.season}-final`, [exists] = await bucket.file(`backups/${name}/blitz-league.xlsx`).exists();
+    if (!exists) dirs.push(name);
+  }
+  for (const dir of dirs) {
+    await bucket.file(`backups/${dir}/blitz-league.xlsx`).save(xlsx, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    await bucket.file(`backups/${dir}/blitz-league.json`).save(json, { contentType: 'application/json' });
+  }
+  return { day, dirs, xlsxBytes: xlsx.length, jsonBytes: json.length };
+}
+
+exports.leagueBackup = onSchedule({ schedule: '30 2 * * *', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 2, timeoutSeconds: 300, memory: '1GiB', maxInstances: 1 }, async () => {
+  await saveBackup(getFirestore());
+});
+
+// The commissioner's copy: "now" builds a fresh workbook, "list" names the saved nights, "get" returns one of them.
+exports.backup = onCall({ region: 'us-central1', maxInstances: 2, timeoutSeconds: 300, memory: '1GiB' }, async req => {
+  const uid = req.auth && req.auth.uid; if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const db = getFirestore(), roles = (await db.doc('config/roles').get()).data() || {};
+  if (!(roles.commish || []).includes(uid)) throw new HttpsError('permission-denied', 'Only the commissioner can download the league backup.');
+  const a = (req.data || {}).action;
+  if (a === 'now') { const L = await collectLeague(db); return { name: `blitz-league-${new Date().toISOString().slice(0, 10)}.xlsx`, data: (await buildWorkbook(L)).toString('base64') }; }
+  const { getStorage } = require('firebase-admin/storage'), bucket = getStorage().bucket();
+  if (a === 'list') { const [files] = await bucket.getFiles({ prefix: 'backups/' }), dirs = [...new Set(files.map(f => f.name.split('/')[1]))];
+    return { finals: dirs.filter(d => /^season-\d{4}-final$/.test(d)).sort().reverse(), days: dirs.filter(d => /^\d{4}-\d\d-\d\d$/.test(d)).sort().reverse() }; }
+  if (a === 'get') {
+    const day = String((req.data || {}).day || ''), kind = (req.data || {}).kind === 'json' ? 'json' : 'xlsx';
+    if (!/^(\d{4}-\d\d-\d\d|season-\d{4}-final)$/.test(day)) throw new HttpsError('invalid-argument', 'Pick a saved copy.');
+    const [buf] = await bucket.file(`backups/${day}/blitz-league.${kind}`).download();
+    return { name: `blitz-league-${day}.${kind}`, data: buf.toString('base64') };
+  }
+  throw new HttpsError('invalid-argument', 'Unknown action.');
+});
+
+// Tests only (never set in production): the pure helpers.
+if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts, collectLeague, buildWorkbook };

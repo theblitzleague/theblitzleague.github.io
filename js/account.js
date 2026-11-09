@@ -212,6 +212,8 @@ function commishView() {
       <div class="sub">Sent to the league</div><div id="annlist" class="acct-list"></div>
       <div class="sub">Sent to specific GMs</div><div id="notelist" class="acct-list"></div>`, 's7')}
     ${panel('Commissioner', 'Link accounts to teams', `<p class="acct-note">Everyone who has signed in. Pick each GM's team; they get announcements once linked.</p><div id="members" class="acct-list"></div>${note('memmsg')}`, 's5')}
+    ${panel('Commissioner', 'League backup', `<p class="acct-note">Everything the League has, as an Excel workbook: franchises, members, rosters, every week's lineups and scores, standings, schedules, playoffs, drafts and every pick, transactions, trades, waiver claims, FAAB, pick ownership, history and the ledger. A copy is saved every night at 2:30 AM Central and kept for good, plus a permanent season-final copy once each Blitz Bowl is official.</p>
+      <div class="acct-row"><button class="btn primary" id="bk-now">Download the workbook now</button><select id="bk-day" aria-label="Saved night"><option value="">Saved nights…</option></select><button class="btn" id="bk-get">Download that night</button><button class="btn" id="bk-json">That night's raw data (.json)</button></div>${note('bkmsg')}`, 's12')}
     ${panel('Commissioner', 'Scheduled reminders', `<p class="acct-note">Messages the site sends on its own. Sent ones appear under "Sent to specific GMs" as Automatic reminder.</p><div id="sched" class="acct-list"><p class="pmeta">Loading…</p></div>`, 's12')}
   </div>`;
   const toTeams = () => document.querySelector('input[name="to"]:checked').value === 'teams';
@@ -248,6 +250,7 @@ function commishView() {
     };
   }, e => say('annmsg', `Couldn't load sent messages (${nice(e)}).`, true)));
   members();
+  backupPanel();
   scheduled();
 }
 
@@ -345,3 +348,21 @@ UI.boot('<strong>Account</strong>', async model => {
     catch (e) { $('content').innerHTML = `<div class="error">Couldn't load your account (${esc(nice(e))}).</div>`; console.error(e); }
   });
 });
+
+// League backup (functions/index.js "backup"): a fresh workbook now, or one of the nightly copies.
+async function backupPanel() {
+  const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js');
+  const call = httpsCallable(getFunctions(app, 'us-central1'), 'backup', { timeout: 300000 });
+  const save = (name, b64, type) => { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([u], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); };
+  const XL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  const run = async (btn, label, fn) => { btn.disabled = true; const t = btn.textContent; btn.textContent = label; try { await fn(); } catch (e) { say('bkmsg', `Couldn't do that (${nice(e)}).`, true); } finally { btn.disabled = false; btn.textContent = t; } };
+  call({ action: 'list' }).then(r => { const days = r.data.days || [], finals = r.data.finals || [];
+    $('bk-day').innerHTML = `<option value="">${days.length || finals.length ? 'Saved copies…' : 'No saved copies yet'}</option>`
+      + finals.map(d => `<option value="${d}">${d.replace(/^season-(\d{4})-final$/, '$1 season final')}</option>`).join('') + days.map(d => `<option>${d}</option>`).join(''); }).catch(() => {});
+  $('bk-now').onclick = () => run($('bk-now'), 'Building…', async () => { const r = (await call({ action: 'now' })).data; save(r.name, r.data, XL); say('bkmsg', `Downloaded ${r.name}.`); });
+  const get = kind => run(kind === 'json' ? $('bk-json') : $('bk-get'), 'Downloading…', async () => {
+    const day = $('bk-day').value; if (!day) { say('bkmsg', 'Pick a saved night first.', true); return; }
+    const r = (await call({ action: 'get', day, kind })).data; save(r.name, r.data, kind === 'json' ? 'application/json' : XL); say('bkmsg', `Downloaded ${r.name}.`); });
+  $('bk-get').onclick = () => get('xlsx'); $('bk-json').onclick = () => get('json');
+}

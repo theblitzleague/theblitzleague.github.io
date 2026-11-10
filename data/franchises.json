@@ -88,28 +88,31 @@
       }
     },
     "2": {
-      "location": "Las Vegas",
-      "nickname": null,
-      "abbr": "LV",
+      "location": "Reno",
+      "nickname": "Spades",
+      "abbr": "RNO",
       "division": "west",
-      "placeholder": true,
+      "placeholder": false,
       "founded": 2026,
       "colors": {
-        "primary": "#2B1F4A",
-        "secondary": "#C9A227",
-        "trim": "#F1F1F1"
+        "primary": "#0E4D36",
+        "secondary": "#D4A64A",
+        "trim": "#EFE4C8"
       },
       "helmet": {
-        "shell": "#2B1F4A",
-        "facemask": "#F1F1F1",
-        "stripe": "#C9A227",
-        "stripeTrim": "#F1F1F1"
+        "shell": "#0E4D36",
+        "facemask": "#D4A64A",
+        "stripe": "#D4A64A",
+        "stripeTrim": "#EFE4C8"
       },
       "logos": {
-        "primary": null,
+        "primary": "assets/franchises/rno/crest.webp",
+        "primaryWide": true,
         "mark": null,
         "wordmark": null,
-        "helmetDecal": null
+        "helmetDecal": null,
+        "alternates": {},
+        "matchup": "assets/franchises/rno/script.webp"
       },
       "gm": {
         "name": null,
@@ -118,7 +121,39 @@
         "portrait": null,
         "bio": null
       },
-      "pastGms": []
+      "pastGms": [],
+      "banner": "assets/franchises/rno/banner.webp",
+      "_bannerNote": "Reno skyline / arch banner from the commissioner, 2026-11-10 (original in assets/source/reno/). Shown faded behind the team-page hero.",
+      "palette": [
+        [
+          "Casino Green",
+          "#0E4D36"
+        ],
+        [
+          "Gold",
+          "#D4A64A"
+        ],
+        [
+          "Cream",
+          "#EFE4C8"
+        ],
+        [
+          "Black",
+          "#0B0B0F"
+        ]
+      ],
+      "_colorsNote": "Taken from the commissioner's helmet render, 2026-11-10 (green shell, gold mask and spade, cream stripe). Interim until a brand sheet arrives.",
+      "helmetImages": {
+        "home": {
+          "right": "assets/franchises/rno/helmet-home-right.webp",
+          "left": "assets/franchises/rno/helmet-home-left.webp"
+        }
+      },
+      "_helmetNote": "Faceoff helmets from the commissioner, 2026-11-10: right- and left-facing renders (originals assets/source/reno/helmet-{right,left}-src.webp; first single render retired to assets/source/reno/retired/). Helmets are faceoff art only (matchups, home slider). No away set: away games wear these (js/helmet.js fallback).",
+      "_logosNote": "2026-11-10 from the commissioner: team crest = primary, shown on the team page in place of the helmet (primaryWide: the crest is 2:1, so small spots keep the RNO shield). Script logo (clean gold) = logos.matchup, the team badge on matchup screens (matchup page header, team-page matchup card). Originals in assets/source/reno/.",
+      "logoStatus": {
+        "alternates": "Final"
+      }
     },
     "3": {
       "location": "Seattle",

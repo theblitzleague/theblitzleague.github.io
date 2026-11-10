@@ -57,10 +57,11 @@
     const t = T, d = t.division, now = t.games.find(g => g.live);
     const gm = t.f.gm || {};
     const wm = t.f.logos && t.f.logos.primary;
-    return `<section class="hero">${wm ? `<img class="hero-watermark" src="${esc(wm)}" alt="" aria-hidden="true">` : ''}<div class="wrap">
-  ${helmetHTML(t.f, { facing: 'right' })}
-  <div class="id-block">
-    ${t.f.logos && t.f.logos.primary ? `<img class="mark logo-img" src="${esc(t.f.logos.primary)}" alt="${esc(teamName(t))} primary logo">` : markSVG(t.f)}
+    const crest = t.f.logos && t.f.logos.primaryWide ? t.f.logos.primary : null;   // a wide crest takes the helmet's spot (helmets are for faceoffs)
+    return `<section class="hero${t.f.banner ? ' has-banner' : ''}">${t.f.banner ? `<img class="hero-banner" src="${esc(t.f.banner)}" alt="" aria-hidden="true">` : ''}${wm && !t.f.banner ? `<img class="hero-watermark" src="${esc(wm)}" alt="" aria-hidden="true">` : ''}<div class="wrap">
+  ${crest ? `<img class="hero-crest" src="${esc(crest)}" alt="${esc(teamName(t))} crest">` : helmetHTML(t.f, { facing: 'right' })}
+  <div class="id-block${crest ? ' no-mark' : ''}">
+    ${crest ? '' : t.f.logos && t.f.logos.primary ? `<img class="mark logo-img" src="${esc(t.f.logos.primary)}" alt="${esc(teamName(t))} primary logo">` : markSVG(t.f)}
     <div><span class="eyebrow">${divMarkHTML(d)}${esc(d.name)} · ${esc(d.region)}</span><h1>${esc(teamName(t))}</h1></div>
     <div class="nick">${t.f.nickname ? `Est. ${t.f.founded}` : `Franchise name <em>to be decided</em> · Est. ${t.f.founded}`}</div>
     <div class="hero-stats">
@@ -163,9 +164,9 @@
 
   function duel(a, b) {
     return `<div class="duel" style="--l:${wash(a.f)};--r:${wash(b.f)}">
-  <div class="side">${markSVG(a.f)}<div><div class="name">${esc(a.f.location)}</div><div class="rec">${rec(a)} · ${ord(a.divRank)} ${esc(a.division.name)}</div></div></div>
+  <div class="side">${UI.matchupLogo(a.f, 'mark', markSVG)}<div><div class="name">${esc(a.f.location)}</div><div class="rec">${rec(a)} · ${ord(a.divRank)} ${esc(a.division.name)}</div></div></div>
   <div class="mid"><div class="at">VS</div></div>
-  <div class="side r">${markSVG(b.f)}<div><div class="name">${esc(b.f.location)}</div><div class="rec">${rec(b)} · ${ord(b.divRank)} ${esc(b.division.name)}</div></div></div>
+  <div class="side r">${UI.matchupLogo(b.f, 'mark', markSVG)}<div><div class="name">${esc(b.f.location)}</div><div class="rec">${rec(b)} · ${ord(b.divRank)} ${esc(b.division.name)}</div></div></div>
 </div>`;
   }
 

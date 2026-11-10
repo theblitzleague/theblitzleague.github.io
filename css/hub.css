@@ -1555,3 +1555,23 @@ div.lu-empty .lu-plus { border-style: dotted; }
   .lhero.home .wrap:has(.lhero-mark) .lhero-mark, .lhero.home .wrap:has(.lhero-mark) .lhero-divs { grid-column: 1; justify-self: stretch; }
 }
 @media (max-width: 760px) { .lhero-wordmark { height: auto; width: min(100%, 420px); } .lhero-wm .eyebrow { font-size: 11px; } }
+
+/* Team banner (franchises.json "banner"): a city photo faded in behind the team-page hero. */
+.hero-banner { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 60%;
+  opacity: .42; pointer-events: none; z-index: 0; filter: saturate(.9);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.35) 22%, #000 55%);
+          mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.35) 22%, #000 55%); }
+.hero.has-banner::after { background:
+  linear-gradient(180deg, rgba(0,0,0,.25), transparent 35%, rgba(0,0,0,.55)),
+  repeating-linear-gradient(90deg, transparent 0 79px, rgba(255,255,255,.02) 79px 80px); }
+@media (max-width: 760px) { .hero-banner { opacity: .3; object-position: 78% 50%;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.5) 60%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.5) 60%, transparent 100%); } }
+/* Team crest (logos.primaryWide): the team page's primary logo, in the helmet's spot. */
+.hero-crest { width: clamp(220px, 24vw, 360px); height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,.6)); }
+.id-block.no-mark { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 760px) { .hero-crest { width: min(78%, 300px); justify-self: start; } }
+/* Matchup badge (logos.matchup): wide script logos need more width than a square mark. */
+.mlogo.mu-logo { width: clamp(130px, 12vw, 190px); }
+.duel .side .mark.mu-logo { width: 104px; height: 52px; }
+@media (max-width: 760px) { .mside .mlogo.mu-logo { width: 96px; } .duel .side .mark.mu-logo { width: 76px; height: 38px; } }

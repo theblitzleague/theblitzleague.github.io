@@ -220,6 +220,12 @@
       "lon": -107.55
     },
     {
+      "name": "Reno",
+      "region": "west",
+      "lat": 39.53,
+      "lon": -119.81
+    },
+    {
       "name": "Las Vegas",
       "region": "west",
       "lat": 36.17,

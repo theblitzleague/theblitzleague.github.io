@@ -52,6 +52,12 @@
     return src ? `<img class="${cls || 'mark'} logo-img" src="${esc(src)}" alt="${esc(f.location)} logo">` : markSVG(f, cls);
   }
 
+  // Matchup screens: a team's matchup badge (logos.matchup, e.g. a script logo), else the fallback.
+  function matchupLogo(f, cls, fallback) {
+    const src = f.logos && f.logos.matchup;
+    return src ? `<img class="${cls || 'mark'} logo-img mu-logo" src="${esc(src)}" alt="${esc(f.location)}${f.nickname ? ' ' + esc(f.nickname) : ''}">` : fallback(f, cls);
+  }
+
   // League-page header: shield, title, one-line summary, division marks.
   function leagueHero(M, eyebrow, title, sub) {
     const lg = M.league;
@@ -325,5 +331,5 @@
     addEventListener('touchcancel', stop);
   })();
 
-  window.UI = { myTeam, announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
+  window.UI = { myTeam, announcements, markSeen, annTime, POS_ORDER, pid, divInk, SIL, esc, f1, f2, ord, SLOT_LABEL, SLOT_SHORT, lum, shot, teamName, rec, status, pmeta, wash, accentFor, applyColors, primaryLogo, matchupLogo, leagueHero, tabsHTML, boot, badge, allGames, money, cash, honorOnly, prizes, weeklyWinners, PRIZE_LABEL, line, oddsHTML, billingHTML, broadcastHTML, netWord, mlTxt };
 })();

@@ -62,7 +62,7 @@
   // A franchise with finished renders (f.helmetImages[variant][facing]) gets those instead of the recolor.
   window.helmetHTML = function (f, opts) {
     const facing = (opts && opts.facing) || 'right', variant = (opts && opts.variant) || 'home';
-    const photo = f.helmetImages && f.helmetImages[variant] && f.helmetImages[variant][facing];
+    const imgs = f.helmetImages || {}, photo = (imgs[variant] || (variant === 'away' && !f.helmetAway && imgs.home) || {})[facing];   // no away set: wear the home render
     if (photo) return `<span class="helmet photo" role="img" aria-label="${esc(f.location)} ${variant} helmet"><img class="shell" src="${esc(photo)}" alt=""></span>`;
     const h = (variant === 'away' && f.helmetAway) || f.helmet || {};
     const decal = f.logos && f.logos.helmetDecal;
@@ -85,7 +85,7 @@
 
   /* Placeholder team mark: a shield with the abbreviation, until real logos arrive. */
   window.markSVG = function (f, cls) {
-    const m = f.logos && (f.logos.mark || f.logos.primary);
+    const m = f.logos && (f.logos.mark || (!f.logos.primaryWide && f.logos.primary));   // a wide crest is unreadable at mark size
     if (m) return `<img class="${cls || 'mark'} logo-img" src="${esc(m)}" alt="${esc(f.location)}${f.nickname ? ' ' + esc(f.nickname) : ''}">`;
     const len = String(f.abbr).length;
     return `<svg class="${cls || 'mark'}" viewBox="0 0 100 104" role="img" aria-label="${esc(f.location)}">

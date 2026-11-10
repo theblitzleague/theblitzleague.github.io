@@ -20,7 +20,7 @@
   function side(t, dir) {
     const gm = (t.f.gm && t.f.gm.name) || 'Open seat';
     return `<div class="mside ${dir}" style="--ink:${accentFor(t.f)}">
-      ${primaryLogo(t.f, 'mlogo')}
+      ${UI.matchupLogo(t.f, 'mlogo', primaryLogo)}
       <div class="mid-id">
         <span class="eyebrow">${divMarkHTML(t.division)}${esc(t.division.name)}</span>
         <a class="mname" href="team.html?team=${t.id}">${esc(t.f.location)}${t.f.nickname ? `<small>${esc(t.f.nickname)}</small>` : ''}</a>

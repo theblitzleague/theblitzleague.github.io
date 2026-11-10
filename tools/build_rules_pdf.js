@@ -12,7 +12,7 @@ let body = frag.replace(/<!--.*?-->\n?/, '').replace(/<script type="application\
 const introMatch = body.match(/^\s*<p>[\s\S]*?<\/p>\n?/);
 const intro = introMatch ? introMatch[0] : '';
 body = body.slice(intro.length);
-const seal = 'data:image/webp;base64,' + fs.readFileSync(path.join(ROOT, 'assets', 'league', 'blitz-shield.webp')).toString('base64');
+const seal = 'data:image/webp;base64,' + fs.readFileSync(path.join(ROOT, 'assets', 'league', 'blitz-league.webp')).toString('base64');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const page = `<!doctype html><html><head><meta charset="utf-8">

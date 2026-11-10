@@ -48,7 +48,11 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 800; text-transform:
 .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg-2); border-bottom: 1px solid var(--line); }
 .topbar .wrap { display: flex; align-items: center; gap: 22px; height: 56px; }
 .brand { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; white-space: nowrap; }
-.brand-logo { height: 34px; width: auto; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+.brand-logo { height: 36px; width: auto; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+/* The league logo, centered and large above the bar. It scrolls away; the bar below stays pinned with the helmet. */
+.masthead { display: flex; justify-content: center; padding: 18px 16px 14px; background: radial-gradient(ellipse at 50% 60%, rgba(214,32,39,.16), transparent 62%), var(--bg-2); }
+.masthead a { display: block; }
+.masthead-logo { display: block; height: clamp(96px, 13vw, 168px); width: auto; max-width: calc(100vw - 32px); object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,.55)); }
 .brand b { color: var(--red); font-weight: 700; }
 .nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
 .nav::-webkit-scrollbar { display: none; }
@@ -316,7 +320,9 @@ tr.group td { background: var(--bg-2); font-family: var(--font-display); font-si
   .id-block .mark { width: 48px; height: 50px; }
   .id-block .mark.logo-img { width: 110px; height: auto; }
   .id-block h1 { font-size: min(9vw, 44px); }
-  .brand-logo { height: 26px; }
+  .brand-logo { height: 30px; }
+  .masthead { padding: 12px 16px 10px; }
+  .masthead-logo { height: auto; width: min(88vw, 420px); }
   .hero-stats { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
   .hero-stats > div { border-bottom: 1px solid var(--line-2); }
   .hero-stats > div:nth-child(3n) { border-right: 0; }

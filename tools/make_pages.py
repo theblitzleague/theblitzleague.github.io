@@ -67,8 +67,9 @@ TPL = """<!doctype html>
 <meta name="blitz-trades" content="{trades}">
 </head>
 <body{body}>
+<div class="masthead"><a href="./" aria-label="Blitz Hub home"><img class="masthead-logo" src="assets/league/blitz-league-horizontal.webp" alt="The Blitz League" width="964" height="420"></a></div>
 <header class="topbar"><div class="wrap">
-  <a class="brand" href="./"><img class="brand-logo" src="assets/league/blitz-hub.webp" alt="Blitz Hub" width="672" height="132"></a>
+  <a class="brand" href="./" aria-label="Home"><img class="brand-logo" src="assets/league/helmet-mark.webp" alt="" width="437" height="512"></a>
   <nav class="nav" aria-label="League">
     {nav}
   </nav>

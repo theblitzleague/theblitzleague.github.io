@@ -15,7 +15,7 @@
     document.getElementById('content').innerHTML = `
       <section class="panel rb">
         <header class="rb-head">
-          <img class="rb-seal" src="assets/league/blitz-shield.webp" alt="The Blitz League seal" width="160" height="200">
+          <img class="rb-seal" src="assets/league/blitz-league.webp" alt="The Blitz League" width="874" height="900">
           <div><span class="eyebrow">Issued by the Commissioner's Office</span>
             <h1>${esc(meta.title || 'Official Rules of The Blitz League')}</h1>
             ${meta.adopted ? `<p class="pmeta">Adopted ${esc(meta.adopted)}. In effect from publication on the League Website (13-2-1).</p>` : ''}

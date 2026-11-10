@@ -83,6 +83,7 @@
   "draftRounds": 4,
   "futurePickSeasons": 3,
   "logo": "assets/league/blitz-league.webp",
+  "wordmark": "assets/league/blitz-league-horizontal.webp",
   "trophy": "assets/league/championship-trophy.webp",
   "_trophyNote": "Championship trophy from the commissioner, 2026-11-04. trophy = 640px web copy; championship-trophy-full.webp is the original 1024x1536.",
   "awardTrophies": {

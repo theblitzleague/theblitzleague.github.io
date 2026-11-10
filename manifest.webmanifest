@@ -1,7 +1,7 @@
 {
   "name": "Blitz Hub",
   "short_name": "Blitz Hub",
-  "description": "Blitz Hub: standings, matchups, schedule, awards and Blitz Network news for The Blitz League, a 12-team Sleeper dynasty league.",
+  "description": "Blitz Hub: standings, matchups, schedule, awards and Blitz Network news for The Blitz League, a 12-team dynasty league.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

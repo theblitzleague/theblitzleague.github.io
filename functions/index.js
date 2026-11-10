@@ -827,17 +827,15 @@ exports.waiverRun = onSchedule({ schedule: 'every 10 minutes', region: 'us-centr
 const TRADE_REVIEW_MS = 2 * 864e5, TRADE_DEADLINE_WEEK = 11, PICK_SEASONS = 3, PICK_ROUNDS = 4;
 const pickKey = p => `${p.season}-${p.round}-${p.roster_id}`;
 function pickOwner(traded, p) { const t = (traded || []).find(x => pickKey(x) === pickKey(p)); return t ? t.owner_id : p.roster_id; }
-// The deadline (8-3-3): closed from the end of the last NFL game of Week 11 until the championship game (league week 17,
-// three playoff rounds after the 14-week regular season) is final. Open again from then through the offseason.
-async function deadlinePassed() {
+// The deadline (8-3-3): no trade is accepted from the end of the last NFL game of Week 11 until the championship game is
+// final, which rule 2-2-3 sets at 5 AM Central on the Tuesday after it (the Blitz Bowl winner in league/bracket).
+async function deadlinePassed(db) {
   const sb = await getJSON(`${ESPN_NFL}/scoreboard`), week = Number((sb.week || {}).number || 0), type = Number((sb.season || {}).type || 2);
   const allPost = (sb.events || []).length > 0 && (sb.events || []).every(e => e.status.type.state === 'post');
-  if (type !== 2) return { passed: false, week };                        // NFL postseason / offseason: open
-  if (week < TRADE_DEADLINE_WEEK) return { passed: false, week };
-  if (week === TRADE_DEADLINE_WEEK) return { passed: allPost, week };
-  if (week < 17) return { passed: true, week };
-  if (week === 17) return { passed: !allPost, week };
-  return { passed: false, week };
+  const after = type === 3 || (type === 2 && (week > TRADE_DEADLINE_WEEK || (week === TRADE_DEADLINE_WEEK && allPost)));
+  if (!after) return { passed: false, week };
+  const br = db ? (await db.doc('league/bracket').get()).data() : null;
+  return { passed: !(br && br.champion), week };
 }
 async function prepaid(db, team, season) {
   const s = await db.collection('ledger').where('season', '==', Number(season)).get();
@@ -906,7 +904,7 @@ async function tradesAct(db, uid, commish, myTeam, data) {
   if (data.action === 'veto') { if (!commish || T.status !== 'review') throw new HttpsError('failed-precondition', 'Only a trade in review can be vetoed, by the commissioner (rule 8-3-4).'); await ref.update({ status: 'vetoed', done: Date.now(), note: String(data.reason || 'Vetoed by the commissioner (rule 8-3-4).').slice(0, 300) }); return { ok: true }; }
   if (data.action === 'accept') {
     if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be accepted.');
-    const dl = await deadlinePassed();
+    const dl = await deadlinePassed(db);
     if (dl.passed) throw new HttpsError('failed-precondition', `The trade deadline has passed (rule 8-3-3: the last game of Week ${TRADE_DEADLINE_WEEK}); trading reopens when the championship game is final.`);
     const T2 = { ...T, dropsTo: [...new Set((data.drops || []).map(String))].slice(0, 10) };
     await checkTrade(db, T2, R, picks, P, state, { prepay: true });

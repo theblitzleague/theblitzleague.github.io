@@ -1538,3 +1538,4 @@ div.lu-empty .lu-plus { border-style: dotted; }
 .ns-game { display: flex; align-items: center; gap: 6px; font-size: 14px; } .ns-game em { color: var(--muted); font-style: normal; font-size: 12px; }
 .ns-game.div { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
 .ns-game .mini { width: 20px; height: 21px; }
+.tr-window { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--bg-2); border-radius: var(--radius); font-size: 14px; }

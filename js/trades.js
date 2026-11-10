@@ -42,6 +42,14 @@ async function load() {
   render();
 }
 
+// Where the trade window stands (rule 8-3-3): open until the last game of Week 11, closed until the Blitz Bowl is final.
+function windowText() {
+  const wk = +M.current, champ = M.bracket && M.bracket.champion;
+  if (wk < 11) return '<b>Trading is open</b> until the last game of Week 11 ends (rule 8-3-3).';
+  if (wk === 11) return '<b>Last week to trade:</b> trades must be accepted before the last game of Week 11 ends (rule 8-3-3).';
+  return champ ? '<b>Trading is open</b> for the offseason.' : '<b>The trade deadline has passed.</b> Offers can still be sent, but none can be accepted until the Blitz Bowl is final (rule 8-3-3).';
+}
+
 // ---------- another team's page: the offer builder ----------
 function builder(other) {
   const me = M.teams[myTeam], them = M.teams[other];
@@ -60,6 +68,7 @@ function builder(other) {
     ${over > 0 ? `<div class="tr-drops"><b>You'd have ${active(me).length - outCount + inCount} active players (most is ${ACTIVE_MAX}). Pick ${over} to drop when it goes through:</b>
       <div class="tr-list">${active(me).filter(id => !sel.give.has(id)).map(id => `<label class="tr-item"><input type="checkbox" data-side="drops" value="${esc(id)}"${sel.drops.has(id) ? ' checked' : ''}><span class="pos ${esc(P(id).position)}">${esc(P(id).position)}</span><span>${esc(P(id).full_name)}</span></label>`).join('')}</div></div>` : ''}
     <div class="tr-sum"><div><span class="eyebrow">You send</span>${assets(split('give'))}</div><div><span class="eyebrow">You get</span>${assets(split('get'))}</div></div>
+    <p class="tr-window">${windowText()}</p>
     <div class="acct-row"><input id="tr-note" maxlength="300" placeholder="Note to ${esc(tname(other))} (optional)"><button class="btn primary" data-tr="send">${counterOf ? 'Send counter offer' : 'Send offer'}</button>${counterOf ? '<button class="btn" data-tr="nocounter">Cancel counter</button>' : ''}</div>
     <p class="footnote">An accepted trade sits in a two-day review, then goes through (rule 8-3-2). Picks up to three seasons ahead can be traded; trading away a future pick needs that season's $50 prepay first (8-3-5). No trades are accepted after the last game of Week 11 until the championship is final (8-3-3).</p></section>`;
 }
@@ -82,7 +91,7 @@ function card(t) {
 function inbox() {
   const open = list.filter(t => t.status === 'offered'), review = list.filter(t => t.status === 'review'), done = list.filter(t => !['offered', 'review'].includes(t.status)).slice(0, 10);
   const sec = (title, items, empty) => `<section class="panel"><header><div><h2>${title}</h2></div><span class="aside">${items.length}</span></header>${items.length ? items.map(card).join('') : `<div class="empty">${empty}</div>`}</section>`;
-  return `<div class="tr-inbox">${sec('Open offers', open, 'No open offers. To make one, open another team and choose its Trades tab.')}${sec('In review', review, 'No trades in review.')}${sec('Recent', done, 'Nothing yet.')}</div>`;
+  return `<div class="tr-inbox"><p class="tr-window">${windowText()}</p>${sec('Open offers', open, 'No open offers. To make one, open another team and choose its Trades tab.')}${sec('In review', review, 'No trades in review.')}${sec('Recent', done, 'Nothing yet.')}</div>`;
 }
 
 function render() {

@@ -1575,3 +1575,23 @@ div.lu-empty .lu-plus { border-style: dotted; }
 .mlogo.mu-logo { width: clamp(130px, 12vw, 190px); }
 .duel .side .mark.mu-logo { width: 104px; height: 52px; }
 @media (max-width: 760px) { .mside .mlogo.mu-logo { width: 96px; } .duel .side .mark.mu-logo { width: 76px; height: 38px; } }
+/* Matchup hero: each team's color glows behind its own helmet, and a team banner photo (franchises.json "banner") fades in on its half. */
+.mhero { background:
+  radial-gradient(ellipse 34% 95% at 9% 55%, color-mix(in srgb, var(--lw) 80%, #000) 0%, color-mix(in srgb, var(--lw) 30%, transparent) 55%, transparent 100%),
+  radial-gradient(ellipse 34% 95% at 91% 55%, color-mix(in srgb, var(--rw) 80%, #000) 0%, color-mix(in srgb, var(--rw) 30%, transparent) 55%, transparent 100%),
+  var(--bg-2); }
+.mbg { position: absolute; top: 0; bottom: 0; width: 42%; z-index: 0; pointer-events: none; background-size: cover; opacity: .38; filter: saturate(.9); }
+.mbg.l { left: 0; background-position: 88% 60%;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.6) 50%, transparent 92%); mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.6) 50%, transparent 92%); }
+.mbg.r { right: 0; background-position: 88% 60%;
+  -webkit-mask-image: linear-gradient(270deg, #000 0%, rgba(0,0,0,.6) 50%, transparent 92%); mask-image: linear-gradient(270deg, #000 0%, rgba(0,0,0,.6) 50%, transparent 92%); }
+@media (max-width: 760px) { .mhero { background:
+  radial-gradient(ellipse 60% 40% at 25% 20%, color-mix(in srgb, var(--lw) 80%, #000), transparent 100%),
+  radial-gradient(ellipse 60% 40% at 75% 20%, color-mix(in srgb, var(--rw) 80%, #000), transparent 100%), var(--bg-2); }
+  .mbg { width: 60%; height: 45%; bottom: auto; } }
+/* Division games: the division logo instead of a text tag. */
+.billing .tags b.divgame { border: 0; background: none; padding: 0; display: inline-flex; }
+.divgame-mark { height: 46px; width: auto; max-width: 120px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
+.sc-mid .divgame-mark { height: 50px; }
+.sched-board .divgame-mark { height: 28px; }
+@media (max-width: 760px) { .divgame-mark { height: 38px; } }

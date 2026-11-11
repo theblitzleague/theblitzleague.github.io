@@ -294,7 +294,7 @@
     <a class="srow${g.live ? ' now' : ''}" href="matchup.html#w${g.week}-t${T.id}"><span class="w">W${g.week}</span>
       <div class="opp">${g.opp ? markSVG(g.opp.f) : ''}<div><div class="pname">${g.opp ? esc(g.opp.f.location) : 'TBD'}</div><div class="pmeta">${g.opp ? `${rec(g.opp)} · ${esc(g.opp.division.name)}` : ''}</div></div></div>
       <span class="res ${g.result || ''}">${g.result || (g.live ? '<span class="tag trade">Now</span>' : '')}</span>
-      <span class="score">${g.final ? `${f2(g.me.points)} - ${f2(g.oppRow.points)}` : g.live ? 'In progress' : 'Upcoming'}</span>
+      <span class="score">${g.final ? `${f2(g.me.points)} - ${f2(g.oppRow.points)}` : g.started ? 'In progress' : 'Upcoming'}</span>
     </a>`).join('')}</div>
 </section>`;
   }

@@ -154,7 +154,9 @@
     const L = M.teams[g.me.roster_id], R = g.opp, ab = t => esc(t.f.abbr || t.f.location), tags = [];
     if (g.playoff) tags.push(`<b class="hot">${esc(g.label || 'Playoffs')}${g.me.seed && g.oppRow && g.oppRow.seed ? ` · ${g.me.seed} seed vs ${g.oppRow.seed} seed` : ''}</b>`);
     else if (L.division && L.division === R.division) {
-      tags.push(`<b style="--tc:${divInk(L.division)}">${esc(L.division.name)} game</b>`);
+      tags.push(L.division.mark                        // the division's own logo stands in for the "Division game" tag
+        ? `<b class="divgame" title="${esc(L.division.name)} game">${divMarkHTML(L.division, 'divgame-mark')}</b>`
+        : `<b style="--tc:${divInk(L.division)}">${esc(L.division.name)} game</b>`);
       if (!g.final && [L.divRank, R.divRank].sort().join() === '1,2') tags.push('<b class="hot">1st place on the line</b>');
     }
     const prev = L.games.filter(x => x.final && x.week < g.week && x.opp && x.opp.id === R.id).pop();

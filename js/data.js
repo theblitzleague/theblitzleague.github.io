@@ -322,6 +322,19 @@
     return true;
   }
 
+  // Has the current week kicked off? A week's games show "Live" only once its first NFL game has started; before that
+  // they are "Upcoming". Sources: the live scoring job's game states (live/current, same week), else the nightly NFL
+  // snapshot (data/nfl.json, same week): any game past pregame, or the first kickoff time already passed.
+  async function markKickoff(M, L) {
+    let started = !!(L && +L.week === +M.current && (L.games || []).some(g => g.state && g.state !== 'pre'));
+    if (!started) {
+      const snap = await getJSON('data/nfl.json').catch(() => null);
+      if (snap && +snap.week === +M.current) started = (snap.games || []).some(g => (g.state && g.state !== 'pre') || (g.at && Date.parse(g.at) <= Date.now()));
+    }
+    M.weekStarted = started;
+    for (const t of Object.values(M.teams)) for (const g of t.games.concat(t.playoffGames || [])) g.started = !!(g.live && started);
+  }
+
   window.Hub = {
     applyLive,
     // Fetch the newest live points and apply them (pages that stay open during games call this every minute or so).
@@ -353,7 +366,9 @@
       }
       const model = { ...build(league, brand, { ...raw, history }), live, hub, hubStart: raw.hubStart || null, seasonStats: raw.seasonStats || null,
         waivers: hub ? hub.waivers : {}, faab: hub ? hub.faab : {}, bracket: hub ? hub.bracket : null };
-      if (hub && window.NFL) applyLive(model, await NFL.liveScores().catch(() => null));
+      const L = window.NFL ? await NFL.liveScores().catch(() => null) : null;
+      if (hub) applyLive(model, L);
+      await markKickoff(model, L);
       return model;
     },
     headshot: id => `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`,

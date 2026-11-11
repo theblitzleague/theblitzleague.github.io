@@ -6,7 +6,7 @@
   const P = id => M.players[id] || { full_name: `Player ${id}`, position: '?' };
   const order = (a, b) => (b.wins - a.wins) || (b.pf - a.pf);
   const mlink = (w, id) => `matchup.html#w${w}-t${id}`;
-  const state = g => (g.final ? 'final' : g.live ? 'live' : 'upcoming');
+  const state = g => (g.final ? 'final' : g.started ? 'live' : 'upcoming');   // 'live' only after kickoff (data.js markKickoff)
 
   function gamesFor(week) {
     const seen = new Set(), out = [];

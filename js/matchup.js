@@ -13,7 +13,7 @@
     return { team: M.teams[team] ? team : 1, week };
   }
   const link = (week, team) => `#w${week}-t${team}`;
-  const state = g => (g.final ? 'final' : g.live ? 'live' : 'upcoming');
+  const state = g => (g.final ? 'final' : g.started ? 'live' : 'upcoming');   // 'live' only after kickoff (data.js markKickoff)
   const avg = t => { const n = t.games.filter(g => g.final).length; return n ? t.pf / n : 0; };
 
   /* ---------- Hero ---------- */
@@ -36,6 +36,7 @@
     const scoreA = st === 'upcoming' ? f1(avg(L)) : f2(a), scoreB = st === 'upcoming' ? f1(avg(R)) : f2(b);
     const lead = st === 'upcoming' ? '' : a > b ? 'l' : b > a ? 'r' : '';
     return `<section class="mhero" style="--lw:${wash(L.f)};--rw:${wash(R.f)};--lc:${accentFor(L.f)};--rc:${accentFor(R.f)}">
+  ${L.f.banner ? `<div class="mbg l" style="background-image:url('${esc(L.f.banner)}')" aria-hidden="true"></div>` : ''}${R.f.banner ? `<div class="mbg r" style="background-image:url('${esc(R.f.banner)}')" aria-hidden="true"></div>` : ''}
   <div class="wrap mgrid">
     <div class="mh l">${helmetHTML(L.f, { facing: 'right', variant: 'home' })}</div>
     ${side(L, 'l')}
@@ -59,7 +60,7 @@
   function weekStrip(L, week) {
     return `<nav class="weeks" aria-label="Weeks"><div class="wrap">${gamesOf(L).map(g => `
   <a class="wk${g.week === week ? ' now' : ''}" href="${link(g.week, L.id)}" title="Week ${g.week} vs ${esc(g.opp ? g.opp.f.location : 'TBD')}">
-    ${g.playoff ? 'P' : 'W'}${g.week} <span class="vs">vs</span> ${g.opp ? markSVG(g.opp.f, 'mini') : ''}${g.result ? `<span class="r ${g.result}">${g.result}</span>` : g.live ? '<span class="r live">Live</span>' : ''}
+    ${g.playoff ? 'P' : 'W'}${g.week} <span class="vs">vs</span> ${g.opp ? markSVG(g.opp.f, 'mini') : ''}${g.result ? `<span class="r ${g.result}">${g.result}</span>` : g.started ? '<span class="r live">Live</span>' : ''}
   </a>`).join('')}</div></nav>`;
   }
 

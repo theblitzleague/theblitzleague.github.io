@@ -5,10 +5,10 @@
   const { esc, f1, f2, rec, leagueHero, tabsHTML, boot, allGames } = UI;
   let M;
   const mlink = (w, id) => `matchup.html#w${w}-t${id}`;
-  const state = g => (g.final ? 'final' : g.live ? 'live' : 'upcoming');
+  const state = g => (g.final ? 'final' : g.started ? 'live' : 'upcoming');   // 'live' only after kickoff (data.js markKickoff)
   const weeks = () => Array.from({ length: M.league.regularSeasonWeeks }, (_, i) => i + 1);
   const thisWeek = () => Math.min(M.current, M.league.regularSeasonWeeks);
-  const weekState = w => (w < M.current ? 'final' : w === M.current ? 'live' : 'upcoming');
+  const weekState = w => (w < M.current ? 'final' : w === M.current && M.weekStarted ? 'live' : 'upcoming');
   const STATE = { final: 'Final', live: 'Live', upcoming: 'Upcoming' };
 
   function strip(week) {
@@ -30,7 +30,7 @@
     const aside = hi ? `High score: ${hi.winners.map(t => esc(t.f.location)).join(', ')} ${f2(hi.points)} ${UI.cash(hi.each)}`
       : st === 'live' ? 'In progress' : `${games.length} games`;
     return `${strip(week)}<div class="grid"><section class="panel s12">
-      <header><div><span class="eyebrow">${esc(M.state.season)} · ${STATE[st] === 'Live' ? 'This week' : STATE[st]}</span><h2>Week ${week}</h2></div><span class="aside">${aside}</span></header>
+      <header><div><span class="eyebrow">${esc(M.state.season)} · ${week === M.current ? 'This week' : STATE[st]}</span><h2>Week ${week}</h2></div><span class="aside">${aside}</span></header>
       ${games.length ? `<div class="board sched-board">${games.map(card).join('')}</div>` : '<div class="empty">No games scheduled this week.</div>'}
       <p class="footnote">Lines are the site's own projection from each team's scoring before that week; finished games show the closing spread and who covered. Tags show only when true.</p>
     </section></div>`;
@@ -43,7 +43,7 @@
     const rows = teams.map(t => `<tr><td class="gteam" style="--dc:${UI.divInk(t.division)}"><a href="team.html?team=${t.id}#schedule">${markSVG(t.f, 'mini')}<span>${esc(t.f.abbr || t.f.location)}</span></a><small>${rec(t)}</small></td>${weeks().map(w => {
       const g = t.games.find(x => x.week === w);
       if (!g || !g.opp) return `<td class="${w === cur ? 'now' : ''}"><span class="gc bye">-</span></td>`;
-      const cls = [g.result || (g.live ? 'live' : ''), g.opp.division === t.division ? 'div' : ''].filter(Boolean).join(' ');
+      const cls = [g.result || (g.started ? 'live' : ''), g.opp.division === t.division ? 'div' : ''].filter(Boolean).join(' ');
       const tip = `Week ${w} vs ${g.opp.f.location}${g.final ? ` · ${g.result} ${f2(g.me.points)}-${f2(g.oppRow.points)}` : ''}`;
       return `<td class="${w === cur ? 'now' : ''}"><a class="gc ${cls}" href="${mlink(w, t.id)}" title="${esc(tip)}"><span>${esc(g.opp.f.abbr || g.opp.f.location)}</span>${g.result ? `<small>${g.result}</small>` : ''}</a></td>`;
     }).join('')}</tr>`).join('');

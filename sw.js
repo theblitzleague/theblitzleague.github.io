@@ -1,7 +1,8 @@
 /* Offline support for the installed app. Same-origin GET requests only; Sleeper's API and photos go straight to the network.
    Pages, scripts, styles and data: network first, revalidated with the server (so updates show at once), saved copy when offline.
-   Images under assets/: saved copy first (they rarely change). Bump VERSION to drop every saved copy. */
-const VERSION = 'blitz-v6';
+   Images under assets/: the saved copy shows at once and is refreshed from the server in the background, so a swapped
+   image (same file name, new art) shows on the next open. Bump VERSION to drop every saved copy. */
+const VERSION = 'blitz-v7';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(
   caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())));
@@ -10,7 +11,8 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || url.origin !== location.origin) return;
   const save = res => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); } return res; };
   if (url.pathname.includes('/assets/')) {
-    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(save)));
+    const fresh = fetch(req, { cache: 'no-cache' }).then(save);
+    e.respondWith(caches.match(req).then(hit => (hit ? (e.waitUntil(fresh.catch(() => {})), hit) : fresh)));
   } else {
     e.respondWith(fetch(req, { cache: 'no-cache' }).then(save).catch(() => caches.match(req, { ignoreSearch: req.mode === 'navigate' }).then(hit => hit || Response.error())));
   }

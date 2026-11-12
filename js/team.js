@@ -62,7 +62,7 @@
   ${crest ? `<img class="hero-crest" src="${esc(crest)}" alt="${esc(teamName(t))} crest">` : helmetHTML(t.f, { facing: 'right' })}
   <div class="id-block${crest ? ' no-mark' : ''}">
     ${crest ? '' : t.f.logos && t.f.logos.primary ? `<img class="mark logo-img" src="${esc(t.f.logos.primary)}" alt="${esc(teamName(t))} primary logo">` : markSVG(t.f)}
-    <div><span class="eyebrow">${divMarkHTML(d)}${esc(d.name)} · ${esc(d.region)}</span><h1>${esc(teamName(t))}</h1></div>
+    <div><span class="eyebrow">${divMarkHTML(d)}${esc(d.name)} · ${esc(d.region)}</span><h1>${t.f.logos && t.f.logos.wordmark ? `<img class="hero-wordmark" src="${esc(t.f.logos.wordmark)}" alt="${esc(teamName(t))}">` : esc(teamName(t))}</h1></div>
     <div class="nick">${t.f.nickname ? `Est. ${t.f.founded}` : `Franchise name <em>to be decided</em> · Est. ${t.f.founded}`}</div>
     <div class="hero-stats">
       <div><span class="big">${rec(t)}</span><span class="lbl">Record</span></div>

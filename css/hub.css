@@ -1576,6 +1576,9 @@ div.lu-empty .lu-plus { border-style: dotted; }
 .hero-crest { width: clamp(220px, 24vw, 360px); height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,.6)); }
 .id-block.no-mark { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 760px) { .hero-crest { width: min(78%, 300px); justify-self: start; } }
+/* Team-page title: the franchise wordmark (logos.wordmark) replaces the typed name when there is one. */
+.hero-wordmark { display: block; width: auto; height: clamp(72px, 9vw, 128px); max-width: 100%; object-fit: contain; object-position: left center; filter: drop-shadow(0 6px 14px rgba(0,0,0,.55)); margin: 4px 0 2px; }
+@media (max-width: 760px) { .hero-wordmark { height: auto; width: min(100%, 340px); } }
 /* Matchup badge (logos.matchup): wide script logos need more width than a square mark. */
 .mlogo.mu-logo { width: clamp(130px, 12vw, 190px); }
 .duel .side .mark.mu-logo { width: 104px; height: 52px; }

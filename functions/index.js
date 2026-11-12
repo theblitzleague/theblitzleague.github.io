@@ -74,6 +74,28 @@ exports.announce = onDocumentCreated({ document: 'announcements/{id}', region: '
   await snap.ref.update({ sent, failed, done: true });
 });
 
+// tradeAlert: a new offer (or counter) goes straight to the phones of the receiving team's linked GMs, and opens their
+// Trades tab when tapped. Only that team's GMs are notified; nobody else learns of the offer.
+exports.tradeAlert = onDocumentCreated({ document: 'trades/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
+  const snap = event.data;
+  if (!snap) return;
+  const T = snap.data(), db = getFirestore();
+  if (T.status !== 'offered') return;
+  const fr = ((await getJSON(`${SITE}/data/franchises.json?t=${Date.now()}`).catch(() => null)) || {}).franchises || {};
+  const name = id => (fr[String(id)] ? `${fr[String(id)].location}${fr[String(id)].nickname ? ' ' + fr[String(id)].nickname : ''}` : `Team ${id}`);
+  const gms = (await db.collection('users').where('team', 'in', [T.to, String(T.to)]).get()).docs.map(d => d.id);
+  const devices = gms.length ? (await db.collection('devices').where('uid', 'in', gms.slice(0, 30)).get()).docs.filter(d => d.data().token) : [];
+  if (!devices.length) { await snap.ref.update({ alerted: 0 }); return; }
+  const res = await getMessaging().sendEachForMulticast({
+    tokens: devices.map(d => d.data().token),
+    data: { kind: 'trade', title: '🚨TRADE ALERT🚨', body: `${name(T.from)} ${T.counterOf ? 'countered your offer' : 'sent you a trade offer'}. Tap to review it.`,
+      url: `./team.html?team=${T.to}#trades`, tag: 'trade-' + event.params.id },
+    webpush: { headers: { Urgency: 'high', TTL: String(3 * 24 * 3600) } },
+  });
+  await Promise.all(res.responses.map((r, j) => (!r.success && r.error && GONE.includes(r.error.code) ? devices[j].ref.delete() : null)));
+  await snap.ref.update({ alerted: res.successCount });
+});
+
 // watchRefresh: every morning at 5:30 Central, check that the 2:37 AM GitHub job (.github/workflows/refresh-data.yml)
 // actually refreshed the site. It looks at the result, data/nfl.json's "built" time on the live site, so it catches any
 // failure along the way (the job, the push, the site rebuild). If it's stale, the owner gets a private message.

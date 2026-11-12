@@ -207,7 +207,7 @@ function commishView() {
         <div id="pick" class="acct-pick" hidden></div>
         <input id="anntitle" maxlength="80" required placeholder="Title (shows in bold on the notification)">
         <textarea id="annbody" maxlength="1000" rows="4" required placeholder="Message to the whole league"></textarea>
-        <div class="acct-row"><button class="btn primary" type="submit">Send to the league</button><span class="pmeta" id="anncount"></span></div>
+        <div class="acct-row"><button class="btn primary" type="submit" id="annsend">Send to the league</button><span class="pmeta" id="anncount"></span></div>
       </form>${note('annmsg')}
       <div class="sub">Sent to the league</div><div id="annlist" class="acct-list"></div>
       <div class="sub">Sent to specific GMs</div><div id="notelist" class="acct-list"></div>`, 's7')}
@@ -217,7 +217,16 @@ function commishView() {
     ${panel('Commissioner', 'Scheduled reminders', `<p class="acct-note">Messages the site sends on its own. Sent ones appear under "Sent to specific GMs" as Automatic reminder.</p><div id="sched" class="acct-list"><p class="pmeta">Loading…</p></div>`, 's12')}
   </div>`;
   const toTeams = () => document.querySelector('input[name="to"]:checked').value === 'teams';
-  for (const r of document.querySelectorAll('input[name="to"]')) r.onchange = () => { $('pick').hidden = !toTeams(); };
+  // The send button says who it goes to: the league, or the GMs of the teams picked.
+  const sendLabel = () => {
+    const n = toTeams() ? $('pick').querySelectorAll('input:checked').length : 0, one = n === 1 && $('pick').querySelector('input:checked');
+    $('annsend').textContent = !toTeams() ? 'Send to the league' : !n ? 'Pick a team to send to'
+      : one ? `Send to ${M.teams[one.value] ? teamName(M.teams[one.value]) : 'that team'}` : `Send to ${n} teams`;
+    $('annbody').placeholder = toTeams() ? 'Message to the GMs you picked' : 'Message to the whole league';
+  };
+  for (const r of document.querySelectorAll('input[name="to"]')) r.onchange = () => { $('pick').hidden = !toTeams(); sendLabel(); };
+  $('pick').addEventListener('change', sendLabel);
+  $('annform').addEventListener('reset', () => setTimeout(sendLabel, 0));
   $('annform').onsubmit = async ev => {
     ev.preventDefault();
     const title = $('anntitle').value.trim(), body = $('annbody').value.trim();

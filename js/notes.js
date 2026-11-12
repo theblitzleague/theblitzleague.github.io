@@ -23,3 +23,13 @@ export async function myTeam() {
   const t = ((await getDoc(doc(db, 'users', u.uid))).data() || {}).team;
   return t == null ? null : +t;
 }
+
+// Open trade offers made to the signed-in GM's team (firestore.rules lets only the two teams and the commissioner read
+// an open offer), so the "missed messages" popup can lead with a trade alert.
+export async function offers() {
+  const team = await myTeam();
+  if (team == null) return [];
+  const snap = await getDocs(query(collection(db, 'trades'), where('to', '==', team), where('status', '==', 'offered')));
+  return snap.docs.map(d => { const t = d.data(); return { id: 'trade-' + d.id, from: t.from, team, counter: !!t.counterOf, at: new Date(t.at || 0), trade: true }; })
+    .sort((a, b) => b.at - a.at);
+}

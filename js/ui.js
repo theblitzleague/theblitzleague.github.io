@@ -230,6 +230,19 @@
     notesMod = notesMod || import(new URL(src, document.baseURI).href);
     return notesMod.then(m => m.mine()).catch(e => (console.error(e), []));
   }
+  // Open trade offers to the signed-in GM's team, shown first in the popup as a trade alert (each one once per device).
+  async function tradeOffers() {
+    let on = false;
+    try { on = localStorage.getItem('blitz.signedIn') === '1'; } catch (e) { /* private mode */ }
+    const src = (document.querySelector('meta[name="blitz-notes"]') || {}).content;
+    if (!on || !src || !window.FIREBASE_CONFIG) return [];
+    notesMod = notesMod || import(new URL(src, document.baseURI).href);
+    const list = await notesMod.then(m => (m.offers ? m.offers() : [])).catch(e => (console.error(e), []));
+    if (!list.length) return [];
+    const M = window.Hub ? await Hub.load().catch(() => null) : null;
+    const nm = id => (M && M.teams[id] ? teamName(M.teams[id]) : `Team ${id}`);
+    return list.map(t => ({ ...t, title: '🚨TRADE ALERT🚨', body: `${nm(t.from)} ${t.counter ? 'countered your offer' : 'sent you a trade offer'}.`, href: `team.html?team=${t.team}#trades` }));
+  }
   // "My team" in the top bar: the signed-in GM's franchise, with quick links (hover on desktop). Remembered on this
   // device so it shows at once; checked again against the account on every page load.
   const MY_KEY = 'blitz.myTeam';
@@ -260,18 +273,19 @@
   async function unreadPopup(fresh) {
     if (window.top !== window || document.getElementById('ann-pop')) return;
     const s = new Set(seen());
-    const [pub, mine] = await Promise.all([announcements(fresh), privateNotes()]);
-    const list = [...mine, ...pub].filter(a => !s.has(a.id)).sort((a, b) => b.at - a.at);
+    const [pub, mine, offers] = await Promise.all([announcements(fresh), privateNotes(), tradeOffers()]);
+    const list = [...offers.filter(a => !s.has(a.id)), ...[...mine, ...pub].filter(a => !s.has(a.id)).sort((a, b) => b.at - a.at)];
     if (!list.length || document.getElementById('ann-pop')) return;
     const el = document.createElement('div');
     el.id = 'ann-pop'; el.className = 'ann-pop';
     el.innerHTML = `<div class="ann-card" role="dialog" aria-modal="true" aria-labelledby="ann-pop-h">
-      <span class="eyebrow">From the commissioner</span><h2 id="ann-pop-h">${list.length > 1 ? `${list.length} new messages` : list[0].private ? 'A message for you' : 'New announcement'}</h2>
-      <div class="ann-list">${list.map(a => `<article class="ann${a.private ? ' private' : ''}">${a.private ? '<span class="ann-tag">Just for you</span>' : ''}<b>${esc(a.title)}</b><p>${esc(a.body)}</p><span class="pmeta">${annTime(a.at)}</span></article>`).join('')}</div>
+      <span class="eyebrow">${list.every(a => a.trade) ? 'Trades' : list.some(a => a.trade) ? 'While you were away' : 'From the commissioner'}</span><h2 id="ann-pop-h">${list.length > 1 ? `${list.length} new messages` : list[0].trade ? 'New trade offer' : list[0].private ? 'A message for you' : 'New announcement'}</h2>
+      <div class="ann-list">${list.map(a => `<article class="ann${a.private ? ' private' : ''}${a.trade ? ' trade' : ''}"><b>${esc(a.title)}</b><p>${esc(a.body)}</p><span class="pmeta">${annTime(a.at)}</span>${a.href ? `<a class="btn small primary ann-go" href="${esc(a.href)}">Review trade</a>` : ''}</article>`).join('')}</div>
       <button class="btn primary" type="button">Got it</button></div>`;
     const close = () => { markSeen(list.map(a => a.id)); el.remove(); document.removeEventListener('keydown', esc_); };
     const esc_ = e => { if (e.key === 'Escape') close(); };
     el.querySelector('button').onclick = close;
+    for (const a of el.querySelectorAll('.ann-go')) a.onclick = () => markSeen(list.map(x => x.id));   // going to review it counts as seen
     el.onclick = e => { if (e.target === el) close(); };
     document.addEventListener('keydown', esc_);
     document.body.appendChild(el);
@@ -280,7 +294,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => unreadPopup()); else unreadPopup();
   // A notification that arrives while the site is open on screen: sw.js tells the page, and it pops up at once.
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data && (e.data.kind === 'announcement' || e.data.kind === 'note')) setTimeout(() => unreadPopup(true), 800);
+    if (e.data && (e.data.kind === 'announcement' || e.data.kind === 'note' || e.data.kind === 'trade')) setTimeout(() => unreadPopup(true), 800);
   });
 
   /* ---------- Staying current in the installed app (it has no reload button) ----------

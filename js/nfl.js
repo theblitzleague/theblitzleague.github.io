@@ -42,7 +42,7 @@
   const story = (a, teamById) => {
     const cats = a.categories || [];
     return { id: a.id, at: a.published, type: a.type, head: a.headline || '', dek: a.description || '', url: ((a.links || {}).web || {}).href,
-      byline: a.byline, premium: !!a.premium,
+      byline: a.byline, premium: !!a.premium, image: ((a.images || [])[0] || {}).url || null,
       athletes: cats.filter(c => c.type === 'athlete' && c.description).map(c => c.description),
       teams: [...new Set(cats.filter(c => c.type === 'team' && teamById[String(c.teamId)]).map(c => teamById[String(c.teamId)]))].sort() };
   };

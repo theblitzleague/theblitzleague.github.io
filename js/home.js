@@ -229,7 +229,7 @@
     const T = { HeadlineNews: 'NFL news', Story: 'NFL story', Media: 'NFL video' };
     return N.news.filter(n => n.blitz.length).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 4).map(n => {
       const b = n.blitz[0];
-      return { tag: T[n.type] || 'NFL', head: esc(n.head), href: n.url || '', ext: true, shot: b.id, t: b.t, byline: ['ESPN', n.byline].filter(Boolean).join(' · '),
+      return { tag: T[n.type] || 'NFL', head: esc(n.head), href: n.url || '', ext: true, image: n.image, shot: b.id, t: b.t, byline: ['ESPN', n.byline].filter(Boolean).join(' · '),
         dek: `${n.blitz.slice(0, 3).map(x => `${esc(P(x.id).full_name)} (${esc(x.t.f.location)})`).join(', ')}${n.blitz.length > 3 ? ` and ${n.blitz.length - 3} more` : ''}` };
     });
   }
@@ -244,7 +244,7 @@
     if (!all.length) return '';
     const breaking = stories.filter(s => s.breaking);
     const [lead, ...rest] = all;
-    const art = s => (s.image ? `<img class="net-img" src="${esc(s.image)}" alt="">` : s.shot ? UI.shot(s.shot, 'nw-lead-shot') : s.t ? primaryLogo(s.t.f, 'net-logo') : `<img class="net-logo" src="${esc((M.league.network || {}).mark || M.league.logo)}" alt="">`);
+    const art = s => (s.image ? `<img class="net-img" src="${esc(s.image)}" alt="" onerror="this.remove()">` : s.shot ? UI.shot(s.shot, 'nw-lead-shot') : s.t ? primaryLogo(s.t.f, 'net-logo') : `<img class="net-logo" src="${esc((M.league.network || {}).mark || M.league.logo)}" alt="">`);
     const meta = s => [s.byline ? esc(s.byline) : s.date ? '' : 'Blitz Network Wire', s.date ? esc(s.date) : ''].filter(Boolean).join(' · ');
     const tag = s => `<span class="net-tag${s.breaking || /breaking/i.test(s.tag) ? ' hot' : ''}">${esc(s.tag)}</span>`;
     const a = (s, cls, inner) => (s.href ? `<a class="${cls}" href="${esc(s.href)}"${s.ext ? ' target="_blank" rel="noopener"' : ''}>${inner}</a>` : `<div class="${cls}">${inner}</div>`);

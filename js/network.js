@@ -40,6 +40,7 @@
 
   function leadArt(n) {
     const b = n.blitz[0], id = b ? b.id : n.pids[0];
+    if (n.image) return `<div class="net-art nw-art nw-photo"><img class="net-img" src="${esc(n.image)}" alt="" onerror="this.remove()">${b ? markSVG(b.t.f, 'nw-lead-mark') : ''}</div>`;
     if (id) return `<div class="net-art nw-art" style="${b ? `--lw:${wash(b.t.f)}` : ''}">${shot(id, 'nw-lead-shot')}${b ? markSVG(b.t.f, 'nw-lead-mark') : ''}</div>`;
     return `<div class="net-art"><img class="net-logo" src="${esc((M.league.network || {}).mark || M.league.logo)}" alt=""></div>`;
   }

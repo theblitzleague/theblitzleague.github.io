@@ -119,6 +119,7 @@ for a in get(f"{ESPN}/news?limit=50").get("articles", []):
     news.append({"id": a.get("id"), "at": a.get("published"), "type": a.get("type"), "head": a.get("headline", ""),
                  "dek": a.get("description", ""), "url": ((a.get("links") or {}).get("web") or {}).get("href"),
                  "byline": a.get("byline"), "premium": bool(a.get("premium")),
+                 "image": ((a.get("images") or [{}])[0] or {}).get("url"),
                  "athletes": [c["description"] for c in cats if c.get("type") == "athlete" and c.get("description")],
                  "teams": sorted({team_by_id[str(c.get("teamId"))] for c in cats if c.get("type") == "team" and str(c.get("teamId")) in team_by_id})})
 

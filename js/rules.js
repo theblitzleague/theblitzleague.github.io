@@ -25,7 +25,8 @@
           <ol>${(meta.toc || []).map(([id, t]) => `<li><a href="#${esc(id)}">${esc(t)}</a></li>`).join('')}</ol></nav>
         <article class="rb-body">${box.innerHTML}</article>
       </section>
-      <section class="panel" id="scoring-changes"></section>`;
+      <section class="panel" id="scoring-changes"></section>
+      ${((M && M.league.credits) || []).length ? `<p class="footnote rb-credits">Credits: ${M.league.credits.map(c => `${esc(c.text)} <a href="${esc(c.source)}" target="_blank" rel="noopener">Source</a> · <a href="${esc(c.licenseUrl)}" target="_blank" rel="noopener">${esc(c.license)}</a>`).join(' ')}</p>` : ''}`;
     // The dated record of scoring changes (13-2-3), saved by the commissioner on the Account page.
     const log = ((M && M.scoringLog) || []).slice().sort((a, b) => b.at - a.at), sc = document.getElementById('scoring-changes');
     if (!log.length) sc.remove();

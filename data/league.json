@@ -264,5 +264,9 @@
   ],
   "_inkNote": "inkOnDark: the division color lifted for text, borders and map markers on the dark site. markOnDark: tint for dark-ink division marks (null = show the mark in its own colors).",
   "_scoringLeagueNote": "Retired 2026-11-08: scoring now comes from data/scoring.json (the Hub's own settings, copied exactly from this Sleeper league). Kept for reference only; nothing reads it.",
-  "scoringLeagueId": "1423408541737156608"
+  "scoringLeagueId": "1423408541737156608",
+  "_creditsNote": "Required credits for outside art the site uses, shown at the bottom of the Rules page (js/rules.js). The helmet model is CC BY 4.0: keep this credit as long as any team helmet is built on it.",
+  "credits": [
+    { "text": "Team helmets are built on \"Buffalo Bills Helmet\" by Exodusks, recolored and rebranded for the Blitz League.", "source": "https://sketchfab.com/3d-models/buffalo-bills-helmet-fd471344bf9c4900b8cc0f59fedb8093", "license": "CC BY 4.0", "licenseUrl": "https://creativecommons.org/licenses/by/4.0/" }
+  ]
 }

@@ -149,7 +149,7 @@
           "left": "assets/franchises/rno/helmet-home-left.webp"
         }
       },
-      "_helmetNote": "Faceoff helmets from the commissioner, 2026-11-10: right- and left-facing renders (originals assets/source/reno/helmet-{right,left}-src.webp; first single render retired to assets/source/reno/retired/). Helmets are faceoff art only (matchups, home slider). No away set: away games wear these (js/helmet.js fallback).",
+      "_helmetNote": "Faceoff helmets from the commissioner, 2026-11-11: Astra 3D renders on the free Sketchfab SpeedFlex (Exodusks, CC BY 4.0: credited at the bottom of the Rules page, league.json credits). 4K transparent originals trimmed to 2000px in assets/source/reno/helmet-{right,left}-src.webp; the 2026-11-10 renders and first single render are in assets/source/reno/retired/. Helmets are faceoff art only (matchups, home slider). No away set: away games wear these (js/helmet.js fallback).",
       "_logosNote": "2026-11-10 from the commissioner: team crest = primary, shown on the team page in place of the helmet (primaryWide: the crest is 2:1, so small spots keep the RNO shield). Script logo (clean gold) = logos.matchup, the team badge on matchup screens (matchup page header, team-page matchup card). Originals in assets/source/reno/.",
       "logoStatus": {
         "alternates": "Final"

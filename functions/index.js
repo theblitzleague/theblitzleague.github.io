@@ -417,6 +417,26 @@ const SLOTS = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'SUPER_FLEX',
 const ELIG = { QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], FLEX: ['RB', 'WR', 'TE'], SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'], K: ['K'], DL: ['DL'], LB: ['LB'], DB: ['DB'], IDP_FLEX: ['DL', 'LB', 'DB'] };
 const ACTIVE_MAX = 24, IR_MAX = 4, TAXI_MAX = 5, TAXI_DEADLINE_WEEK = 4;
 let playerMemo = null, gameMemo = null;
+/* ESPN's live status for one player, matched the way the site's injury badges are (js/nfl.js): same normalized name,
+   and if more than one player shares it, the one on the team ESPN names; never a guess. null when ESPN doesn't list
+   him or the match is ambiguous. */
+const injNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[.'’`-]/g, '')
+  .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
+const INJ_LIVE = { Out: 'Out', Questionable: 'Questionable', Doubtful: 'Doubtful', 'Injured Reserve': 'IR', Suspension: 'Sus', Active: null };
+async function espnInjury(P, id) {
+  const me = P[id]; if (!me) return null;
+  const k = injNorm(me.name), same = Object.keys(P).filter(x => injNorm(P[x].name) === k);
+  const inj = await getJSON(`${ESPN_NFL}/injuries`);
+  for (const t of inj.injuries || []) for (const x of t.injuries || []) {
+    const a = x.athlete || {};
+    if (injNorm(a.displayName) !== k || !x.status) continue;
+    const team = ({ WSH: 'WAS' })[(a.team || {}).abbreviation] || (a.team || {}).abbreviation || null;
+    const pick = same.length === 1 ? same[0] : (same.filter(s => team && P[s].team === team).length === 1 ? same.find(s => P[s].team === team) : null);
+    if (pick !== id) continue;
+    return x.status in INJ_LIVE ? INJ_LIVE[x.status] : x.status;
+  }
+  return null;
+}
 async function playerInfo() {
   if (playerMemo && Date.now() - playerMemo.at < 10 * 60000) return playerMemo.v;
   const all = await getJSON(`${SITE}/data/players.json?t=${Date.now()}`), v = {};
@@ -490,7 +510,10 @@ async function lineupAct(db, uid, commish, myTeam, data) {
       if (i >= 0 && locked(id)) throw new HttpsError('failed-precondition', `${nm(id)} is starting and his game has started (rule 7-4-2).`);
       if (to === 'ir') {
         if (ir.includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is already on IR.`);
-        if (!['IR', 'Out'].includes(P[id] && P[id].inj)) throw new HttpsError('failed-precondition', `Only players listed IR or Out can go on IR (rule 8-1-3). ${nm(id)} is listed ${(P[id] && P[id].inj) || 'healthy'}.`);
+        if (!['IR', 'Out'].includes(P[id] && P[id].inj)) {
+          const live = await espnInjury(P, id).catch(() => null);  // the nightly list can lag ESPN by a day
+          if (!['IR', 'Out'].includes(live)) throw new HttpsError('failed-precondition', `Only players listed IR or Out can go on IR (rule 8-1-3). ${nm(id)} is listed ${live || (P[id] && P[id].inj) || 'healthy'}.`);
+        }
         if (ir.length >= IR_MAX) throw new HttpsError('failed-precondition', `IR is full (${IR_MAX} spots).`);
         newTaxi = taxi.filter(x => x !== id); newIr = [...ir, id];
       } else if (to === 'taxi') {

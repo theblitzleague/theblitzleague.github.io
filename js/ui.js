@@ -53,9 +53,10 @@
   }
 
   // Matchup screens: a team's matchup badge (logos.matchup, e.g. a script logo), else the fallback.
+  // logos.matchupSquare: a square badge (e.g. a shield) sits in the normal mark box; wide script logos get mu-logo.
   function matchupLogo(f, cls, fallback) {
     const src = f.logos && f.logos.matchup;
-    return src ? `<img class="${cls || 'mark'} logo-img mu-logo" src="${esc(src)}" alt="${esc(f.location)}${f.nickname ? ' ' + esc(f.nickname) : ''}">` : fallback(f, cls);
+    return src ? `<img class="${cls || 'mark'} logo-img${f.logos.matchupSquare ? "" : " mu-logo"}" src="${esc(src)}" alt="${esc(f.location)}${f.nickname ? ' ' + esc(f.nickname) : ''}">` : fallback(f, cls);
   }
 
   // League-page header: shield, title, one-line summary, division marks.

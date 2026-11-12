@@ -439,27 +439,31 @@
     },
     "10": {
       "location": "Boston",
-      "nickname": null,
+      "nickname": "Rebellion",
       "abbr": "BOS",
       "division": "east",
-      "placeholder": true,
+      "placeholder": false,
       "founded": 2026,
       "colors": {
         "primary": "#13233F",
-        "secondary": "#D23B3B",
-        "trim": "#E8E8E8"
+        "secondary": "#5F0115",
+        "trim": "#F5DDAF"
       },
       "helmet": {
         "shell": "#13233F",
-        "facemask": "#E8E8E8",
-        "stripe": "#D23B3B",
-        "stripeTrim": "#E8E8E8"
+        "facemask": "#5F0115",
+        "stripe": "#5F0115",
+        "stripeTrim": "#F5DDAF"
       },
       "logos": {
-        "primary": null,
+        "primary": "assets/franchises/bos/primary.webp",
+        "primaryWide": true,
         "mark": null,
-        "wordmark": null,
-        "helmetDecal": null
+        "wordmark": "assets/franchises/bos/wordmark.webp",
+        "helmetDecal": null,
+        "alternates": {},
+        "matchup": "assets/franchises/bos/shield.webp",
+        "matchupSquare": true
       },
       "gm": {
         "name": null,
@@ -468,7 +472,29 @@
         "portrait": null,
         "bio": null
       },
-      "pastGms": []
+      "pastGms": [],
+      "banner": "assets/franchises/bos/banner.webp",
+      "_bannerNote": "Boston harbor at night (tea crates, tall ships), from the commissioner 2026-11-12 (original in assets/source/boston/). Shown faded behind the team-page hero.",
+      "palette": [
+        [
+          "Navy",
+          "#13233F"
+        ],
+        [
+          "Crimson",
+          "#5F0115"
+        ],
+        [
+          "Parchment",
+          "#F5DDAF"
+        ]
+      ],
+      "_colorsNote": "Sampled from the commissioner's shield and helmet render, 2026-11-12. Interim until a brand sheet arrives.",
+      "_logosNote": "2026-11-12 from the commissioner: lantern R + BOSTON REBELLION = primary (team page). Crossed-muskets shield = logos.matchup (small badge on matchup screens). Wordmark = logos.wordmark. Originals in assets/source/boston/.",
+      "logoStatus": {
+        "primary": "Final",
+        "wordmark": "Final"
+      }
     },
     "11": {
       "location": "Philadelphia",

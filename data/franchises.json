@@ -458,7 +458,7 @@
       "logos": {
         "primary": "assets/franchises/bos/primary.webp",
         "primaryWide": true,
-        "mark": null,
+        "mark": "assets/franchises/bos/shield.webp",
         "wordmark": "assets/franchises/bos/wordmark.webp",
         "helmetDecal": null,
         "alternates": {},
@@ -490,7 +490,7 @@
         ]
       ],
       "_colorsNote": "Sampled from the commissioner's shield and helmet render, 2026-11-12. Interim until a brand sheet arrives.",
-      "_logosNote": "2026-11-12 from the commissioner: lantern R + BOSTON REBELLION = primary (team page). Crossed-muskets shield = logos.matchup (small badge on matchup screens). Wordmark = logos.wordmark. Originals in assets/source/boston/.",
+      "_logosNote": "2026-11-12 from the commissioner: lantern R + BOSTON REBELLION = primary (team page). Crossed-muskets shield = logos.matchup (small badge on matchup screens). Wordmark = logos.wordmark. Originals in assets/source/boston/. The shield is also logos.mark (every small spot: week strips, scoreboard, standings, schedule).",
       "logoStatus": {
         "primary": "Final",
         "wordmark": "Final"

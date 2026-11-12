@@ -1578,7 +1578,8 @@ div.lu-empty .lu-plus { border-style: dotted; }
 @media (max-width: 760px) { .hero-crest { width: min(78%, 300px); justify-self: start; } }
 /* Team-page title: the franchise wordmark (logos.wordmark) replaces the typed name when there is one. */
 .hero-wordmark { display: block; width: auto; height: clamp(72px, 9vw, 128px); max-width: 100%; object-fit: contain; object-position: left center; filter: drop-shadow(0 6px 14px rgba(0,0,0,.55)); margin: 4px 0 2px; }
-@media (max-width: 760px) { .hero-wordmark { height: auto; width: min(100%, 340px); } }
+/* Phone: the main logo already sits above, so the wordmark title is visually hidden (still read by screen readers; the breadcrumb names the team). */
+@media (max-width: 760px) { .id-block h1:has(.hero-wordmark) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } }
 /* Matchup badge (logos.matchup): wide script logos need more width than a square mark. */
 .mlogo.mu-logo { width: clamp(130px, 12vw, 190px); }
 .duel .side .mark.mu-logo { width: 104px; height: 52px; }

@@ -115,12 +115,12 @@ function openMove(id, where) {
     const irOk = ['IR', 'Out'].includes(p.injury_status);
     items.push({ off: !irOk || R().reserve.length >= 4, html: `<span class="lu-who"><b>Move to injured reserve</b><small>${irOk ? (R().reserve.length >= 4 ? 'IR is full (4)' : `listed ${esc(p.injury_status)}; frees a roster spot`) : `only players listed IR or Out (rule 8-1-3); he's ${esc(p.injury_status || 'healthy')}`}</small></span>`,
       go: () => send({ action: 'move', player: id, to: 'ir' }, `${p.full_name} moved to IR.`) });
-    const rookie = p.years_exp === 0;
-    items.push({ off: !rookie || R().taxi.length >= 5, html: `<span class="lu-who"><b>Move to taxi squad</b><small>${rookie ? (R().taxi.length >= 5 ? 'taxi squad is full (5)' : 'rookie; frees a roster spot') : 'rookies only (rule 8-1-2)'}</small></span>`,
+    const rookie = p.years_exp === 0, wasUp = ((TeamPage.M.hub || {}).promoted || []).includes(id);
+    items.push({ off: !rookie || wasUp || R().taxi.length >= 5, html: `<span class="lu-who"><b>Move to taxi squad</b><small>${wasUp ? 'promoted off a taxi squad already; he can\'t go back (rule 8-1-2)' : rookie ? (R().taxi.length >= 5 ? 'taxi squad is full (5)' : 'rookie; frees a roster spot') : 'rookies only (rule 8-1-2)'}</small></span>`,
       go: () => send({ action: 'move', player: id, to: 'taxi' }, `${p.full_name} moved to the taxi squad.`) });
   } else {
     const full = activeIds().length >= 24;
-    items.push({ off: full, html: `<span class="lu-who"><b>Activate to the bench</b><small>${full ? '24 active players already: move someone to IR or taxi first' : `from ${where === 'ir' ? 'IR' : 'the taxi squad'}`}</small></span>`,
+    items.push({ off: full, html: `<span class="lu-who"><b>Activate to the bench</b><small>${full ? '24 active players already: move someone to IR or taxi first' : `from ${where === 'ir' ? 'IR' : 'the taxi squad; once promoted he can\'t go back on taxi (rule 8-1-2)'}`}</small></span>`,
       go: () => send({ action: 'move', player: id, to: 'active' }, `${p.full_name} is active.`) });
   }
   sheet(p.full_name, `${p.position} · ${p.team || 'FA'} · ${where === 'bench' ? 'bench' : where === 'ir' ? 'injured reserve' : 'taxi squad'}`, items);

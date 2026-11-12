@@ -90,7 +90,7 @@ function builder(other) {
   const over = active(me).length - outCount + inCount - ACTIVE_MAX;
   return `<section class="panel"><header><div><span class="eyebrow">${counterOf ? 'Counter offer' : 'New offer'} · ${esc(tname(myTeam))} and ${esc(tname(other))}</span><h2>Propose a trade</h2></div></header>
     <div class="tr-build">${col(me, 'give')}${col(them, 'get')}</div>
-    ${over > 0 ? `<div class="tr-drops"><b>You'd have ${active(me).length - outCount + inCount} active players (most is ${ACTIVE_MAX}). Pick ${over} to drop when it goes through:</b>
+    ${over > 0 ? `<div class="tr-drops"><b>You'd have ${active(me).length - outCount + inCount} active players (most is ${ACTIVE_MAX}). Pick up to ${over} to drop when it goes through, or keep everyone and your lineup is frozen until you're back to ${ACTIVE_MAX} (rule 8-1-1):</b>
       <div class="tr-list">${active(me).filter(id => !sel.give.has(id)).map(id => `<label class="tr-item"><input type="checkbox" data-side="drops" value="${esc(id)}"${sel.drops.has(id) ? ' checked' : ''}><span class="pos ${esc(P(id).position)}">${esc(P(id).position)}</span><span>${esc(P(id).full_name)}</span></label>`).join('')}</div></div>` : ''}
     <div class="tr-sum"><div><span class="eyebrow">You send</span>${assets(split('give'))}</div><div><span class="eyebrow">You get</span>${assets(split('get'))}</div></div>
     ${lockBox(needs({ from: myTeam, to: other, give: split('give'), get: split('get') }), ' You can still send the offer.')}
@@ -154,7 +154,7 @@ document.addEventListener('click', async e => {
     const over = active(me).length - t.get.players.length + t.give.players.length - ACTIVE_MAX;
     const box = el.querySelector(`[data-box="${id}"]`);
     if (over > 0 && !box.querySelector('.tr-dropsel')) {
-      box.insertAdjacentHTML('afterbegin', `<div class="tr-dropsel"><b>You'd have ${ACTIVE_MAX + over} active players. Pick ${over} to drop, then Accept again:</b><div class="tr-list">${active(me).filter(x => !t.get.players.includes(x)).map(x => `<label class="tr-item"><input type="checkbox" class="tr-acc-drop" value="${esc(x)}"><span class="pos ${esc(P(x).position)}">${esc(P(x).position)}</span><span>${esc(P(x).full_name)}</span></label>`).join('')}</div></div>`);
+      box.insertAdjacentHTML('afterbegin', `<div class="tr-dropsel"><b>You'd have ${ACTIVE_MAX + over} active players. Pick up to ${over} to drop when it goes through (or none: your lineup is then frozen until you're back to ${ACTIVE_MAX}, rule 8-1-1), then Accept again:</b><div class="tr-list">${active(me).filter(x => !t.get.players.includes(x)).map(x => `<label class="tr-item"><input type="checkbox" class="tr-acc-drop" value="${esc(x)}"><span class="pos ${esc(P(x).position)}">${esc(P(x).position)}</span><span>${esc(P(x).full_name)}</span></label>`).join('')}</div></div>`);
       return;
     }
     const drops = [...box.querySelectorAll('.tr-acc-drop:checked')].map(x => x.value);

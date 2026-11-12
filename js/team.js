@@ -201,10 +201,18 @@
       <div class="pmeta"><span class="pos ${esc(p.position)}">${esc(p.position)}</span> ${esc(pmeta(p))} ${game(id)}${sp[id] ? ` · ${f1(sp[id].pts)} season` : ''}</div></div>
       ${(x => `<div class="pts"${x && x.line ? ` title="${esc(x.line)}"` : ''}>${x ? f1(x.pts) : '-'}<small>${x ? `Wk ${esc(x.week)}` : 'Pts'}</small></div>`)(lp(id))}${ed ? `<button class="btn lu-move" type="button" data-lmove="${esc(id)}" data-where="${where}">${where === 'bench' ? 'Move' : 'Activate'}</button>` : ''}</div>`; };
     const active = r.players.length - r.taxi.length - r.reserve.length, empty = st.filter(x => !x).length;
+    // Frozen lineup (rules 8-1-1, 8-1-3, 8-1-4): the server enforces it; this says why before anyone taps.
+    const actIds = r.players.filter(id => !r.taxi.includes(id) && !r.reserve.includes(id));
+    const qbs = actIds.filter(id => P(id).position === 'QB').length;
+    const frozen = [...(active > 24 ? [`${active} active players: drop ${active - 24} or move rookies to the taxi squad`] : []),
+      ...(qbs > 2 ? [`${qbs} active QBs: move one to taxi or IR, or drop one`] : []),
+      // IR status only once ESPN's live report is in (the nightly file can lag), so no false alarm is shown.
+      ...r.reserve.filter(id => M.injuriesLive && !['IR', 'Out'].includes(P(id).injury_status)).map(id => `${P(id).full_name} is on IR but listed ${P(id).injury_status || 'healthy'}: activate or drop him`)];
     return `<div class="grid">
   <section class="panel s12">
     <header><div><span class="eyebrow">Week ${M.current} lineup${ed ? ' · tap a spot to change it' : ''}</span><h2>Starters</h2></div>
       <span class="aside">${ed ? `${empty ? `<button class="btn primary" type="button" data-lfill="1">Fill ${empty} empty spot${empty > 1 ? 's' : ''}</button> ` : ''}` : ''}${empty ? `${empty} empty` : 'Full lineup'}</span></header>
+    ${frozen.length ? `<div class="tr-lock"><b>🔒 Lineup frozen.</b> ${frozen.map(esc).join('; ')}. Fix it to change starters; this lineup still plays (rules 8-1-1, 8-1-3, 8-1-4).</div>` : ''}
     <div class="field two-way lu-field"><div class="formation"><div class="los" aria-hidden="true"><span>Defense</span><span>Line of scrimmage</span><span>Offense</span></div>${onField}</div></div>
     <div class="sub">Flex spots and kicker</div><div class="flexrow lu-under">${under}</div>
     <p class="footnote">Each player locks when his game kicks off (rule 7-4-2). ${ed ? 'Your lineup stays set from week to week until you change it.' : ''}</p>
@@ -524,7 +532,7 @@
       window.TeamPage = { M, T, P, route };
       addEventListener('hub:lineup', () => { if (location.hash.slice(1) === 'depth-chart') route(); });
       addEventListener('hub:moves', () => route());   // an add or drop changed a roster   // js/ui.js keeps the tab bar and scroll position sensible
-      addEventListener('hub:injuries', () => { const h = location.hash.slice(1); if (!RENDER[h] || h === 'overview') route(); });
+      addEventListener('hub:injuries', () => { const h = location.hash.slice(1); if (!RENDER[h] || h === 'overview' || h === 'depth-chart') route(); });
     } catch (e) {
       content.innerHTML = `<div class="error">Couldn't load league data. ${esc(e.message)}</div>`;
       console.error(e);

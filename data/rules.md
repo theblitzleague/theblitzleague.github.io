@@ -162,7 +162,7 @@ Appendix B. League Settings
 
 **Article 2. Due date.** Founding-Season dues are due by March 13, 2027, one week before the startup draft. An Owner whose founding dues are still unpaid on March 18, 2027 loses their seat before the startup draft: a replacement Owner takes the Franchise and drafts it, or, if none is ready, the Commissioner's Office drafts it and holds it for a successor under Rule 11, Section 3. Dues for every later Season are due before that Season's rookie draft.
 
-**Article 3. Unpaid dues.** After the founding Season, an Owner with unpaid dues may not make draft picks, trades or waiver claims until the dues are paid.
+**Article 3. Unpaid dues.** After the founding Season, an Owner whose dues are not paid by the time they are due (6-1-2) may not make draft picks, trades, waiver claims, free-agent pickups or roster moves (drops, injured reserve and taxi squad moves) until the dues are paid. The Owner may still set the Franchise's lineup.
 
 **Penalty:** Dues still unpaid 14 days after the due date are grounds for removal under 11-2-2.
 
@@ -260,11 +260,11 @@ Appendix B. League Settings
 
 ### Section 1. Roster Limits
 
-**Article 1. Roster.** Each Franchise carries 14 starters, 10 bench players, up to 5 taxi squad players and up to 4 injured reserve players.
+**Article 1. Roster.** Each Franchise carries 14 starters, 10 bench players, up to 5 taxi squad players and up to 4 injured reserve players. A Franchise may go over 24 active players through a waiver claim, a trade or the rookie draft. It keeps every player, but its lineup is frozen until it is back to 24 active; the lineup as it stands still plays.
 
-**Article 2. Taxi squad.** Only rookies may be placed on the taxi squad. A player may stay there while he is within the taxi experience limit of 2 years. The taxi squad opens once the startup draft is complete, and is first filled from the founding Season's rookie draft. Taxi moves follow the taxi deadline in Week 4.
+**Article 2. Taxi squad.** Only rookies may be placed on the taxi squad. A player may stay there while he is within the taxi experience limit of 2 years. The taxi squad opens once the startup draft is complete, and is first filled from the founding Season's rookie draft. Taxi moves follow the taxi deadline in Week 4. A player promoted off a taxi squad may never be placed on a taxi squad again, on any Franchise. A rookie traded or released while still on a taxi squad may go on his new Franchise's taxi squad if he is otherwise eligible.
 
-**Article 3. Injured reserve.** Only a player Blitz Hub lists as on injured reserve or out may occupy an IR slot. When his status clears, he must be activated or released before the Owner's next transaction.
+**Article 3. Injured reserve.** Only a player Blitz Hub lists as on injured reserve or out may occupy an IR slot. When his status clears, he must be activated or released before the Owner's next transaction, and until then the Franchise's lineup is frozen.
 
 **Article 4. Quarterback limit.** A Franchise may carry no more than 2 quarterbacks. Quarterbacks on the taxi squad or injured reserve do not count toward the limit. Blitz Hub enforces it: no Franchise may draft past it, and a Franchise over it cannot change its lineup until it is back within it.
 

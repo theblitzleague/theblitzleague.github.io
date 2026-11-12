@@ -68,8 +68,9 @@ function cardActions(id, el) {
   } else if (w) {
     const c = claims.find(x => x.player === id);
     html = `<form class="mv-form" data-mv="claim"><div class="mv-row"><b>On waivers · clears ${esc(when(w.until))}</b><span class="pmeta">Blind bid · $${left()} of $${BUDGET} FAAB left</span></div>
-      <div class="mv-row"><label>Bid $ <input name="bid" type="number" min="1" max="${left()}" step="1" value="${c ? c.bid : 1}" required></label>${dropSelect(full)}
+      <div class="mv-row"><label>Bid $ <input name="bid" type="number" min="1" max="${left()}" step="1" value="${c ? c.bid : 1}" required></label>${dropSelect(false)}
       <button class="btn primary" type="submit">${c ? 'Update claim' : 'Place claim'}</button>${c ? `<button class="btn" type="button" data-mv="cancel" data-claim="${esc(c.id)}">Cancel claim</button>` : ''}</div>
+      ${full ? `<span class="pmeta">Your roster is full. If you win him without a drop, he still joins you, and your lineup is frozen until you're back to ${ACTIVE_MAX} active (rule 8-1-1).</span>` : ''}
       ${c ? `<span class="pmeta">Your claim: $${c.bid}${c.drop ? `, dropping ${esc(P(c.drop).full_name)}` : ''}.</span>` : ''}</form>`;
   } else {
     html = `<form class="mv-form" data-mv="add"><div class="mv-row"><b>Free agent</b><span class="pmeta">Added at once, no bid.</span></div>

@@ -114,7 +114,7 @@
       const obj = k => val({ mapValue: { fields: D[k] || {} } }) || {};
       return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0),
         rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((D.lineups || {}).teams), startWeek: f.startWeek ? val(f.startWeek) : null, startSeason: f.startSeason ? val(f.startSeason) : null,
-        rookieSeasons: f.rookieSeasons ? (val(f.rookieSeasons) || []).map(Number) : [],
+        rookieSeasons: f.rookieSeasons ? (val(f.rookieSeasons) || []).map(Number) : [], promoted: f.promoted ? (val(f.promoted) || []).map(String) : [],
         results: (res.documents || []).map(d => val({ mapValue: { fields: d.fields } })),
         waivers: obj('waivers').players || {}, faab: obj('faab'), picks: obj('picks').traded || [], bracket: D.bracket ? obj('bracket') : null,
         transactions: (txs.documents || []).map(d => ({ transaction_id: d.name.split('/').pop(), ...val({ mapValue: { fields: d.fields } }) })) };
@@ -130,7 +130,8 @@
       for (const [w, games] of Object.entries(S.weeks)) raw.matchups[w] = games.flatMap(([a, b], i) => [a, b].map(t => ({ roster_id: +t, matchup_id: i + 1, starters: [], starters_points: [], points: 0, players: [] })));
     }
     raw.seasonStats = nfl.players || {};            // {id: [games, points, last-3 average]} in League scoring
-    for (const [id, p] of Object.entries(all)) if (!raw.players[id]) raw.players[id] = p;
+    // The nightly player file is newer than the placeholder files: its team, injury and experience win.
+    for (const [id, p] of Object.entries(all)) raw.players[id] = raw.players[id] ? Object.assign(raw.players[id], p) : p;
     // Lineups are the Hub's standing lineup (league/lineups), in league.json rosterSlots order; null = an empty spot.
     for (const r of raw.rosters) {
       const k = String(r.roster_id), all = hub.rosters[k] || [];

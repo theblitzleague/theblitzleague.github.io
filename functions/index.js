@@ -355,6 +355,11 @@ async function officialWrites(tx, db, id, d, now, uid) {
 }
 
 async function draftAct(db, uid, commish, data, myTeam) {
+  let unpaidNow = new Set(), duesSeason = null;
+  if (['pick', 'queue'].includes(data.action) && !commish && uid) {
+    const cal = await leagueCalendar(db, await getJSON('https://api.sleeper.app/v1/state/nfl'));
+    unpaidNow = await unpaidTeams(db, cal); duesSeason = cal.season;
+  }
   const now = Date.now(), action = data.action, only = () => { if (!commish) throw new HttpsError('permission-denied', 'Only the commissioner can do that.'); };
   if (action === 'create') {
     only();
@@ -394,6 +399,7 @@ async function draftAct(db, uid, commish, data, myTeam) {
     const snap = await tx.get(ref); if (!snap.exists) throw new HttpsError('not-found', 'No such draft.');
     const d = snap.data();
     const mine = t => d.seats[String(t)] === uid;
+    if (d.mode === 'official' && myTeam != null && unpaidNow.has(String(myTeam))) throw new HttpsError('failed-precondition', unpaidMsg(duesSeason));
     const needPool = ['pick', 'tick', 'start', 'resume', 'queue', 'join', 'seat'].includes(action);
     const pool = needPool ? parsePool((await tx.get(db.doc(`drafts/${id}/pool/all`))).data().list) : null;
     const posOf = pool ? Object.fromEntries(pool.map(e => [e.id, e.pos])) : null;
@@ -539,10 +545,48 @@ let playerMemo = null, gameMemo = null;
 const injNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[.'’`-]/g, '')
   .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
 const INJ_LIVE = { Out: 'Out', Questionable: 'Questionable', Doubtful: 'Doubtful', 'Injured Reserve': 'IR', Suspension: 'Sus', Active: null };
+let injMemo = null;
+async function espnInjuries() {
+  if (injMemo && Date.now() - injMemo.at < 5 * 60e3) return injMemo.v;
+  const v = await getJSON(`${ESPN_NFL}/injuries`); injMemo = { at: Date.now(), v }; return v;
+}
+// What freezes a team's lineup (Sleeper's way; rules 8-1-1, 8-1-3, 8-1-4): more than 24 active players, more than 2
+// active QBs, or a player on IR who is no longer listed IR or Out. The team keeps everyone and its lineup as it stands
+// still plays; it just can't change starters until it fixes the problem. kind "ir" also blocks new transactions (8-1-3).
+async function rosterProblems(R, team, P) {
+  const all = (R.rosters || {})[team] || [], ir = (R.ir || {})[team] || [], taxi = (R.taxi || {})[team] || [], out = [];
+  const active = all.filter(id => !ir.includes(id) && !taxi.includes(id)), nm = id => (P[id] ? P[id].name : id);
+  if (active.length > ACTIVE_MAX) out.push({ kind: 'size', msg: `${active.length} active players (the most is ${ACTIVE_MAX}): drop ${active.length - ACTIVE_MAX} or move rookies to the taxi squad` });
+  const q = active.filter(id => P[id] && P[id].pos === 'QB').length;
+  if (q > 2) out.push({ kind: 'qb', msg: `${q} active QBs (the most is 2): move one to taxi or IR, or drop one` });
+  for (const id of ir) {
+    if (['IR', 'Out'].includes(P[id] && P[id].inj)) continue;
+    let live; try { live = await espnInjury(P, id); } catch (e) { continue; }    // ESPN unreachable: never freeze on a guess
+    if (!['IR', 'Out'].includes(live)) out.push({ kind: 'ir', msg: `${nm(id)} is on IR but listed ${live || (P[id] && P[id].inj) || 'healthy'}: activate or drop him` });
+  }
+  return out;
+}
+const frozenMsg = list => `Your lineup is frozen until you fix this: ${list.map(x => x.msg).join('; ')}. Your current lineup still plays (rules 8-1-1, 8-1-3, 8-1-4).`;
+
+// Rule 6-1-3: after the founding Season, a team whose dues for the League's season aren't fully in the ledger (dues and
+// prepays, not voided) once they're due (the season's rookie draft has started, or its games have) can't trade, add,
+// claim, drop or move players, or make draft picks. Setting a lineup is still allowed.
+const FOUNDING_SEASON = 2027;
+async function unpaidTeams(db, cal) {
+  if (!(cal.season > FOUNDING_SEASON && cal.duesDue)) return new Set();
+  const [lg, led, ro] = await Promise.all([getJSON(`${SITE}/data/league.json?t=${Date.now()}`).catch(() => ({})),
+    db.collection('ledger').where('season', '==', cal.season).get(), db.doc('league/rosters').get()]);
+  const dues = Number((lg.prizes || {}).buyIn) || 100, all = led.docs.map(d => ({ id: d.id, ...d.data() }));
+  const voided = new Set(all.filter(e => e.kind === 'void').map(e => e.ref)), paid = {};
+  for (const e of all) if (!voided.has(e.id) && ['dues', 'prepay'].includes(e.kind)) paid[String(e.team)] = (paid[String(e.team)] || 0) + Number(e.amount || 0);
+  return new Set(Object.keys((ro.data() || {}).rosters || {}).filter(t => (paid[t] || 0) < dues));
+}
+const unpaidMsg = season => `Your ${season} dues aren't in the ledger yet. Until they're paid you can't trade, add, claim, drop or move players, or make draft picks (rule 6-1-3). You can still set your lineup.`;
+
 async function espnInjury(P, id) {
   const me = P[id]; if (!me) return null;
   const k = injNorm(me.name), same = Object.keys(P).filter(x => injNorm(P[x].name) === k);
-  const inj = await getJSON(`${ESPN_NFL}/injuries`);
+  const inj = await espnInjuries();
   for (const t of inj.injuries || []) for (const x of t.injuries || []) {
     const a = x.athlete || {};
     if (injNorm(a.displayName) !== k || !x.status) continue;
@@ -597,6 +641,12 @@ async function lineupAct(db, uid, commish, myTeam, data) {
   const [P, G] = await Promise.all([playerInfo(), weekGames()]);
   const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
   const nm = id => (P[id] ? P[id].name : id);
+  // Checked before the transaction (they read ESPN and the ledger): a frozen lineup, and unpaid dues for roster moves.
+  const problems = data.action === 'set' ? await rosterProblems((await db.doc('league/rosters').get()).data() || {}, team, P) : [];
+  if (data.action === 'move' && !(commish && String(myTeam) !== team)) {
+    const cal = await leagueCalendar(db, await getJSON('https://api.sleeper.app/v1/state/nfl'));
+    if ((await unpaidTeams(db, cal)).has(team)) throw new HttpsError('failed-precondition', unpaidMsg(cal.season));
+  }
   return db.runTransaction(async tx => {
     const rRef = db.doc('league/rosters'), lRef = db.doc('league/lineups'), snapRef = db.doc(`lineups/${G.season || 'x'}-w${G.week}`);
     const [rs, ls, snap] = await Promise.all([tx.get(rRef), tx.get(lRef), tx.get(snapRef)]);
@@ -609,7 +659,7 @@ async function lineupAct(db, uid, commish, myTeam, data) {
     const qbs = list => list.filter(id => P[id] && P[id].pos === 'QB').length;
     let slots = cur.slice(), newIr = ir.slice(), newTaxi = taxi.slice();
     if (data.action === 'set') {
-      if (qbs(active) > 2) throw new HttpsError('failed-precondition', `${active.length} active players include ${qbs(active)} QBs; the most allowed is 2 (rule 8-1-4). Move one to taxi or IR first.`);
+      if (problems.length) throw new HttpsError('failed-precondition', frozenMsg(problems));
       const want = (data.slots || []).slice(0, SLOTS.length).map(x => (x ? String(x) : null)); while (want.length < SLOTS.length) want.push(null);
       const seen = new Set();
       want.forEach((id, i) => {
@@ -639,6 +689,8 @@ async function lineupAct(db, uid, commish, myTeam, data) {
         newTaxi = taxi.filter(x => x !== id); newIr = [...ir, id];
       } else if (to === 'taxi') {
         if (taxi.includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is already on the taxi squad.`);
+        // One way (8-1-2): a player promoted off any taxi squad never goes back on one, on any team.
+        if ((R.promoted || []).includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} was promoted off a taxi squad; once promoted, a player can't go back on one (rule 8-1-2).`);
         if (!(P[id] && P[id].exp === 0)) throw new HttpsError('failed-precondition', `Only rookies can be placed on the taxi squad (rule 8-1-2).`);
         // Closed after Week 4 of the regular season and through the NFL playoffs; open again in the offseason for the rookie draft.
         if (!R.practice && ((G.regular && G.week > TAXI_DEADLINE_WEEK) || G.type === 3)) throw new HttpsError('failed-precondition', `The taxi deadline (Week ${TAXI_DEADLINE_WEEK}) has passed (rule 8-1-2).`);
@@ -658,7 +710,8 @@ async function lineupAct(db, uid, commish, myTeam, data) {
     // The week's own record only in the regular season (so a January change can't touch last season's Week 1), with
     // every spot whose player has kicked off kept as it was.
     if (G.regular && G.season) tx.set(snapRef, { teams: { [team]: freeze(((snap.data() || {}).teams || {})[team], slots, locked) }, season: G.season, week: G.week, updated: now }, { merge: true });
-    if (data.action === 'move') tx.update(rRef, { [`ir.${team}`]: newIr, [`taxi.${team}`]: newTaxi });
+    if (data.action === 'move') tx.update(rRef, { [`ir.${team}`]: newIr, [`taxi.${team}`]: newTaxi,
+      ...(taxi.includes(String(data.player)) && data.to !== 'taxi' ? { promoted: FieldValue.arrayUnion(String(data.player)) } : {}) });
     return { ok: true, slots, ir: newIr, taxi: newTaxi };
   });
 }
@@ -711,6 +764,7 @@ exports.lineupCheck = onSchedule({ schedule: '0 9 * * 0,4', timeZone: 'America/C
       else if (!g) issues.push(`${nm} is on a bye`);
       else if (['Out', 'IR', 'Sus', 'PUP'].includes(p.inj)) issues.push(`${nm} is listed ${p.inj}`);
     });
+    for (const x of await rosterProblems(R, t, P)) issues.unshift(`lineup frozen: ${x.msg}`);
     if (!issues.length) continue;
     for (const u of us.docs.filter(u => String(u.data().team) === t))
       await db.collection('notes').add({ to: u.id, team: Number(t), by: 'system', at: FieldValue.serverTimestamp(), title: `Week ${G.week} lineup check`,
@@ -897,11 +951,11 @@ async function leagueCalendar(db, state) {
   // and the next three seasons'.
   const begun = String(state.season) === String(season) && ['regular', 'post'].includes(state.season_type);
   const pickSeasons = [...(!rookieDone && !begun ? [season] : []), season + 1, season + 2, season + 3];
-  return { season, offseason: done && !rookieStarted, pickSeasons };
+  return { season, offseason: done && !rookieStarted, pickSeasons, duesDue: rookieDone || begun };
 }
 
 // Apply an add and/or drop to the roster doc's data (mutates R and the standing lineups LU); returns the changes made.
-function rosterMove(R, LU, team, add, drop, P, locked) {
+function rosterMove(R, LU, team, add, drop, P, locked, allowOver = false) {
   const all = R.rosters[team] || (R.rosters[team] = []), ir = ((R.ir = R.ir || {})[team] = R.ir[team] || []), taxi = ((R.taxi = R.taxi || {})[team] = R.taxi[team] || []);
   const nm = id => (P[id] ? P[id].name : id);
   if (drop) {
@@ -911,8 +965,8 @@ function rosterMove(R, LU, team, add, drop, P, locked) {
   if (add && ownerOf(R, add)) throw new HttpsError('failed-precondition', `${nm(add)} is already on a roster.`);
   const after = all.filter(x => x !== drop).concat(add ? [add] : []);
   const active = after.filter(x => !ir.includes(x) && !taxi.includes(x));
-  if (add && active.length > ACTIVE_MAX) throw new HttpsError('failed-precondition', `Your active roster is full (${ACTIVE_MAX}). Pick a player to drop.`);
-  if (add && P[add] && P[add].pos === 'QB' && active.filter(x => P[x] && P[x].pos === 'QB').length > 2) throw new HttpsError('failed-precondition', 'That would make 3 active QBs; the most allowed is 2 (rule 8-1-4). Drop a QB with him.');
+  if (add && !allowOver && active.length > ACTIVE_MAX) throw new HttpsError('failed-precondition', `Your active roster is full (${ACTIVE_MAX}). Pick a player to drop.`);
+  if (add && !allowOver && P[add] && P[add].pos === 'QB' && active.filter(x => P[x] && P[x].pos === 'QB').length > 2) throw new HttpsError('failed-precondition', 'That would make 3 active QBs; the most allowed is 2 (rule 8-1-4). Drop a QB with him.');
   R.rosters[team] = after;
   if (drop) { R.ir[team] = ir.filter(x => x !== drop); R.taxi[team] = taxi.filter(x => x !== drop);
     const slots = (LU.teams = LU.teams || {})[team]; if (slots) LU.teams[team] = slots.map(x => (x === drop ? null : x)); }
@@ -930,6 +984,14 @@ async function movesAct(db, uid, commish, myTeam, data) {
   const cal = await leagueCalendar(db, state);
   if (['add', 'claim'].includes(data.action) && cal.offseason) throw new HttpsError('failed-precondition', 'No free agents may be added in the Offseason, from the Blitz Bowl until the rookie draft starts (rule 8-4-3).');
   if (add && !P[add]) throw new HttpsError('invalid-argument', "That player isn't in the NFL player list.");
+  if (data.action !== 'cancel' && !(commish && String(myTeam) !== team)) {
+    if ((await unpaidTeams(db, cal)).has(team)) throw new HttpsError('failed-precondition', unpaidMsg(cal.season));
+    // A player on IR who is healthy again has to be activated or released before the next transaction (8-1-3).
+    if (['add', 'claim'].includes(data.action)) {
+      const ir = (await rosterProblems((await db.doc('league/rosters').get()).data() || {}, team, P)).filter(x => x.kind === 'ir');
+      if (ir.length) throw new HttpsError('failed-precondition', `First: ${ir.map(x => x.msg).join('; ')} (rule 8-1-3).`);
+    }
+  }
   if (data.action === 'cancel') {
     const ref = db.doc(`claims/${String(data.claim || '').replace(/[^A-Za-z0-9-]/g, '')}`), c = (await ref.get()).data();
     if (!c || String(c.team) !== team || c.status !== 'pending') throw new HttpsError('not-found', 'No such pending claim.');
@@ -994,7 +1056,7 @@ async function settleWaivers(db) {
   const due = Object.entries(W.players || {}).filter(([, v]) => v.until <= now + BATCH_SLACK).sort((a, b) => a[1].until - b[1].until).map(([id]) => id);
   if (!due.length) return { settled: 0 };
   const [P, G, state] = await Promise.all([playerInfo(), weekGames(), getJSON('https://api.sleeper.app/v1/state/nfl')]);
-  const cal = await leagueCalendar(db, state);
+  const cal = await leagueCalendar(db, state), unpaid = await unpaidTeams(db, cal);
   const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
   const rec = await records(db, state.season).catch(() => ({}));
   const nm2 = id => (P[id] ? P[id].name : id);
@@ -1013,8 +1075,10 @@ async function settleWaivers(db) {
       for (const c of claims) {
         const t = String(c.team), left = FAAB_BUDGET - (FA.spent[t] || 0);
         let note = null;
-        if (c.bid > left) note = `Not enough FAAB left ($${left}).`;
-        else { try { rosterMove(R, LU, t, id, c.drop || null, P, locked); } catch (e) { note = e.message; } }
+        // A claim you win always goes through, even past 24 active (your lineup is then frozen until you're back to 24).
+        if (unpaid.has(t)) note = `${cal.season} dues unpaid (rule 6-1-3).`;
+        else if (c.bid > left) note = `Not enough FAAB left ($${left}).`;
+        else { try { rosterMove(R, LU, t, id, c.drop || null, P, locked, true); } catch (e) { note = e.message; } }
         if (note) { tx.update(c.ref, { status: 'failed', note, done: Date.now() }); done.add(c); continue; }
         winner = c; FA.spent[t] = (FA.spent[t] || 0) + c.bid;
         tx.update(c.ref, { status: 'won', done: Date.now() }); done.add(c);
@@ -1083,8 +1147,8 @@ async function checkTrade(db, T, R, picks, P, state, opts = {}) {
     const list = own(t).filter(x => !out.includes(x) && !drops.includes(x)).concat(inn);
     const active = list.filter(x => !ir.includes(x) && !taxi.includes(x));
     const label = t === from ? 'The proposing team' : 'The accepting team';
-    if (active.length > ACTIVE_MAX) throw new HttpsError('failed-precondition', `${label} would have ${active.length} active players; the most is ${ACTIVE_MAX}. Add ${active.length - ACTIVE_MAX} drop${active.length - ACTIVE_MAX > 1 ? 's' : ''}.`);
-    if (active.filter(x => P[x] && P[x].pos === 'QB').length > 2) throw new HttpsError('failed-precondition', `${label} would have 3 active QBs; the most is 2 (rule 8-1-4).`);
+    // A trade may leave a team over 24 active or 2 QBs, like a waiver claim: it goes through, and that team's lineup is
+    // frozen until it's back within the limits (8-1-1, 8-1-4). Drops named with the trade happen with it.
     after[t] = list;
   }
   return after;
@@ -1098,6 +1162,12 @@ async function tradesAct(db, uid, commish, myTeam, data) {
   const [rs, ps] = await Promise.all([db.doc('league/rosters').get(), db.doc('league/picks').get()]);
   const R = rs.data(); if (!R) throw new HttpsError('failed-precondition', 'There are no league rosters yet.');
   const picks = (ps.data() || {}).traded || [];
+  const cal = await leagueCalendar(db, state), unpaid = await unpaidTeams(db, cal);
+  const gate = async (teams, actor) => {
+    for (const t of teams.map(String)) if (unpaid.has(t)) throw new HttpsError('failed-precondition', t === String(actor) ? unpaidMsg(cal.season) : `The other team's ${cal.season} dues aren't paid yet, so it can't trade (rule 6-1-3).`);
+    const ir = (await rosterProblems(R, String(actor), P)).filter(x => x.kind === 'ir');
+    if (ir.length) throw new HttpsError('failed-precondition', `First: ${ir.map(x => x.msg).join('; ')} (rule 8-1-3).`);
+  };
   if (data.action === 'propose' || data.action === 'counter') {
     let from = String(parseInt(data.from ?? myTeam, 10)), to = String(parseInt(data.to, 10)), prev = null;
     if (data.action === 'counter') {
@@ -1107,6 +1177,7 @@ async function tradesAct(db, uid, commish, myTeam, data) {
     }
     if (!commish && from !== me) throw new HttpsError('permission-denied', 'You can only offer trades from your own team.');
     if (from === to || !R.rosters[to]) throw new HttpsError('invalid-argument', 'Pick another team to trade with.');
+    await gate([from, to], from);
     const T = { from: Number(from), to: Number(to), give: cleanAssets(data.give), get: cleanAssets(data.get), dropsFrom: [...new Set((data.drops || []).map(String))].slice(0, 10), dropsTo: [] };
     if (!T.give.players.length && !T.give.picks.length && !T.get.players.length && !T.get.picks.length) throw new HttpsError('invalid-argument', 'Add at least one player or pick.');
     if (!T.give.players.length && !T.give.picks.length || !T.get.players.length && !T.get.picks.length) throw new HttpsError('invalid-argument', 'Each side has to send something.');
@@ -1126,6 +1197,7 @@ async function tradesAct(db, uid, commish, myTeam, data) {
     if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be accepted.');
     const dl = await deadlinePassed(db);
     if (dl.passed) throw new HttpsError('failed-precondition', `The trade deadline has passed (rule 8-3-3: the last game of Week ${TRADE_DEADLINE_WEEK}); trading reopens when the championship game is final.`);
+    await gate([T.from, T.to], T.to);
     const T2 = { ...T, dropsTo: [...new Set((data.drops || []).map(String))].slice(0, 10) };
     await checkTrade(db, T2, R, picks, P, state, { prepay: true });
     // Two days of review (8-3-2), then it goes through in the next Wednesday 3 AM batch, never in the middle of a week.
@@ -1242,7 +1314,7 @@ async function processTrades(db) {
   const due = (await db.collection('trades').where('status', '==', 'review').get()).docs.filter(d => (d.data().processAt || d.data().reviewUntil) <= Date.now() + BATCH_SLACK);
   if (!due.length) return { processed: 0 };
   const [P, state, G] = await Promise.all([playerInfo(), getJSON('https://api.sleeper.app/v1/state/nfl'), weekGames()]);
-  const { pickSeasons } = await leagueCalendar(db, state);
+  const cal = await leagueCalendar(db, state), { pickSeasons } = cal, unpaid = await unpaidTeams(db, cal);
   let processed = 0;
   for (const d of due) {
     await db.runTransaction(async tx => {
@@ -1251,6 +1323,8 @@ async function processTrades(db) {
       const T = ts.data(); if (!T || T.status !== 'review') return;
       const R = rs.data(), PK = ps.data() || { traded: [] }, LU = ls.data() || { teams: {} }, W = ws.data() || { players: {} };
       let after;
+      const owing = [T.from, T.to].map(String).filter(t => unpaid.has(t));
+      if (owing.length) { tx.update(d.ref, { status: 'failed', note: `${cal.season} dues unpaid (rule 6-1-3).`, done: Date.now() }); return; }
       try { after = await checkTrade(db, T, R, PK.traded, P, state, { prepay: false, pickSeasons }); }
       catch (e) { tx.update(d.ref, { status: 'failed', note: e.message, done: Date.now() }); return; }
       const from = String(T.from), to = String(T.to);
@@ -1485,4 +1559,4 @@ exports.backup = onCall({ region: 'us-central1', maxInstances: 2, timeoutSeconds
 });
 
 // Tests only (never set in production): the pure helpers.
-if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts, collectLeague, buildWorkbook, freeze, nextBatch };
+if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts, collectLeague, buildWorkbook, freeze, nextBatch, rosterProblems, unpaidTeams };

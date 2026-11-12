@@ -336,7 +336,7 @@
   function txRow(x) {
     const me = T.id, other = x.roster_ids.find(r => r !== me);
     const d = new Date(x.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const label = { trade: 'Trade', waiver: 'Waiver', free_agent: 'Free agent' }[x.type] || x.type;
+    const label = { trade: 'Trade', waiver: 'Waiver', free_agent: 'Free agent', commissioner: 'Commissioner' }[x.type] || x.type;
     const name = rid => M.teams[rid] ? M.teams[rid].f.location : `Team ${rid}`;
     const adds = Object.entries(x.adds || {}).filter(([, r]) => r === me).map(([id]) => id);
     const drops = Object.entries(x.drops || {}).filter(([, r]) => r === me).map(([id]) => id);
@@ -346,7 +346,7 @@
     const pl = id => { const p = P(id); return `<span class="pname"${UI.pid(id)}>${esc(p.full_name)}</span> <span class="pos ${esc(p.position)}">${esc(p.position)}</span> <span class="pmeta">${esc(p.team || 'FA')}</span>`; };
     return `<div class="tx"><div class="when"><span class="tag ${esc(x.type)}">${esc(label)}</span><span>${esc(d)} · W${x.leg}</span>
       ${x.type === 'trade' && other ? `<span>with ${esc(name(other))}</span>` : ''}${x.settings && x.settings.waiver_bid != null ? `<span>$${x.settings.waiver_bid} bid</span>` : ''}</div>
-    <div class="moves">${adds.map(id => mv('add', '+', pl(id))).join('')}${pin.map(p => mv('add', '+', `<span class="pname">${pk(p)} pick</span>`)).join('')}
+    <div class="moves">${x.settings && x.settings.note ? `<div class="mv"><span class="pname">${esc(x.settings.note)}</span></div>` : ''}${adds.map(id => mv('add', '+', pl(id))).join('')}${pin.map(p => mv('add', '+', `<span class="pname">${pk(p)} pick</span>`)).join('')}
       ${drops.map(id => mv('drop', '−', pl(id))).join('')}${pout.map(p => mv('drop', '−', `<span class="pname">${pk(p)} pick</span>`)).join('')}</div></div>`;
   }
 

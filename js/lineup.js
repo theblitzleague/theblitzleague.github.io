@@ -55,7 +55,7 @@ const hurt = id => ['IR', 'Out', 'Doubtful', 'Sus', 'PUP'].includes(P(id).injury
 async function send(data, done) {
   if (busy) return; busy = true;
   try {
-    const r = (await call({ team: TeamPage.T.id, ...data })).data;
+    const r = (await call({ team: TeamPage.T.id, ...data, ...(+TeamPage.T.id !== myTeam ? { override: true } : {}) })).data;
     const ro = R(); ro.starters = r.slots.map(x => x || '0'); ro.reserve = r.ir; ro.taxi = r.taxi;
     const g = TeamPage.T.games.find(x => x.live); if (g) g.me.starters = ro.starters.slice();
     if (done) toast(done);
@@ -155,6 +155,34 @@ onAuthStateChanged(auth, async user => {
   const [roles, prof] = await Promise.all([getDoc(doc(db, 'config', 'roles')).catch(() => null), getDoc(doc(db, 'users', user.uid)).catch(() => null)]);
   commish = (((roles && roles.data()) || {}).commish || []).includes(user.uid);
   const t = ((prof && prof.data()) || {}).team; myTeam = t == null ? null : +t;
-  window.LineupEdit = { can: id => commish || (myTeam != null && +id === myTeam), game, pts };
+  window.LineupEdit = { can: id => (myTeam != null && +id === myTeam) || (commish && editOn(id)), game, pts };
   dispatchEvent(new Event('hub:lineup'));
+  commishBar();
 });
+
+// ---------- Commissioner edit ----------
+// The commissioner sees other teams read-only, like any GM, until switching Commissioner edit on for that team (for
+// this browser session). The server refuses an override without it and logs every one as a Commissioner transaction.
+const CE_KEY = 'blitz.commishEdit';
+function editOn(id) { try { return JSON.parse(sessionStorage.getItem(CE_KEY) || '[]').includes(+id); } catch (e) { return false; } }
+function setEdit(id, on) {
+  let l = []; try { l = JSON.parse(sessionStorage.getItem(CE_KEY) || '[]'); } catch (e) { /* */ }
+  l = on ? [...new Set([...l, +id])] : l.filter(x => x !== +id);
+  try { sessionStorage.setItem(CE_KEY, JSON.stringify(l)); } catch (e) { /* private mode: stays off */ }
+}
+function commishBar() {
+  const old = document.getElementById('ce-bar');
+  if (!commish || !window.TeamPage || !TeamPage.T || +TeamPage.T.id === myTeam) { if (old) old.remove(); return; }
+  const id = TeamPage.T.id, on = editOn(id), name = TeamPage.T.f.location;
+  const html = `<div id="ce-bar" class="ce-bar${on ? ' on' : ''}"><span>${on ? `<b>Commissioner edit is ON</b> for ${UI.esc(name)}. Every change is logged on this team's Transactions for the league to see (11-2-1).`
+    : `<b>Commissioner edit is off.</b> ${UI.esc(name)}'s lineup and roster are read-only.`}</span>
+    <button class="btn small${on ? '' : ' primary'}" type="button">${on ? 'Turn off' : 'Turn on Commissioner edit'}</button></div>`;
+  const host = document.getElementById('content'); if (!host) return;
+  if (old) old.outerHTML = html; else host.insertAdjacentHTML('beforebegin', html);
+  document.querySelector('#ce-bar button').onclick = () => {
+    if (!on && !confirm(`Turn on Commissioner edit for ${name}? Any lineup or roster change you make will be logged on their Transactions for the whole league.`)) return;
+    setEdit(id, !on); commishBar(); dispatchEvent(new Event('hub:lineup'));
+  };
+}
+addEventListener('hashchange', () => setTimeout(commishBar, 0));
+addEventListener('hub:lineup', () => commishBar());

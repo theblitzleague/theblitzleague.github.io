@@ -272,14 +272,14 @@
   function moves() {
     const list = M.transactions.slice(0, 5);
     if (!list.length) return '<div class="empty">No moves yet.</div>';
-    const label = { trade: 'Trade', waiver: 'Waiver', free_agent: 'Free agent' };
+    const label = { trade: 'Trade', waiver: 'Waiver', free_agent: 'Free agent', commissioner: 'Commissioner' };
     return `<div class="plist">${list.map(x => {
       const d = new Date(x.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const teams = x.roster_ids.map(r => M.teams[r]).filter(Boolean);
       const adds = Object.entries(x.adds || {}).map(([id, r]) => `<span class="mv"${UI.pid(id)}><span class="sign add">+</span>${esc(P(id).full_name)}${x.type === 'trade' ? ` <small>to ${esc(M.teams[r].f.location)}</small>` : ''}</span>`).join('');
       return `<div class="hmove"><div class="when"><span class="tag ${esc(x.type)}">${label[x.type] || esc(x.type)}</span><span>${esc(d)}</span></div>
         <div class="who">${teams.map(t => `<a href="team.html?team=${t.id}">${markSVG(t.f, 'mini')} ${esc(t.f.location)}</a>`).join('<span class="x">&harr;</span>')}</div>
-        <div class="moves">${adds}</div></div>`;
+        <div class="moves">${x.settings && x.settings.note ? `<span class="mv">${esc(x.settings.note)}</span>` : ''}${adds}</div></div>`;
     }).join('')}</div>`;
   }
 

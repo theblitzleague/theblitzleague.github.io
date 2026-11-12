@@ -580,7 +580,23 @@ exports.lineup = onCall({ region: 'us-central1', maxInstances: 10, timeoutSecond
   const db = getFirestore();
   const [roles, user] = await Promise.all([db.doc('config/roles').get(), db.doc(`users/${uid}`).get()]);
   const commish = ((roles.data() || {}).commish || []).includes(uid), team = (user.data() || {}).team;
-  return lineupAct(db, uid, commish, team == null ? null : team, req.data || {});
+  const d = req.data || {}, target = String(parseInt(d.team, 10));
+  // Commissioner edit: the commissioner may set another team's lineup or roster (the Commissioner's Office sets an
+  // abandoned Franchise's lineups, 11-2-1), but only with Commissioner edit switched on for that team, and every change is
+  // logged as a "Commissioner" transaction on that team for the whole league to see.
+  const override = d.action !== 'results' && commish && String(team) !== target;
+  if (override && d.override !== true) throw new HttpsError('failed-precondition', 'Turn on Commissioner edit for this team first.');
+  const res = await lineupAct(db, uid, commish, team == null ? null : team, d);
+  if (override) {
+    const P = await playerInfo(), nm = id => (P[id] ? P[id].name : id);
+    const what = d.action === 'set' ? 'Lineup set by the Commissioner'
+      : d.action === 'move' ? `Commissioner moved ${nm(d.player)} to ${({ ir: 'injured reserve', taxi: 'the taxi squad', bench: 'the bench' })[d.to] || d.to}`
+      : `Commissioner roster change (${String(d.action || '')})`;
+    const week = Number((await getJSON('https://api.sleeper.app/v1/state/nfl')).week) || 0;
+    await db.collection('transactions').add({ type: 'commissioner', status: 'complete', leg: week, created: Date.now(), roster_ids: [Number(target)],
+      adds: {}, drops: {}, draft_picks: [], settings: { note: what }, by: uid });
+  }
+  return res;
 });
 
 /* ---------- Week results, standings and the playoff bracket ----------

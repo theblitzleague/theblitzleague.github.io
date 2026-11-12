@@ -17,7 +17,8 @@ const sel = { give: new Set(), get: new Set(), drops: new Set() };
 
 const P = id => M.players[id] || { full_name: `Player ${id}`, position: '?' };
 const tname = id => (M.teams[id] ? M.teams[id].f.location : `Team ${id}`);
-const seasons = () => Array.from({ length: M.league.futurePickSeasons || 3 }, (_, i) => +M.state.season + 1 + i);
+// Picks that can be traded (8-3-1), from the League calendar (js/data.js): this season's until its rookie draft, and the next three.
+const seasons = () => (M.calendar ? M.calendar.pickSeasons : Array.from({ length: M.league.futurePickSeasons || 3 }, (_, i) => +M.state.season + 1 + i));
 const pickOwner = p => { const t = (M.tradedPicks || []).find(x => +x.season === +p.season && +x.round === +p.round && +x.roster_id === +p.roster_id); return t ? +t.owner_id : +p.roster_id; };
 const picksOf = team => seasons().flatMap(s => Array.from({ length: ROUNDS }, (_, r) => Object.keys(M.teams).map(o => ({ season: s, round: r + 1, roster_id: +o }))).flat()).filter(p => pickOwner(p) === +team);
 const pkKey = p => `pk:${p.season}-${p.round}-${p.roster_id}`;
@@ -95,7 +96,7 @@ function builder(other) {
     ${lockBox(needs({ from: myTeam, to: other, give: split('give'), get: split('get') }), ' You can still send the offer.')}
     <p class="tr-window">${windowText()}</p>
     <div class="acct-row"><input id="tr-note" maxlength="300" placeholder="Note to ${esc(tname(other))} (optional)"><button class="btn primary" data-tr="send">${counterOf ? 'Send counter offer' : 'Send offer'}</button>${counterOf ? '<button class="btn" data-tr="nocounter">Cancel counter</button>' : ''}</div>
-    <p class="footnote">An accepted trade sits in a two-day review, then goes through (rule 8-3-2). Picks up to three seasons ahead can be traded; trading away a future pick needs that season's $50 prepay first (8-3-5). No trades are accepted after the last game of Week 11 until the championship is final (8-3-3).</p></section>`;
+    <p class="footnote">An accepted trade sits in a two-day review, then goes through in the next Wednesday 3 AM batch, when the week's scores are in and no game is on (rule 8-3-2). Picks up to three seasons ahead can be traded; trading away a future pick needs that season's $50 prepay first (8-3-5). No trades are accepted after the last game of Week 11 until the championship is final (8-3-3).</p></section>`;
 }
 const split = side => ({ players: [...sel[side]].filter(k => !k.startsWith('pk:')), picks: [...sel[side]].filter(k => k.startsWith('pk:')).map(fromKey) });
 
@@ -103,7 +104,7 @@ const split = side => ({ players: [...sel[side]].filter(k => !k.startsWith('pk:'
 function card(t) {
   const mineFrom = +t.from === +myTeam, other = mineFrom ? t.to : t.from;
   const youGive = mineFrom ? t.give : t.get, youGet = mineFrom ? t.get : t.give;
-  const status = { offered: mineFrom ? `Waiting on ${tname(other)}` : `Offer from ${tname(other)}`, review: `In review until ${when(t.reviewUntil)}`, processed: 'Done', rejected: 'Rejected', cancelled: 'Withdrawn', countered: 'Countered', vetoed: 'Vetoed', failed: 'Failed' }[t.status] || t.status;
+  const status = { offered: mineFrom ? `Waiting on ${tname(other)}` : `Offer from ${tname(other)}`, review: `In review · goes through ${when(t.processAt || t.reviewUntil)}`, processed: 'Done', rejected: 'Rejected', cancelled: 'Withdrawn', countered: 'Countered', vetoed: 'Vetoed', failed: 'Failed' }[t.status] || t.status;
   const involved = +t.from === +myTeam || +t.to === +myTeam;
   const lock = t.status === 'offered' ? needs(t) : [];
   const btns = t.status === 'offered' && !mineFrom ? `<button class="btn primary" data-tr="accept" data-id="${t.id}"${lock.length ? ' disabled title="Locked until the prepay is in the ledger (8-3-5)"' : ''}>${lock.length ? '🔒 Accept' : 'Accept'}</button><button class="btn" data-tr="counter" data-id="${t.id}">Counter</button><button class="btn danger" data-tr="reject" data-id="${t.id}">Reject</button>`
@@ -157,8 +158,8 @@ document.addEventListener('click', async e => {
       return;
     }
     const drops = [...box.querySelectorAll('.tr-acc-drop:checked')].map(x => x.value);
-    if (!confirm(`Accept this trade with ${tname(t.from)}? It goes into a two-day review, then goes through.`)) return;
-    await send({ action: 'accept', id, drops }, 'Accepted. The trade goes through after its two-day review.'); return;
+    if (!confirm(`Accept this trade with ${tname(t.from)}? It goes into a two-day review, then goes through in the next Wednesday 3 AM batch.`)) return;
+    await send({ action: 'accept', id, drops }, 'Accepted. After its two-day review it goes through in the next Wednesday 3 AM batch.'); return;
   }
   const msg = { reject: 'Offer rejected.', cancel: 'Offer withdrawn.', veto: 'Trade vetoed.' }[a];
   if (a === 'veto' && !confirm('Veto this trade? The rules allow it only for collusion or a rules violation (8-3-4).')) return;

@@ -60,6 +60,7 @@
     const names = ['rosters', 'users', 'matchups', 'transactions', 'traded_picks', 'players', 'state'];
     const [got, scoring, live] = await Promise.all([Promise.all(names.map(n => getJSON(`data/sample/${n}.json`))), hubScoring(), nflState()]);
     const d = Object.fromEntries(names.map((n, i) => [n, got[i]]));
+    d.sampleSeason = String(d.state.season);         // the season the placeholder files belong to (2026)
     if (live && live.season && live.week) d.state = { season: String(live.season), week: Number(live.week), display_week: live.display_week, season_type: live.season_type };
     return { ...d, rosterPositions: null, drafts: [], scoring };
   }
@@ -113,13 +114,21 @@
       const obj = k => val({ mapValue: { fields: D[k] || {} } }) || {};
       return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0),
         rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((D.lineups || {}).teams), startWeek: f.startWeek ? val(f.startWeek) : null, startSeason: f.startSeason ? val(f.startSeason) : null,
+        rookieSeasons: f.rookieSeasons ? (val(f.rookieSeasons) || []).map(Number) : [],
         results: (res.documents || []).map(d => val({ mapValue: { fields: d.fields } })),
         waivers: obj('waivers').players || {}, faab: obj('faab'), picks: obj('picks').traded || [], bracket: D.bracket ? obj('bracket') : null,
         transactions: (txs.documents || []).map(d => ({ transaction_id: d.name.split('/').pop(), ...val({ mapValue: { fields: d.fields } }) })) };
     } catch (e) { return null; } finally { clearTimeout(t); }
   }
   async function applyHub(raw, hub) {
-    const [all, nfl] = await Promise.all([getJSON('data/players.json').catch(() => ({})), getJSON('data/nfl.json').catch(() => ({}))]);
+    const [all, nfl, sched] = await Promise.all([getJSON('data/players.json').catch(() => ({})), getJSON('data/nfl.json').catch(() => ({})), getJSON('data/schedule.json').catch(() => ({}))]);
+    // Every season after the placeholder one plays the Hub's own schedule (data/schedule.json, the same pairings the
+    // server scores and seeds the bracket from), starting from zero: nothing from the placeholder files carries over.
+    const S = sched[String(raw.state.season)];
+    if (raw.sampleSeason && String(raw.state.season) !== raw.sampleSeason && S && S.weeks) {
+      raw.matchups = {};
+      for (const [w, games] of Object.entries(S.weeks)) raw.matchups[w] = games.flatMap(([a, b], i) => [a, b].map(t => ({ roster_id: +t, matchup_id: i + 1, starters: [], starters_points: [], points: 0, players: [] })));
+    }
     raw.seasonStats = nfl.players || {};            // {id: [games, points, last-3 average]} in League scoring
     for (const [id, p] of Object.entries(all)) if (!raw.players[id]) raw.players[id] = p;
     // Lineups are the Hub's standing lineup (league/lineups), in league.json rosterSlots order; null = an empty spot.
@@ -131,7 +140,7 @@
     const wk = raw.state.week;
     // Weeks before startWeek (the first week the official rosters could set a lineup before kickoff) stay placeholder
     // weeks, scores and all. Until the server records startWeek, rosters made official mid-week start next week.
-    const start = hub.startSeason && +raw.state.season > +hub.startSeason ? 1 : hub.startWeek || wk + 1;   // later seasons: all Hub
+    const start = +raw.state.season > +(hub.startSeason || raw.sampleSeason || 2026) ? 1 : hub.startWeek || wk + 1;   // later seasons: all Hub
     raw.hubStart = start;
     for (const [w, rows] of Object.entries(raw.matchups)) if (+w >= wk) for (const m of rows) {
       if (+w < start) continue;
@@ -139,8 +148,11 @@
       m.starters = +w === wk && r ? r.starters.slice() : []; m.starters_points = m.starters.map(() => 0); m.players = r ? r.players.slice() : []; m.points = 0;
     }
     // Weeks the Hub has scored (results/{season}-w{week}, functions/index.js weekResults) replace the placeholder scores.
+    // A Hub week only counts as played once it has a result: a missing one is never a 0-0 tie.
+    raw.scored = new Set();
     for (const R of hub.results || []) {
       if (String(R.season) !== String(raw.state.season) || !(R.week < wk || (R.week === wk && R.final))) continue;
+      raw.scored.add(R.week);
       for (const m of raw.matchups[String(R.week)] || []) {
         const x = (R.teams || {})[String(m.roster_id)]; if (!x) continue;
         m.starters = (x.starters || []).map(id => id || '0'); m.starters_points = x.points || []; m.points = x.pts || 0;
@@ -170,7 +182,7 @@
 
   // Sleeper lists defenders by exact spot (DE, CB, OLB...); lineups use DL / LB / DB. Every page groups by
   // `position`, so it becomes the lineup group; the exact spot is kept as `nflPos` for the player card.
-  const IDP = { DE: 'DL', DT: 'DL', NT: 'DL', ILB: 'LB', OLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
+  const IDP = { DE: 'DL', DT: 'DL', NT: 'DL', ILB: 'LB', OLB: 'LB', MLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
   const KEEP = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB'];
   function normalize(players) {
     for (const [id, p] of Object.entries(players)) {
@@ -277,7 +289,7 @@
         const me = rows.find(x => x.roster_id === t.id);
         if (!me || me.matchup_id == null) continue;
         const opp = rows.find(x => x.matchup_id === me.matchup_id && x.roster_id !== t.id);
-        const final = w < current;
+        const final = raw.scored ? raw.scored.has(w) || (w < current && w < (raw.hubStart || 0)) : w < current;
         const g = { week: w, me, opp: opp && teams[opp.roster_id], oppRow: opp, final, live: w === current };
         if (final && opp) g.result = me.points > opp.points ? 'W' : me.points < opp.points ? 'L' : 'T';
         t.games.push(g);
@@ -406,6 +418,14 @@
       }
       const model = { ...build(league, brand, { ...raw, history }), live, hub, hubStart: raw.hubStart || null, seasonStats: raw.seasonStats || null,
         waivers: hub ? hub.waivers : {}, faab: hub ? hub.faab : {}, bracket: hub ? hub.bracket : null };
+      // The League's calendar, the same way the server works it out (functions/index.js leagueCalendar): once the Blitz
+      // Bowl is final the League is in the next season; that season's picks trade until its rookie draft and its games.
+      if (hub) {
+        const br = hub.bracket, nflSeason = +model.state.season, done = !!(br && br.champion && +br.season >= nflSeason);
+        const season = done ? +br.season + 1 : nflSeason;
+        const begun = String(model.state.season) === String(season) && ['regular', 'post'].includes(model.state.season_type);
+        model.calendar = { season, offseason: done, pickSeasons: [...(!begun && !(hub.rookieSeasons || []).includes(season) ? [season] : []), season + 1, season + 2, season + 3] };
+      }
       const SV = await scoringVersions();
       model.scoringVersions = SV.versions; model.scoringLog = SV.log;
       model.scoringAt = (season, week) => scoringAt(model.scoringBase, SV.versions, season, week);

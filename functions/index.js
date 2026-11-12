@@ -160,6 +160,7 @@ function statLine(s) {
 }
 exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 90, memory: '512MiB', maxInstances: 1 }, async () => {
   const sb = await getJSON(`${ESPN_NFL}/scoreboard`);
+  if (Number((sb.season || {}).type) !== 2) return;                // preseason, NFL playoffs and offseason games never count
   const games = (sb.events || []).map(e => {
     const c = e.competitions[0], side = h => { const t = c.competitors.find(x => x.homeAway === h); const a = t.team.abbreviation; return { abbr: TEAMFIX[a] || a, score: Number(t.score || 0) }; };
     return { id: e.id, at: e.date, state: e.status.type.state, detail: e.status.type.shortDetail, away: side('away'), home: side('home') };
@@ -170,8 +171,8 @@ exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-centr
   const changed = games.some(g => was[g.id] !== g.state);
   if (!games.some(g => g.state === 'in') && !changed) return;      // no game on, nothing new since the last run
 
-  const state = await getJSON('https://api.sleeper.app/v1/state/nfl');
-  const season = String(state.season), week = Number(state.week);
+  // The week's season and number from the same ESPN scoreboard the lineup locks use, so both save to the same week.
+  const season = String((sb.season || {}).year), week = Number((sb.week || {}).number);
   const scoring = await leagueScoring(season, week);
   const rows = await getJSON(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&t=${Date.now()}`);
   const players = {};
@@ -186,10 +187,31 @@ exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-centr
   const data = { season, week, updated: new Date().toISOString(), statsAt: newest ? new Date(newest).toISOString() : null, games, players };
   const doc = { season, week, updated: FieldValue.serverTimestamp(), states: games.map(g => `${g.id}:${g.state}`), json: JSON.stringify(data) };
   await Promise.all([ref.set(doc), db.doc(`live/${season}-w${week}`).set(doc)]);
-  // Keep this week's Hub lineups as they stand during the games (locked players can't change, so the last copy is final).
-  const lu = (await db.doc('league/lineups').get()).data();
-  if (lu && lu.teams) await db.doc(`lineups/${season}-w${week}`).set({ teams: lu.teams, season, week, updated: Date.now() }, { merge: true });
+  // Keep this week's Hub lineups as they stand during the games. Every team gets an entry (an empty one if it never set a
+  // lineup), and a starter whose game has kicked off is frozen in that week's record: nothing after kickoff (a move, a
+  // release by his NFL team) can take him or his points out of that week.
+  const [lu, sn, ro, P] = await Promise.all([db.doc('league/lineups').get(), db.doc(`lineups/${season}-w${week}`).get(), db.doc('league/rosters').get(), playerInfo()]);
+  const standing = ((lu.data() || {}).teams) || {}, before = ((sn.data() || {}).teams) || {}, rosters = ((ro.data() || {}).rosters) || {};
+  const kicked = new Set(games.filter(g => g.state !== 'pre').flatMap(g => [g.away.abbr, g.home.abbr]));
+  const played = id => !!(players[id] || (P[id] && P[id].team && kicked.has(P[id].team)));
+  const teams = {};
+  for (const t of new Set([...Object.keys(rosters), ...Object.keys(standing)])) teams[t] = freeze(before[t], standing[t], played);
+  if (Object.keys(teams).length) await db.doc(`lineups/${season}-w${week}`).set({ teams, season, week, updated: Date.now() }, { merge: true });
 });
+// A week's lineup record: the new lineup, except that any spot whose player has already kicked off keeps him.
+function freeze(prev, next, played) {
+  const out = SLOTS.map((_, i) => ((next || [])[i] ? String(next[i]) : null));
+  (prev || []).forEach((id, i) => { if (id && i < out.length && played(id)) { const j = out.indexOf(id); if (j >= 0 && j !== i) out[j] = null; out[i] = id; } });
+  return out;
+}
+// The weekly moves batch: Wednesday 3 AM Central, when the week's scores are in (official Tuesday 5 AM, rule 2-2-3), ESPN
+// has moved to the new week and no game is near. Trades and waiver claims go through only then. The first such time at
+// or after `after`.
+function nextBatch(after) {
+  for (let i = 0; i < 9; i++) { const p = chiParts(after + i * 864e5); if (p.weekday === 'Wed') { const at = chiTime(+p.year, +p.month, +p.day, 3); if (at >= after) return at; } }
+  return after + 7 * 864e5;
+}
+const BATCH_SLACK = 20 * 60e3;   // the batch counts anything due within a few minutes of its start
 
 /* ---------- Draft room (draftroom.html) ----------
    Every draft change goes through the one callable function below, which checks it inside a database transaction, so
@@ -297,7 +319,21 @@ async function officialWrites(tx, db, id, d, now, uid) {
     const rosters = JSON.parse(JSON.stringify(L.rosters));
     for (const p of d.picks) { const k = String(p.t); rosters[k] = [...new Set([...(rosters[k] || []), p.p])]; }
     d.official = true; d.officialAt = now;
-    return [[db.doc('league/rosters'), { rosters, rookieDrafts: [...(L.rookieDrafts || []), id], updated: now }, 'update']];
+    return [[db.doc('league/rosters'), { rosters, rookieDrafts: [...(L.rookieDrafts || []), id], rookieSeasons: [...new Set([...(L.rookieSeasons || []), Number(d.pickSeason)].filter(Boolean))], updated: now }, 'update']];
+  }
+  // A dynasty has one startup draft. Once the real league has started (the founding reset), its rosters are never replaced.
+  const C = (await tx.get(db.doc('config/season'))).data() || {};
+  if (C.founding && L && L.rosters && L.source !== id) throw new HttpsError('failed-precondition', `The league's rosters came from ${L.name || 'the startup draft'}. A dynasty has one startup draft; later drafts are rookie drafts, which add to the rosters.`);
+  // Every team starts with a full lineup: each spot filled with the best player drafted for it (draft board order), so
+  // nobody scores zero in Week 1 for not having set one. GMs change it from there.
+  const poolDoc = (await tx.get(db.doc(`drafts/${id}/pool/all`))).data();
+  const rank = {}, posOf = {}; for (const e of parsePool((poolDoc || {}).list || [])) { rank[e.id] = e.rank; posOf[e.id] = e.pos; }
+  const order = SLOTS.map((_, i) => i).sort((a, b) => ELIG[SLOTS[a]].length - ELIG[SLOTS[b]].length);
+  const lineups = {};
+  for (const t of d.teams) {
+    const mine = d.picks.filter(p => String(p.t) === String(t)).map(p => p.p).sort((a, b) => (rank[a] ?? 1e9) - (rank[b] ?? 1e9)), used = new Set(), slots = SLOTS.map(() => null);
+    for (const i of order) { const best = mine.find(x => !used.has(x) && ELIG[SLOTS[i]].includes(posOf[x])); if (best) { slots[i] = best; used.add(best); } }
+    lineups[String(t)] = slots;
   }
   const prevRef = L && L.source && L.source !== id ? db.doc(`drafts/${L.source}`) : null;
   const prev = prevRef ? await tx.get(prevRef) : null;
@@ -312,7 +348,8 @@ async function officialWrites(tx, db, id, d, now, uid) {
     if (st.season_type !== 'regular') startWeek = 1;
     else { const G = await weekGames(); startWeek = G.week + (Object.values(G.byTeam).some(g => g.started) ? 1 : 0); }
   } catch (e) { /* weekResults sets it */ }
-  const out = [[db.doc('league/rosters'), { source: id, name: d.name, kind: d.kind, practice: !!d.practice, rosters, picks: d.picks.length, at: now, by: uid || 'auto', startWeek, startSeason }]];
+  const out = [[db.doc('league/rosters'), { source: id, name: d.name, kind: d.kind, practice: !!d.practice, rosters, picks: d.picks.length, at: now, by: uid || 'auto', startWeek, startSeason }],
+    [db.doc('league/lineups'), { teams: lineups, updated: now, auto: true }]];
   if (prev && prev.exists) out.push([prevRef, { official: false, updated: now }, 'update']);
   return out;
 }
@@ -327,7 +364,15 @@ async function draftAct(db, uid, commish, data, myTeam) {
     const rounds = Math.min(30, Math.max(1, parseInt(data.rounds, 10) || (kind === 'rookie' ? 4 : 24)));
     const clockSec = Math.min(86400, Math.max(10, parseInt(data.clockSec, 10) || 120));
     const simDelay = Math.min(60, Math.max(1, parseInt(data.simDelay, 10) || 2));
-    const pool = await buildPool(kind);
+    if (kind === 'startup' && data.official) {
+      const [L, C] = await Promise.all([db.doc('league/rosters').get(), db.doc('config/season').get()]);
+      if ((C.data() || {}).founding && L.exists && (L.data() || {}).rosters) throw new HttpsError('failed-precondition', 'The league already had its startup draft. Make a rookie draft, or a mock draft for practice.');
+    }
+    let pool = await buildPool(kind);
+    if (kind === 'rookie') {                                  // a rookie already on a Blitz roster can't be drafted again
+      const onRoster = new Set(Object.values(((await db.doc('league/rosters').get()).data() || {}).rosters || {}).flat());
+      pool = pool.filter(s => !onRoster.has(s.split('|')[0]));
+    }
     const pickSeason = kind === 'rookie' ? (parseInt(data.pickSeason, 10) || Number((await getJSON('https://api.sleeper.app/v1/state/nfl')).season)) : null;
     const ref = db.collection('drafts').doc();
     await db.doc(`drafts/${ref.id}/pool/all`).set({ list: pool });
@@ -414,6 +459,8 @@ async function draftAct(db, uid, commish, data, myTeam) {
         else {
           const L = (await tx.get(db.doc('league/rosters'))).data();
           if (d.kind === 'rookie' && L && (L.rookieDrafts || []).includes(id)) throw new HttpsError('failed-precondition', "This rookie draft's players are already on the rosters. Remove them with roster moves instead.");
+          const C = (await tx.get(db.doc('config/season'))).data() || {};
+          if (C.founding && L && L.source === id) throw new HttpsError('failed-precondition', "This draft made the league's rosters. Unmarking it would erase every roster, so it stays official.");
           d.official = false; if (L && L.source === id) extra.push([db.doc('league/rosters'), null]);
         }
         break;
@@ -518,12 +565,17 @@ async function playerInfo() {
 // This week's kickoff per NFL team, from ESPN (a game that has started or finished locks its players).
 async function weekGames() {
   if (gameMemo && Date.now() - gameMemo.at < 60000) return gameMemo.v;
-  const sb = await getJSON(`${ESPN_NFL}/scoreboard`), byTeam = {};
-  for (const e of sb.events || []) {
+  // Locks only count in the regular season (ESPN season type 2): preseason, NFL playoff and offseason games lock nobody.
+  // Once every game of the week is final, the week is over: nothing is locked and lineups are for the next week (ESPN
+  // itself only moves to the next week at 2 AM Central Wednesday).
+  const sb = await getJSON(`${ESPN_NFL}/scoreboard`), byTeam = {}, events = sb.events || [];
+  const type = Number((sb.season || {}).type || 0), regular = type === 2;
+  const over = events.length > 0 && events.every(e => e.status.type.state === 'post');
+  if (regular && !over) for (const e of events) {
     const c = e.competitions[0], started = e.status.type.state !== 'pre' || Date.parse(e.date) <= Date.now();
     for (const t of c.competitors) { const a = TEAMFIX[t.team.abbreviation] || t.team.abbreviation; byTeam[a] = { at: e.date, started }; }
   }
-  const v = { season: String((sb.season || {}).year || ''), week: Number((sb.week || {}).number || 0), byTeam };
+  const v = { season: String((sb.season || {}).year || ''), week: Number((sb.week || {}).number || 0) + (regular && over ? 1 : 0), type, regular, byTeam };
   gameMemo = { at: Date.now(), v }; return v;
 }
 
@@ -546,8 +598,8 @@ async function lineupAct(db, uid, commish, myTeam, data) {
   const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
   const nm = id => (P[id] ? P[id].name : id);
   return db.runTransaction(async tx => {
-    const rRef = db.doc('league/rosters'), lRef = db.doc('league/lineups');
-    const [rs, ls] = await Promise.all([tx.get(rRef), tx.get(lRef)]);
+    const rRef = db.doc('league/rosters'), lRef = db.doc('league/lineups'), snapRef = db.doc(`lineups/${G.season || 'x'}-w${G.week}`);
+    const [rs, ls, snap] = await Promise.all([tx.get(rRef), tx.get(lRef), tx.get(snapRef)]);
     const R = rs.data(); if (!R || !R.rosters || !R.rosters[team]) throw new HttpsError('failed-precondition', 'There are no league rosters yet. Make a draft official first.');
     const L = ls.data() || { teams: {} };
     const all = R.rosters[team], ir = (R.ir || {})[team] || [], taxi = (R.taxi || {})[team] || [];
@@ -588,7 +640,8 @@ async function lineupAct(db, uid, commish, myTeam, data) {
       } else if (to === 'taxi') {
         if (taxi.includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is already on the taxi squad.`);
         if (!(P[id] && P[id].exp === 0)) throw new HttpsError('failed-precondition', `Only rookies can be placed on the taxi squad (rule 8-1-2).`);
-        if (!R.practice && G.week > TAXI_DEADLINE_WEEK) throw new HttpsError('failed-precondition', `The taxi deadline (Week ${TAXI_DEADLINE_WEEK}) has passed (rule 8-1-2).`);
+        // Closed after Week 4 of the regular season and through the NFL playoffs; open again in the offseason for the rookie draft.
+        if (!R.practice && ((G.regular && G.week > TAXI_DEADLINE_WEEK) || G.type === 3)) throw new HttpsError('failed-precondition', `The taxi deadline (Week ${TAXI_DEADLINE_WEEK}) has passed (rule 8-1-2).`);
         if (taxi.length >= TAXI_MAX) throw new HttpsError('failed-precondition', `The taxi squad is full (${TAXI_MAX} spots).`);
         newIr = ir.filter(x => x !== id); newTaxi = [...taxi, id];
       } else if (to === 'active') {
@@ -600,9 +653,11 @@ async function lineupAct(db, uid, commish, myTeam, data) {
       } else throw new HttpsError('invalid-argument', 'Unknown move.');
       if (i >= 0 && to !== 'active') slots[i] = null;
     } else throw new HttpsError('invalid-argument', 'Unknown action.');
-    const now = Date.now(), wk = `${G.season || 'x'}-w${G.week}`;
+    const now = Date.now();
     tx.set(lRef, { teams: { [team]: slots }, season: G.season, week: G.week, updated: now }, { merge: true });
-    tx.set(db.doc(`lineups/${wk}`), { teams: { [team]: slots }, season: G.season, week: G.week, updated: now }, { merge: true });
+    // The week's own record only in the regular season (so a January change can't touch last season's Week 1), with
+    // every spot whose player has kicked off kept as it was.
+    if (G.regular && G.season) tx.set(snapRef, { teams: { [team]: freeze(((snap.data() || {}).teams || {})[team], slots, locked) }, season: G.season, week: G.week, updated: now }, { merge: true });
     if (data.action === 'move') tx.update(rRef, { [`ir.${team}`]: newIr, [`taxi.${team}`]: newTaxi });
     return { ok: true, slots, ir: newIr, taxi: newTaxi };
   });
@@ -631,6 +686,36 @@ exports.lineup = onCall({ region: 'us-central1', maxInstances: 10, timeoutSecond
       adds: {}, drops: {}, draft_picks: [], settings: { note: what }, by: uid });
   }
   return res;
+});
+
+// lineupCheck: Thursday and Sunday at 9 AM Central in the regular season, a private message (and phone notification) to
+// each GM whose lineup has an empty spot or a starter who can't play this week: listed Out, on IR or suspended, on a bye,
+// or without an NFL team. Spots already locked are left alone. Nobody with a clean lineup hears anything.
+exports.lineupCheck = onSchedule({ schedule: '0 9 * * 0,4', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 0, timeoutSeconds: 120, memory: '512MiB' }, async () => {
+  const G = await weekGames(); if (!G.regular || G.week > REG_WEEKS + 3) return;
+  const db = getFirestore(), [rs, ls, us, br] = await Promise.all([db.doc('league/rosters').get(), db.doc('league/lineups').get(), db.collection('users').get(), db.doc('league/bracket').get()]);
+  const R = rs.data(); if (!R || !R.rosters) return;
+  const P = await playerInfo(), L = (ls.data() || {}).teams || {};
+  // In the playoffs only the teams still playing that week get the reminder.
+  const B = br.data() || {}, rd = (B.rounds || []).find(r => r.week === G.week);
+  const playing = G.week > REG_WEEKS ? new Set(rd ? rd.games.flatMap(g => [g.a, g.b]).filter(Boolean).map(String) : []) : null;
+  for (const t of Object.keys(R.rosters)) {
+    if (playing && !playing.has(t)) continue;
+    const slots = L[t] || SLOTS.map(() => null), issues = [];
+    slots.forEach((id, i) => {
+      if (!id) { issues.push(`${SLOTS[i].replace('_', ' ')} is empty`); return; }
+      const p = P[id], g = p && p.team && G.byTeam[p.team];
+      if (g && g.started) return;
+      const nm = p ? p.name : `Player ${id}`;
+      if (!p || !p.team) issues.push(`${nm} has no NFL team`);
+      else if (!g) issues.push(`${nm} is on a bye`);
+      else if (['Out', 'IR', 'Sus', 'PUP'].includes(p.inj)) issues.push(`${nm} is listed ${p.inj}`);
+    });
+    if (!issues.length) continue;
+    for (const u of us.docs.filter(u => String(u.data().team) === t))
+      await db.collection('notes').add({ to: u.id, team: Number(t), by: 'system', at: FieldValue.serverTimestamp(), title: `Week ${G.week} lineup check`,
+        body: `${issues.join('; ')}. Set your lineup on your team's Depth Chart before kickoff.` });
+  }
 });
 
 /* ---------- Week results, standings and the playoff bracket ----------
@@ -668,7 +753,9 @@ const samplePts = (sample, w, t) => ((sample[String(w)] || []).find(m => m.roste
 
 // Regular-season standings from the Hub's results (official weeks only) and the placeholder weeks' scores.
 // The first Hub-scored week of a season: the start week in the season the rosters were made, Week 1 in every later one.
-const startFor = (R, season) => (R && R.startSeason && Number(season) > Number(R.startSeason) ? 1 : (R && R.startWeek) || 99);
+// Placeholder weeks only ever exist in the 2026 test season (rosters saved before startSeason was recorded count as 2026).
+const SAMPLE_SEASON = 2026;
+const startFor = (R, season) => (Number(season) > Number((R && R.startSeason) || SAMPLE_SEASON) ? 1 : (R && R.startWeek) || 99);
 function standingsFrom(season, files, results, startWeek, current = 99) {
   const weeks = (files.schedule[String(season)] || {}).weeks || {}, out = {};
   const T = t => (out[t] = out[t] || { team: Number(t), w: 0, l: 0, t: 0, pf: 0, pa: 0, gp: 0 });
@@ -765,8 +852,11 @@ exports.weekResults = onSchedule({ schedule: '0 5 * * *', timeZone: 'America/Chi
   const db = getFirestore(), rRef = db.doc('league/rosters'), R = (await rRef.get()).data();
   if (!R) return;                                                          // no Hub league yet
   const state = await getJSON('https://api.sleeper.app/v1/state/nfl');
+  // Only while NFL games are being played (regular season, and the NFL playoffs while Week 17 waits to go official):
+  // in the preseason and offseason there is nothing to score, and no empty week gets written.
+  if (!['regular', 'post'].includes(state.season_type)) return;
   const season = String(state.season), week = Number(state.week), files = await leagueFiles();
-  if (!R.startWeek) { R.startWeek = week + 1; await rRef.update({ startWeek: R.startWeek }); }   // rosters made official mid-week: next week
+  if (!R.startWeek) { R.startWeek = week + 1; R.startSeason = Number(season); await rRef.update({ startWeek: R.startWeek, startSeason: R.startSeason }); }   // rosters made official mid-week: next week
   const start = startFor(R, season);
   // This week and the two before it, oldest first, so a playoff round sees the round before it once it is official.
   for (const w of [week - 2, week - 1, week]) {
@@ -777,7 +867,7 @@ exports.weekResults = onSchedule({ schedule: '0 5 * * *', timeZone: 'America/Chi
   await updateBracket(db, season, start, files, week);
 });
 /* ---------- Waivers and free agents (rule 8-4) ----------
-   One callable, "moves": add a free agent, drop a player, place or cancel a blind FAAB claim. waiverRun settles claims.
+   One callable, "moves": add a free agent, drop a player, place or cancel a blind FAAB claim. movesRun settles claims on Wednesdays.
      league/waivers     players: {id: {until: ms, from: team}}  (a dropped player sits on waivers for two days, 8-4-1)
      league/faab        spent: {team: dollars}, season          ($100 a season, never carried over, 8-4-2)
      claims/{id}        {team, player, bid, drop, at, status: pending | won | lost | failed | cancelled, note}
@@ -789,6 +879,26 @@ exports.weekResults = onSchedule({ schedule: '0 5 * * *', timeZone: 'America/Chi
    Ties: the team with the worse record (fewer wins, then fewer points) wins; still tied, the earlier claim. */
 const FAAB_BUDGET = 100, WAIVER_MS = 2 * 864e5;
 const ownerOf = (R, id) => Object.keys(R.rosters || {}).find(t => (R.rosters[t] || []).includes(id)) || null;
+// A dropped player stays on waivers at least two days (8-4-1) and clears in the Wednesday 3 AM batch after that.
+const waiverClears = from => nextBatch(from + WAIVER_MS);
+
+// The League's season calendar, from the League's own record rather than Sleeper's (whose season changes on its own
+// schedule). Once the Blitz Bowl is final, the League is in the next season: the Offseason (rule definitions) runs from
+// then until that season's rookie draft starts.
+async function leagueCalendar(db, state) {
+  const br = (await db.doc('league/bracket').get()).data() || {}, nfl = Number(state.season);
+  const done = !!br.champion && Number(br.season) >= nfl;            // this NFL season's Blitz Bowl is final
+  const season = done ? Number(br.season) + 1 : nfl;
+  const drafts = (await db.collection('drafts').where('pickSeason', '==', season).get()).docs.map(d => d.data());
+  const rookieStarted = drafts.some(d => d.kind === 'rookie' && d.mode === 'official' && ['live', 'paused', 'done'].includes(d.status));
+  const R = (await db.doc('league/rosters').get()).data() || {};
+  const rookieDone = rookieStarted || (R.rookieSeasons || []).map(Number).includes(season);
+  // Picks that can be traded (8-3-1): this season's, until its rookie draft starts and while its games haven't begun,
+  // and the next three seasons'.
+  const begun = String(state.season) === String(season) && ['regular', 'post'].includes(state.season_type);
+  const pickSeasons = [...(!rookieDone && !begun ? [season] : []), season + 1, season + 2, season + 3];
+  return { season, offseason: done && !rookieStarted, pickSeasons };
+}
 
 // Apply an add and/or drop to the roster doc's data (mutates R and the standing lineups LU); returns the changes made.
 function rosterMove(R, LU, team, add, drop, P, locked) {
@@ -817,7 +927,8 @@ async function movesAct(db, uid, commish, myTeam, data) {
   const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
   const nm = id => (P[id] ? P[id].name : id);
   const add = data.player ? String(data.player) : null, drop = data.drop ? String(data.drop) : null;
-  if (['add', 'claim'].includes(data.action) && state.season_type === 'off') throw new HttpsError('failed-precondition', 'No free agents may be added in the offseason (rule 8-4-3).');
+  const cal = await leagueCalendar(db, state);
+  if (['add', 'claim'].includes(data.action) && cal.offseason) throw new HttpsError('failed-precondition', 'No free agents may be added in the Offseason, from the Blitz Bowl until the rookie draft starts (rule 8-4-3).');
   if (add && !P[add]) throw new HttpsError('invalid-argument', "That player isn't in the NFL player list.");
   if (data.action === 'cancel') {
     const ref = db.doc(`claims/${String(data.claim || '').replace(/[^A-Za-z0-9-]/g, '')}`), c = (await ref.get()).data();
@@ -830,28 +941,28 @@ async function movesAct(db, uid, commish, myTeam, data) {
     const R = rs.data(); if (!R || !R.rosters || !R.rosters[team]) throw new HttpsError('failed-precondition', 'There are no league rosters yet.');
     const W = ws.data() || { players: {} }, LU = ls.data() || { teams: {} }, FA = fs.data() || { spent: {} };
     W.players = W.players || {};
-    const onWaivers = id => W.players[id] && W.players[id].until > Date.now();
+    const onWaivers = id => !!W.players[id];                // until the Wednesday batch clears him, even past his date
     const week = G.week || Number(state.week);
     if (data.action === 'claim') {
       if (!add || !onWaivers(add)) throw new HttpsError('failed-precondition', `${nm(add)} isn't on waivers. Free agents can be added right away.`);
-      const bid = parseInt(data.bid, 10), left = FAAB_BUDGET - ((FA.season === String(state.season) ? FA.spent : {})[team] || 0);
+      const bid = parseInt(data.bid, 10), left = FAAB_BUDGET - ((FA.season === String(cal.season) ? FA.spent || {} : {})[team] || 0);
       if (!(bid >= 1)) throw new HttpsError('invalid-argument', 'The minimum bid is $1 (rule 8-4-2).');
       if (bid > left) throw new HttpsError('failed-precondition', `You have $${left} of FAAB left.`);
       if (drop && !(R.rosters[team] || []).includes(drop)) throw new HttpsError('failed-precondition', `${nm(drop)} isn't on your roster.`);
       const ref = db.doc(`claims/${team}-${add}`);
-      tx.set(ref, { team: Number(team), player: add, bid, drop, at: Date.now(), until: W.players[add].until, status: 'pending', season: String(state.season), by: uid });
+      tx.set(ref, { team: Number(team), player: add, bid, drop, at: Date.now(), until: W.players[add].until, status: 'pending', season: String(cal.season), by: uid });
       return { ok: true, claim: ref.id, until: W.players[add].until };
     }
     if (data.action === 'add') {
       if (!add) throw new HttpsError('invalid-argument', 'Pick a player.');
-      if (onWaivers(add)) throw new HttpsError('failed-precondition', `${nm(add)} is on waivers until ${new Date(W.players[add].until).toUTCString()}. Place a claim instead.`);
+      if (onWaivers(add)) throw new HttpsError('failed-precondition', `${nm(add)} is on waivers until the ${new Date(W.players[add].until).toLocaleString('en-US', { timeZone: 'America/Chicago', weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} Central waiver run. Place a claim instead.`);
       rosterMove(R, LU, team, add, drop, P, locked);
       if (W.players[add]) delete W.players[add];
     } else if (data.action === 'drop') {
       if (!drop) throw new HttpsError('invalid-argument', 'Pick a player to drop.');
       rosterMove(R, LU, team, null, drop, P, locked);
     } else throw new HttpsError('invalid-argument', 'Unknown move.');
-    if (drop) W.players[drop] = { until: Date.now() + WAIVER_MS, from: Number(team) };
+    if (drop) W.players[drop] = { until: waiverClears(Date.now()), from: Number(team) };
     tx.set(rRef, R); tx.set(wRef, W); tx.set(lRef, LU);
     tx.set(db.collection('transactions').doc(), txDoc('free_agent', team, week, add, drop, null));
     return { ok: true, roster: R.rosters[team], ir: R.ir[team], taxi: R.taxi[team], slots: (LU.teams || {})[team] || null, waivers: W.players };
@@ -875,14 +986,15 @@ async function records(db, season) {
   return Object.fromEntries(standingsFrom(season, files, results, startFor(R, season), current).map(x => [x.team, { w: x.w + x.t / 2, pf: x.pf }]));
 }
 
-// waiverRun: every 10 minutes, settle every player whose two days on waivers are up. Highest bid wins (ties: worse record,
+// settleWaivers (in the Wednesday batch, movesRun): settle every player whose time on waivers is up. Highest bid wins (ties: worse record,
 // then the earlier claim). A winning claim that no longer fits (budget, roster room, its drop) fails and the next one gets
 // a turn. A player nobody wins becomes a free agent.
 async function settleWaivers(db) {
   const now = Date.now(), W = (await db.doc('league/waivers').get()).data() || { players: {} };
-  const due = Object.entries(W.players || {}).filter(([, v]) => v.until <= now).sort((a, b) => a[1].until - b[1].until).map(([id]) => id);
+  const due = Object.entries(W.players || {}).filter(([, v]) => v.until <= now + BATCH_SLACK).sort((a, b) => a[1].until - b[1].until).map(([id]) => id);
   if (!due.length) return { settled: 0 };
   const [P, G, state] = await Promise.all([playerInfo(), weekGames(), getJSON('https://api.sleeper.app/v1/state/nfl')]);
+  const cal = await leagueCalendar(db, state);
   const locked = id => !!(id && P[id] && P[id].team && G.byTeam[P[id].team] && G.byTeam[P[id].team].started);
   const rec = await records(db, state.season).catch(() => ({}));
   const nm2 = id => (P[id] ? P[id].name : id);
@@ -893,8 +1005,8 @@ async function settleWaivers(db) {
       const claimsQ = db.collection('claims').where('player', '==', id).where('status', '==', 'pending');
       const [rs, ws, ls, fs, cs] = await Promise.all([tx.get(rRef), tx.get(wRef), tx.get(lRef), tx.get(fRef), tx.get(claimsQ)]);
       const R = rs.data(), W2 = ws.data() || { players: {} }, LU = ls.data() || { teams: {} };
-      let FA = fs.data() || {}; if (FA.season !== String(state.season)) FA = { season: String(state.season), spent: {} };
-      if (!R || !W2.players[id] || W2.players[id].until > Date.now()) return;
+      let FA = fs.data() || {}; if (FA.season !== String(cal.season)) FA = { season: String(cal.season), spent: {} };   // $100 a season, fresh each one (8-4-2)
+      if (!R || !W2.players[id] || W2.players[id].until > Date.now() + BATCH_SLACK) return;
       const claims = cs.docs.map(d => ({ ref: d.ref, ...d.data() })).sort((a, b) => (b.bid - a.bid)
         || ((rec[a.team] || {}).w || 0) - ((rec[b.team] || {}).w || 0) || ((rec[a.team] || {}).pf || 0) - ((rec[b.team] || {}).pf || 0) || a.at - b.at);
       let winner = null; const done = new Set();
@@ -906,7 +1018,7 @@ async function settleWaivers(db) {
         if (note) { tx.update(c.ref, { status: 'failed', note, done: Date.now() }); done.add(c); continue; }
         winner = c; FA.spent[t] = (FA.spent[t] || 0) + c.bid;
         tx.update(c.ref, { status: 'won', done: Date.now() }); done.add(c);
-        if (c.drop) W2.players[c.drop] = { until: Date.now() + WAIVER_MS, from: c.team };
+        if (c.drop) W2.players[c.drop] = { until: waiverClears(Date.now()), from: c.team };
         tx.set(db.collection('transactions').doc(), txDoc('waiver', t, G.week, id, c.drop || null, c.bid));
         break;
       }
@@ -918,12 +1030,10 @@ async function settleWaivers(db) {
   }
   return { settled };
 }
-exports.waiverRun = onSchedule({ schedule: 'every 10 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 120, memory: '512MiB', maxInstances: 1 }, async () => {
-  await settleWaivers(getFirestore());
-});
+
 
 /* ---------- Trades (rule 8-3) ----------
-   One callable, "trades": propose, cancel, reject, counter, accept, veto. tradeRun processes trades whose review is over.
+   One callable, "trades": propose, cancel, reject, counter, accept, veto. movesRun processes trades whose review is over, Wednesdays.
      trades/{id}   {from, to, give: {players, picks}, get: {players, picks}, dropsFrom, dropsTo, status, at, reviewUntil, note}
                    status: offered -> accepted ("review", two days, 8-3-2) -> processed | vetoed | failed;
                            or cancelled (by the proposer) / rejected / countered (by the other team)
@@ -960,9 +1070,9 @@ async function checkTrade(db, T, R, picks, P, state, opts = {}) {
     for (const id of T[side].players) if (!own(t).includes(id)) throw new HttpsError('failed-precondition', `${nm(id)} is no longer on that roster.`);
     for (const pk of T[side].picks) if (String(pickOwner(picks, pk)) !== t) throw new HttpsError('failed-precondition', `The ${pk.season} round ${pk.round} pick no longer belongs to that team.`);
   }
-  const season = Number(state.season);
+  const allowed = opts.pickSeasons || (await leagueCalendar(db, state)).pickSeasons;
   for (const pk of T.give.picks.concat(T.get.picks)) {
-    if (!(pk.season > season && pk.season <= season + PICK_SEASONS) || !(pk.round >= 1 && pk.round <= PICK_ROUNDS)) throw new HttpsError('invalid-argument', `Only picks in the next ${PICK_SEASONS} seasons can be traded (8-3-1).`);
+    if (!allowed.includes(Number(pk.season)) || !(pk.round >= 1 && pk.round <= PICK_ROUNDS)) throw new HttpsError('invalid-argument', `The ${pk.season} round ${pk.round} pick can't be traded now. Tradeable picks: ${allowed.join(', ')} (8-3-1; a season's picks stop trading when its rookie draft starts).`);
   }
   if (opts.prepay) for (const [side, t] of [['give', from], ['get', to]]) for (const season2 of new Set(T[side].picks.map(p => p.season)))
     if (!(await prepaid(db, t, season2))) throw new HttpsError('failed-precondition', `${t === from ? 'The proposing team' : 'The accepting team'} must prepay $50 of its ${season2} dues before trading a ${season2} pick (rule 8-3-5).`);
@@ -1018,8 +1128,10 @@ async function tradesAct(db, uid, commish, myTeam, data) {
     if (dl.passed) throw new HttpsError('failed-precondition', `The trade deadline has passed (rule 8-3-3: the last game of Week ${TRADE_DEADLINE_WEEK}); trading reopens when the championship game is final.`);
     const T2 = { ...T, dropsTo: [...new Set((data.drops || []).map(String))].slice(0, 10) };
     await checkTrade(db, T2, R, picks, P, state, { prepay: true });
-    await ref.update({ status: 'review', dropsTo: T2.dropsTo, acceptedAt: Date.now(), reviewUntil: Date.now() + TRADE_REVIEW_MS });
-    return { ok: true, reviewUntil: Date.now() + TRADE_REVIEW_MS };
+    // Two days of review (8-3-2), then it goes through in the next Wednesday 3 AM batch, never in the middle of a week.
+    const reviewUntil = Date.now() + TRADE_REVIEW_MS, processAt = nextBatch(reviewUntil);
+    await ref.update({ status: 'review', dropsTo: T2.dropsTo, acceptedAt: Date.now(), reviewUntil, processAt });
+    return { ok: true, reviewUntil, processAt };
   }
   throw new HttpsError('invalid-argument', 'Unknown action.');
 }
@@ -1127,9 +1239,10 @@ exports.trades = onCall({ region: 'us-central1', maxInstances: 10, timeoutSecond
 // Process every accepted trade whose two-day review is over: check it again, then swap players and picks, drop the named
 // players to waivers, clear moved players from the old team's lineup and log it (transactions, type "trade").
 async function processTrades(db) {
-  const due = (await db.collection('trades').where('status', '==', 'review').get()).docs.filter(d => d.data().reviewUntil <= Date.now());
+  const due = (await db.collection('trades').where('status', '==', 'review').get()).docs.filter(d => (d.data().processAt || d.data().reviewUntil) <= Date.now() + BATCH_SLACK);
   if (!due.length) return { processed: 0 };
   const [P, state, G] = await Promise.all([playerInfo(), getJSON('https://api.sleeper.app/v1/state/nfl'), weekGames()]);
+  const { pickSeasons } = await leagueCalendar(db, state);
   let processed = 0;
   for (const d of due) {
     await db.runTransaction(async tx => {
@@ -1138,7 +1251,7 @@ async function processTrades(db) {
       const T = ts.data(); if (!T || T.status !== 'review') return;
       const R = rs.data(), PK = ps.data() || { traded: [] }, LU = ls.data() || { teams: {} }, W = ws.data() || { players: {} };
       let after;
-      try { after = await checkTrade(db, T, R, PK.traded, P, state, { prepay: false }); }
+      try { after = await checkTrade(db, T, R, PK.traded, P, state, { prepay: false, pickSeasons }); }
       catch (e) { tx.update(d.ref, { status: 'failed', note: e.message, done: Date.now() }); return; }
       const from = String(T.from), to = String(T.to);
       R.rosters[from] = after[from]; R.rosters[to] = after[to];
@@ -1146,7 +1259,7 @@ async function processTrades(db) {
       const gone = { [from]: T.give.players.concat(T.dropsFrom || []), [to]: T.get.players.concat(T.dropsTo || []) };
       for (const t of [from, to]) if (LU.teams && LU.teams[t]) LU.teams[t] = LU.teams[t].map(x => (gone[t].includes(x) ? null : x));
       W.players = W.players || {};
-      for (const [t, drops] of [[from, T.dropsFrom || []], [to, T.dropsTo || []]]) for (const x of drops) W.players[x] = { until: Date.now() + WAIVER_MS, from: Number(t) };
+      for (const [t, drops] of [[from, T.dropsFrom || []], [to, T.dropsTo || []]]) for (const x of drops) W.players[x] = { until: waiverClears(Date.now()), from: Number(t) };
       const moved = [];
       for (const [pk, newOwner, oldOwner] of [...T.give.picks.map(p => [p, T.to, T.from]), ...T.get.picks.map(p => [p, T.from, T.to])]) {
         PK.traded = (PK.traded || []).filter(x => pickKey(x) !== pickKey(pk));
@@ -1166,8 +1279,13 @@ async function processTrades(db) {
   }
   return { processed };
 }
-exports.tradeRun = onSchedule({ schedule: 'every 10 minutes', region: 'us-central1', retryCount: 0, timeoutSeconds: 120, memory: '512MiB', maxInstances: 1 }, async () => {
-  await processTrades(getFirestore());
+// movesRun: the weekly moves batch, Wednesday 3 AM Central. Trades whose review is over go through first, then every
+// waiver claim on a player whose waiver time is up (a player nobody wins becomes a free agent). Players never change
+// teams in the middle of a week this way; free agents can still be added any time (8-4).
+exports.movesRun = onSchedule({ schedule: '0 3 * * 3', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 2, timeoutSeconds: 300, memory: '512MiB', maxInstances: 1 }, async () => {
+  const db = getFirestore();
+  await processTrades(db);
+  await settleWaivers(db);
 });
 
 // Tests only (never set in production): the pure helpers, for checking the bracket and the Tuesday cutoff.
@@ -1367,4 +1485,4 @@ exports.backup = onCall({ region: 'us-central1', maxInstances: 2, timeoutSeconds
 });
 
 // Tests only (never set in production): the pure helpers.
-if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts, collectLeague, buildWorkbook };
+if (process.env.BLITZ_TEST) module.exports._t = { bracketFrom, standingsFrom, seedsFrom, officialAt, chiParts, collectLeague, buildWorkbook, freeze, nextBatch };

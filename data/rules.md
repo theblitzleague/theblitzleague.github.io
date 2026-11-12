@@ -248,7 +248,7 @@ Appendix B. League Settings
 
 **Article 1. Setting lineups.** Each Owner sets their lineup on Blitz Hub.
 
-**Article 2. Lock.** Each player locks at his game's kickoff. No lineup is changed after the fact for any reason.
+**Article 2. Lock.** Each player locks at his game's kickoff. No lineup is changed after the fact for any reason. A starter whose game has kicked off stays in that week's lineup, and his points stand, whatever happens to him afterward.
 
 **Article 3. Competitive lineups.** Every Owner starts a full lineup every week, including the playoffs. Every slot must hold a player who is active or expected to play.
 
@@ -282,7 +282,7 @@ Appendix B. League Settings
 
 **Article 1. Eligible assets.** Owners may trade players and draft picks, including picks up to three Seasons ahead.
 
-**Article 2. Review period.** Every accepted trade sits in a two-day review period on Blitz Hub before it is processed.
+**Article 2. Review period.** Every accepted trade sits in a two-day review period on Blitz Hub. When review ends, the trade is processed in the next weekly moves batch, at 3 AM Central on Wednesday, once the week's scores are official and before any game of the new week.
 
 **Article 3. Trade deadline.** No trade may be accepted after the Week 11 trade deadline, which falls when the last NFL game of Week 11 ends. A trade accepted before then still processes after its review period, even if that period ends after the deadline. Trading reopens when the championship game is final.
 
@@ -292,11 +292,11 @@ Appendix B. League Settings
 
 > **A.R. 8.1** In 2027, an Owner offers their 2029 first-round pick in a trade. **Ruling:** The trade cannot be accepted until that Owner has prepaid $50 toward their 2029 dues. They owe the other $50 before the 2029 rookie draft, and they do not need to prepay anything for 2028, since they are not trading a 2028 pick.
 
-> **A.R. 8.2** Two Owners accept a trade during the Monday night game of Week 11, and its two-day review ends on Wednesday of Week 12. **Ruling:** The trade is valid, because it was accepted before the last game of Week 11 ended. Blitz Hub processes it when review ends.
+> **A.R. 8.2** Two Owners accept a trade during the Monday night game of Week 11, and its two-day review ends on Wednesday evening of Week 12. **Ruling:** The trade is valid, because it was accepted before the last game of Week 11 ended. Blitz Hub processes it in the next weekly moves batch, at 3 AM Central the following Wednesday.
 
 ### Section 4. Waivers and Free Agents
 
-**Article 1. Waiver period.** A dropped player is on waivers for two days.
+**Article 1. Waiver period.** A dropped player is on waivers for at least two days. Waivers clear in the weekly moves batch, at 3 AM Central on Wednesday: a player whose two days are up by then goes to the winning claim, or becomes a free agent if nobody claimed him. A player who isn't on waivers is a free agent and may be added at any time.
 
 **Article 2. Claims.** Waiver claims are decided by blind bidding from a $100 budget each Season, which does not carry over. The minimum bid is $1. The highest bid wins and is charged to the winner's budget; a tied bid goes to the Franchise with the worse record (fewer wins, then fewer points for), and if still tied, to the claim placed first.
 

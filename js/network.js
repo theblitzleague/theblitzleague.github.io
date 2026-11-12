@@ -257,6 +257,10 @@
       && (!q || NFL.norm(r.p.full_name || '').includes(q) || NFL.norm(N.teamOf(r.id) || '') === q));
     // Points per game needs a few games to mean much; unless you're searching, it leaves out players with fewer than 3.
     if (PL.sort === 'ppg' && !q) rows = rows.filter(r => r.gp >= 3);
+    // A search finds every player in the League's list, including ones with no games this season (unsigned, injured, retired).
+    if (q) { const have = new Set(rows.map(r => r.id));
+      for (const [id, p] of Object.entries(M.players)) if (!have.has(id) && NFL.norm(p.full_name || '').includes(q) && (PL.pos === 'all' || p.position === PL.pos)) {
+        const owner = N.owner(id); if (PL.own === 'all' || (PL.own === 'fa' ? !owner : !!owner)) rows.push({ id, p, gp: 0, tot: 0, ppg: 0, l3: 0, owner, proj: N.proj[id] ? N.proj[id][0] : null }); } }
     const key = { ppg: r => r.ppg, tot: r => r.tot, l3: r => r.l3, proj: r => (r.proj == null ? -1 : r.proj) }[PL.sort];
     rows.sort((a, b) => key(b) - key(a));
     const shown = rows.slice(0, PL.limit);
@@ -267,8 +271,8 @@
       ${rows.length > PL.limit ? `<div class="acct-row"><button class="btn" data-pl-more="1">Show more (${rows.length - PL.limit} left)</button></div>` : ''}`
       : '<div class="empty">No players match.</div>';
   }
-  // Not on a Blitz roster: on waivers (dropped in the last two days, rule 8-4-1) or a free agent.
-  const faTag = id => { const w = (M.waivers || {})[id]; return w && w.until > Date.now()
+  // Not on a Blitz roster: on waivers (dropped, clears in the next Wednesday waiver run, rule 8-4-1) or a free agent.
+  const faTag = id => { const w = (M.waivers || {})[id]; return w
     ? `<span class="nw-fa wv" title="On waivers until ${esc(new Date(w.until).toLocaleString())}">Waivers · ${esc(new Date(w.until).toLocaleDateString(undefined, { weekday: 'short' }))}</span>` : '<span class="nw-fa">Free agent</span>'; };
   function players() {
     const chip = (attr, v, label, cur) => `<button data-${attr}="${v}" aria-pressed="${cur === v}">${label}</button>`;

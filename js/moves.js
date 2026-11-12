@@ -17,8 +17,10 @@ const P = id => M.players[id] || { full_name: `Player ${id}`, position: '?' };
 const owner = id => Object.values(M.teams).find(t => (t.roster.players || []).includes(id)) || null;
 const mine = () => (myTeam != null ? M.teams[myTeam] : null);
 const active = t => t.roster.players.filter(id => !t.roster.reserve.includes(id) && !t.roster.taxi.includes(id));
-const onWaivers = id => { const w = (M.waivers || {})[id]; return w && w.until > Date.now() ? w : null; };
-const spent = () => (((M.faab || {}).spent || {})[String(myTeam)] || 0);
+// On waivers until the Wednesday 3 AM batch clears him (at least two days after the drop, rule 8-4-1).
+const onWaivers = id => (M.waivers || {})[id] || null;
+// FAAB is $100 a season (8-4-2): last season's spending doesn't count once the League is in a new season.
+const spent = () => (M.faab && (!M.calendar || String(M.faab.season) === String(M.calendar.season)) ? ((M.faab.spent || {})[String(myTeam)] || 0) : 0);
 const left = () => BUDGET - spent();
 const when = ms => new Date(ms).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 
@@ -60,12 +62,12 @@ function cardActions(id, el) {
   const p = P(id), own = owner(id), w = onWaivers(id), full = active(t).length >= ACTIVE_MAX;
   let html = '';
   if (own && own.id === t.id) {
-    html = `<button class="btn" data-mv="drop">Drop ${esc(p.full_name.split(' ').slice(-1)[0])}</button><span class="pmeta">He goes on waivers for 2 days (rule 8-4-1).</span>`;
+    html = `<button class="btn" data-mv="drop">Drop ${esc(p.full_name.split(' ').slice(-1)[0])}</button><span class="pmeta">He goes on waivers and clears in the Wednesday 3 AM waiver run at least 2 days later (rule 8-4-1).</span>`;
   } else if (own) {
     return;                                            // on another team: trades come later
   } else if (w) {
     const c = claims.find(x => x.player === id);
-    html = `<form class="mv-form" data-mv="claim"><div class="mv-row"><b>On waivers until ${esc(when(w.until))}</b><span class="pmeta">Blind bid · $${left()} of $${BUDGET} FAAB left</span></div>
+    html = `<form class="mv-form" data-mv="claim"><div class="mv-row"><b>On waivers · clears ${esc(when(w.until))}</b><span class="pmeta">Blind bid · $${left()} of $${BUDGET} FAAB left</span></div>
       <div class="mv-row"><label>Bid $ <input name="bid" type="number" min="1" max="${left()}" step="1" value="${c ? c.bid : 1}" required></label>${dropSelect(full)}
       <button class="btn primary" type="submit">${c ? 'Update claim' : 'Place claim'}</button>${c ? `<button class="btn" type="button" data-mv="cancel" data-claim="${esc(c.id)}">Cancel claim</button>` : ''}</div>
       ${c ? `<span class="pmeta">Your claim: $${c.bid}${c.drop ? `, dropping ${esc(P(c.drop).full_name)}` : ''}.</span>` : ''}</form>`;
@@ -90,7 +92,7 @@ document.addEventListener('submit', async e => {
   const id = f.closest('.pc-actions').dataset.pid, drop = f.drop ? f.drop.value || null : null, b = f.querySelector('[type=submit]');
   b.disabled = true;
   const ok = f.dataset.mv === 'claim'
-    ? await send({ action: 'claim', player: id, bid: f.bid.value, drop }, `Claim placed: $${f.bid.value} on ${P(id).full_name}. Bids are blind; it's settled when his waiver period ends.`)
+    ? await send({ action: 'claim', player: id, bid: f.bid.value, drop }, `Claim placed: $${f.bid.value} on ${P(id).full_name}. Bids are blind; it's settled in the ${when(onWaivers(id) ? onWaivers(id).until : Date.now())} waiver run.`)
     : await send({ action: 'add', player: id, drop }, `${P(id).full_name} added${drop ? `, ${P(drop).full_name} dropped` : ''}.`);
   b.disabled = false;
   if (ok) cardActions(id, f.closest('.pc-actions'));
@@ -99,8 +101,8 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-mv="drop"], [data-mv="cancel"], [data-mv-cancel]'); if (!b) return;
   if (b.dataset.mv === 'drop') {
     const el = b.closest('.pc-actions'), id = el.dataset.pid;
-    if (!await confirmBox(`Drop ${P(id).full_name}?`, 'He goes on waivers for two days, then becomes a free agent. You can claim him back like anyone else.', 'Yes, drop him')) return;
-    if (await send({ action: 'drop', drop: id }, `${P(id).full_name} dropped. He's on waivers for 2 days.`)) { const d = el.closest('dialog'); if (d) d.close(); }
+    if (!await confirmBox(`Drop ${P(id).full_name}?`, 'He goes on waivers and clears in the Wednesday 3 AM waiver run at least two days from now; if nobody claims him he becomes a free agent. You can claim him back like anyone else.', 'Yes, drop him')) return;
+    if (await send({ action: 'drop', drop: id }, `${P(id).full_name} dropped. He's on waivers until the Wednesday waiver run.`)) { const d = el.closest('dialog'); if (d) d.close(); }
   } else {
     const id = b.dataset.claim || b.dataset.mvCancel;
     if (await send({ action: 'cancel', claim: id }, 'Claim cancelled.')) { const el = b.closest('.pc-actions'); if (el) cardActions(el.dataset.pid, el); }

@@ -68,7 +68,10 @@
     const ids = ix.get(norm(name)) || [];
     if (ids.length === 1) return ids[0];
     const on = ids.filter(id => teams && teams.includes(players[id].team));
-    return on.length === 1 ? on[0] : null;
+    if (on.length === 1) return on[0];
+    // The list keeps unsigned and retired players too; between namesakes, the only one on an NFL team is the one meant.
+    const signed = teams ? [] : ids.filter(id => players[id].team);
+    return signed.length === 1 ? signed[0] : null;
   }
 
   // ---------- Blitz rosters ----------

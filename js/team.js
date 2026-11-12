@@ -301,7 +301,7 @@
 
   function draftCapital() {
     const me = T.id, L = M.league, first = +M.state.season + 1;
-    const seasons = Array.from({ length: L.futurePickSeasons }, (_, i) => String(first + i));
+    const seasons = M.calendar ? M.calendar.pickSeasons.map(String) : Array.from({ length: L.futurePickSeasons }, (_, i) => String(first + i));
     const tp = M.tradedPicks;
     const name = rid => M.teams[rid] ? M.teams[rid].f.location : `Team ${rid}`;
     let total = 0, firsts = 0, got = 0, gone = 0;

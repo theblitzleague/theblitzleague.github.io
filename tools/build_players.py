@@ -5,7 +5,9 @@ Sleeper's full database (GET https://api.sleeper.app/v1/players/nfl) is ~15 MB, 
 at most once a day, so visitors' browsers must never fetch it. Run this once a day (cron or Task Scheduler) and
 publish the result with the site.
 
-Keeps every fantasy-relevant position (offense, kicker, team defense and IDP) for players currently on an NFL team, plus anyone on a Blitz League roster (so a released player on someone's bench still has a name).
+Keeps every player at a fantasy position (offense, kicker, team defense and IDP) in Sleeper's database, whether he's on
+an NFL team, unsigned or retired, so nobody ever drops off Blitz Hub: a player cut by his NFL team stays on his Blitz
+roster with his name and history, shown as a free agent, and picks his team back up when he signs.
 
 Usage: python3 tools/build_players.py [--from saved-players.json]   (no args = download from Sleeper)"""
 import json, os, sys, urllib.request
@@ -41,7 +43,7 @@ def keep(k, p):
     if k in rostered:
         return True
     fp = set(p.get("fantasy_positions") or [p.get("position")])
-    return bool(fp & POSITIONS) and bool(p.get("team"))                  # on an NFL roster right now
+    return bool(fp & POSITIONS)                                          # every player at a fantasy position, signed or not
 
 slim = {}
 for k, p in players.items():

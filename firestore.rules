@@ -29,6 +29,12 @@ service cloud.firestore {
 
     // { owner: uid, commish: [uid] }. The owner (set from the Firebase side) may add or remove co-commissioners from the
     // site, but can't change the owner or remove themselves. Nobody else can change it from the site.
+    // League scoring versions (written only by the "settings" function, for the commissioner). Anyone can read them:
+    // every page scores games with them, and the nightly data build reads them without signing in.
+    match /config/scoring {
+      allow read: if true;
+      allow write: if false;
+    }
     match /config/roles {
       allow read: if signedIn();
       allow update: if signedIn() && resource.data.owner == request.auth.uid

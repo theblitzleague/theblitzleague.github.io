@@ -4,7 +4,7 @@
   const { esc } = UI;
   const PDF = 'assets/rules/blitz-league-official-rules.pdf';
 
-  UI.boot('<strong>Rules</strong>', async () => {
+  UI.boot('<strong>Rules</strong>', async M => {
     const r = await fetch('data/rules.html', { cache: 'no-cache' });
     if (!r.ok) throw new Error(`rules ${r.status}`);
     const frag = await r.text();
@@ -24,7 +24,18 @@
         <nav class="rb-toc" aria-label="Contents"><div class="sub">Contents</div>
           <ol>${(meta.toc || []).map(([id, t]) => `<li><a href="#${esc(id)}">${esc(t)}</a></li>`).join('')}</ol></nav>
         <article class="rb-body">${box.innerHTML}</article>
-      </section>`;
+      </section>
+      <section class="panel" id="scoring-changes"></section>`;
+    // The dated record of scoring changes (13-2-3), saved by the commissioner on the Account page.
+    const log = ((M && M.scoringLog) || []).slice().sort((a, b) => b.at - a.at), sc = document.getElementById('scoring-changes');
+    if (!log.length) sc.remove();
+    else import('./scoring-names.js').then(({ label }) => {
+      sc.innerHTML = `<header><div><span class="eyebrow">Rule 13-2-3</span><h2>Scoring changes</h2></div></header>
+        <p class="acct-note">Every change to the League's scoring, with the week it starts. Games before that week keep the scoring they were played under.</p>
+        <div class="acct-list">${log.map(e => `<div class="acct-item"><div><b>Starts Week ${esc(e.week)}, ${esc(e.season)}</b>
+          <p>${(e.changes || []).map(c => `${esc(label(c.k))}: ${esc(c.from)} → ${esc(c.to)}`).join(' · ')}</p>
+          <span class="pmeta">Adopted ${esc(new Date(e.at).toLocaleDateString([], { dateStyle: 'long' }))} · vote: ${esc(e.vote || '')}${e.note ? ' · ' + esc(e.note) : ''}</span></div></div>`).join('')}</div>`;
+    });
     if (location.hash) { const el = document.getElementById(location.hash.slice(1)); if (el) requestAnimationFrame(() => el.scrollIntoView()); }
   });
 })();

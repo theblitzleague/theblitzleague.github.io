@@ -240,7 +240,7 @@ Appendix B. League Settings
 
 **Article 1. Scoring settings.** Points are scored under the League's scoring settings on Blitz Hub, listed in full in Appendix B. They include 1 point per reception, 4 per passing touchdown, minus 2 per interception thrown, 1 per tackle (solo or assisted) and 2 per sack by a defensive player.
 
-**Article 2. Changes.** A scoring change requires a vote under Rule 13 and takes effect the following Season.
+**Article 2. Changes.** A scoring change requires a vote under Rule 13 and takes effect the following Season, unless all 12 Owners vote for it to take effect sooner. A scoring change never alters a game already played.
 
 **Article 3. Stat corrections.** Stat corrections Blitz Hub applies before the week goes final are part of the official score. Corrections after that do not change any result or prize.
 
@@ -390,7 +390,7 @@ Appendix B. League Settings
 
 **Article 2. Adoption.** A rule change passes with a Supermajority vote. It takes effect at the start of the next Season unless the change itself says otherwise. 4-4-2 (the Commissioner's office) and 4-2-4 (matters not subject to a vote) may be changed only with the Commissioner's agreement in writing, and no vote may change this sentence.
 
-**Article 3. In-season changes.** During the Season, a rule may change only to fix an error or close a loophole that threatens fair competition. Such a change needs a Supermajority vote and does not change the result of any game already played.
+**Article 3. In-season changes.** During the Season, a rule may change only to fix an error or close a loophole that threatens fair competition. Such a change needs a Supermajority vote and does not change the result of any game already played. A scoring change may also take effect during the Season, but only by a unanimous vote of all 12 Owners (7-3-2).
 
 ### Section 2. Adoption of These Rules
 

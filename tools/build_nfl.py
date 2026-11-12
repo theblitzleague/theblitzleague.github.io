@@ -28,7 +28,7 @@ The api.sleeper.com and site.api.espn.com endpoints are the apps' own, not docum
 
 Usage: python3 tools/build_nfl.py   (scores with data/scoring.json)
   Scoring comes from league.json sleeperLeagueId, else --scoring, else Sleeper's PPR + IDP defaults."""
-import json, os, sys, time, urllib.request, datetime
+import json, os, re, sys, time, urllib.request, datetime
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 OUT = os.path.join(ROOT, "data", "nfl.json")
@@ -56,9 +56,37 @@ league = json.load(open(os.path.join(ROOT, "data", "league.json")))
 # The League's scoring: the Hub's own settings file (data/scoring.json), not Sleeper's league settings.
 scoring = json.load(open(os.path.join(ROOT, "data", "scoring.json")))["settings"]
 
-def points(stats, pos):
-    if scoring:
-        return sum(v * stats[k] for k, v in scoring.items() if isinstance(stats.get(k), (int, float)))
+# Scoring changes the commissioner made on the site (config/scoring in the database, public read), each starting at a
+# season and week. A week is always scored with the version in effect that week, so past games never change.
+def scoring_versions():
+    cfg = open(os.path.join(ROOT, "js", "firebase-config.js")).read()
+    key, proj = re.search(r'apiKey:\s*"([^"]+)"', cfg), re.search(r'projectId:\s*"([^"]+)"', cfg)
+    if not key or not proj:
+        return []
+    def val(v):
+        if "mapValue" in v: return {k: val(x) for k, x in v["mapValue"].get("fields", {}).items()}
+        if "arrayValue" in v: return [val(x) for x in v["arrayValue"].get("values", [])]
+        if "integerValue" in v: return int(v["integerValue"])
+        if "doubleValue" in v: return v["doubleValue"]
+        return v.get("stringValue", v.get("booleanValue"))
+    try:
+        d = get(f"https://firestore.googleapis.com/v1/projects/{proj.group(1)}/databases/(default)/documents/config/scoring?key={key.group(1)}")
+    except Exception:
+        return []                                  # no changes saved yet (or the database can't be reached): the original
+    return sorted(val({"mapValue": {"fields": d.get("fields", {})}}).get("versions", []), key=lambda v: v["season"] * 100 + v["week"])
+VERSIONS = scoring_versions()
+
+def scoring_at(season, week):
+    out = scoring
+    for v in VERSIONS:
+        if v["season"] * 100 + v["week"] <= int(season) * 100 + int(week):
+            out = v.get("settings") or {}
+    return out
+
+def points(stats, pos, week=None):
+    sc = scoring_at(season, week) if week else scoring_at(season, globals().get("week", 1))
+    if sc:
+        return sum(v * stats[k] for k, v in sc.items() if isinstance(stats.get(k), (int, float)))
     return stats.get("pts_idp" if pos in ("DL", "LB", "DB") else "pts_ppr") or 0
 
 def group(player):
@@ -148,12 +176,12 @@ for w in range(1, week):
         g = group(pl)
         if g and (r.get("stats") or {}).get("gp"):
             allowed.setdefault(opp, {}).setdefault(g, 0.0)
-            allowed[opp][g] += points(r["stats"], g)
-            logs.setdefault(r["player_id"], []).append(points(r["stats"], g))
+            allowed[opp][g] += points(r["stats"], g, w)
+            logs.setdefault(r["player_id"], []).append(points(r["stats"], g, w))
             if pl.get("years_exp") == 0:
                 st = r["stats"]
                 snp, tm = (st.get("def_snp"), st.get("tm_def_snp")) if g in ("DL", "LB", "DB") else (st.get("off_snp"), st.get("tm_off_snp"))
-                rookies.setdefault(r["player_id"], []).append([w, round(points(st, g), 1), round(100 * snp / tm) if snp and tm else None])
+                rookies.setdefault(r["player_id"], []).append([w, round(points(st, g, w), 1), round(100 * snp / tm) if snp and tm else None])
     time.sleep(0.5)
 dvp = {}
 for t, gids in played.items():
@@ -169,7 +197,7 @@ for r in get(PROJ.format(season=season, week=week)):
     g = group(pl)
     if not g or not r.get("opponent"):
         continue
-    v = round(points(s, g), 1)
+    v = round(points(s, g, week), 1)
     if v >= 1:
         proj[r["player_id"]] = [v, r["opponent"], r.get("team")]
 

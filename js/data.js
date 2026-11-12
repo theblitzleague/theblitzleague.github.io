@@ -14,6 +14,26 @@
 
   // The League's scoring: the Hub's own settings (data/scoring.json), used in every mode.
   const hubScoring = () => getJSON('data/scoring.json').then(x => x.settings || null).catch(() => null);
+  // Scoring changes the commissioner made (config/scoring in the database, readable by anyone), each starting at a set
+  // season and week. Every game is scored with the version in effect that week, so a change never rewrites a past game.
+  const fsVal = v => ('mapValue' in v ? Object.fromEntries(Object.entries(v.mapValue.fields || {}).map(([k, x]) => [k, fsVal(x)]))
+    : 'arrayValue' in v ? (v.arrayValue.values || []).map(fsVal) : 'integerValue' in v ? Number(v.integerValue) : 'doubleValue' in v ? v.doubleValue
+    : 'booleanValue' in v ? v.booleanValue : 'nullValue' in v ? null : v.stringValue);
+  let versionsReq = null;
+  function scoringVersions() {
+    const cfg = window.FIREBASE_CONFIG;
+    if (!cfg) return Promise.resolve({ versions: [], log: [] });
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 5000);
+    return (versionsReq = versionsReq || fetch(`https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/config/scoring?key=${cfg.apiKey}`, { signal: c.signal, cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null)).catch(() => null).finally(() => clearTimeout(t))
+      .then(d => { const f = d && d.fields ? fsVal({ mapValue: { fields: d.fields } }) : {};
+        return { versions: (f.versions || []).sort((a, b) => (a.season * 100 + a.week) - (b.season * 100 + b.week)), log: f.log || [] }; }));
+  }
+  function scoringAt(base, versions, season, week) {
+    let out = base;
+    for (const v of versions) if (v.season * 100 + v.week <= Number(season) * 100 + Number(week)) out = v.settings || {};
+    return out;
+  }
   // The NFL's current season and week, live from Sleeper (it moves to the next week early each week); the saved copy
   // only if Sleeper can't be reached.
   const nflState = () => { const c = new AbortController(), t = setTimeout(() => c.abort(), 4000);
@@ -296,6 +316,7 @@
       slots: raw.rosterPositions && raw.rosterPositions.length ? raw.rosterPositions : league.rosterSlots,
       playoffTeams: raw.playoffTeams || league.playoffTeams || 6,
       scoring: raw.scoring || null,
+      scoringBase: raw.scoring || null,
     };
   }
 
@@ -366,6 +387,10 @@
       }
       const model = { ...build(league, brand, { ...raw, history }), live, hub, hubStart: raw.hubStart || null, seasonStats: raw.seasonStats || null,
         waivers: hub ? hub.waivers : {}, faab: hub ? hub.faab : {}, bracket: hub ? hub.bracket : null };
+      const SV = await scoringVersions();
+      model.scoringVersions = SV.versions; model.scoringLog = SV.log;
+      model.scoringAt = (season, week) => scoringAt(model.scoringBase, SV.versions, season, week);
+      if (model.scoringBase && model.state) model.scoring = model.scoringAt(model.state.season, model.current || model.state.week);
       const L = window.NFL ? await NFL.liveScores().catch(() => null) : null;
       if (hub) applyLive(model, L);
       await markKickoff(model, L);

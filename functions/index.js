@@ -125,7 +125,20 @@ exports.watchRefresh = onSchedule({ schedule: '30 5 * * *', timeZone: 'America/C
 const ESPN_NFL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
 const TEAMFIX = { WSH: 'WAS' };
 // The League's scoring: the Hub's own settings file (data/scoring.json on the site), not Sleeper's league settings.
-const leagueScoring = async () => (await getJSON(`https://theblitzleague.github.io/data/scoring.json?t=${Date.now()}`)).settings || {};
+// Scoring changes (made by the commissioner on the Account page) are stored as versions in config/scoring, each with the
+// season and week it starts. Every week is scored with the version in effect that week, so a change never touches a
+// game already played. data/scoring.json is the original version, in effect from the start.
+const wk = (season, week) => Number(season) * 100 + Number(week);
+async function scoringVersions() {
+  const [base, doc] = await Promise.all([getJSON(`${SITE}/data/scoring.json?t=${Date.now()}`), getFirestore().doc('config/scoring').get()]);
+  return { base: base.settings || {}, versions: ((doc.data() || {}).versions || []).slice().sort((a, b) => wk(a.season, a.week) - wk(b.season, b.week)) };
+}
+function scoringAt(S, season, week) {
+  let out = S.base;
+  for (const v of S.versions) if (wk(v.season, v.week) <= wk(season, week)) out = v.settings;
+  return out;
+}
+const leagueScoring = async (season, week) => scoringAt(await scoringVersions(), season, week);
 const getJSON = async u => { const r = await fetch(u, { headers: { 'User-Agent': 'blitz-hub' } }); if (!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); };
 const num = (s, k) => (typeof s[k] === 'number' ? s[k] : 0);
 const trim = v => (Number.isInteger(v) ? String(v) : v.toFixed(1));
@@ -155,7 +168,7 @@ exports.liveScores = onSchedule({ schedule: 'every 2 minutes', region: 'us-centr
 
   const state = await getJSON('https://api.sleeper.app/v1/state/nfl');
   const season = String(state.season), week = Number(state.week);
-  const scoring = await leagueScoring();
+  const scoring = await leagueScoring(season, week);
   const rows = await getJSON(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&t=${Date.now()}`);
   const players = {};
   let newest = 0;
@@ -653,7 +666,7 @@ async function scoreWeek(db, season, week, startWeek, ctx = {}) {
   if (prev && prev.official) return prev;                                   // official weeks never change (2-2-3)
   const files = ctx.files || await leagueFiles();
   const [scoring, rows, sb, L, snap] = await Promise.all([
-    leagueScoring(),
+    leagueScoring(season, week),
     getJSON(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&t=${Date.now()}`),
     getJSON(`${ESPN_NFL}/scoreboard?seasontype=2&week=${week}&dates=${season}`),
     db.doc('league/lineups').get().then(d => d.data() || {}),
@@ -958,6 +971,44 @@ async function tradesAct(db, uid, commish, myTeam, data) {
   }
   throw new HttpsError('invalid-argument', 'Unknown action.');
 }
+/* settings: the commissioner changes League scoring from the Account page. A change starts at a week that hasn't kicked
+   off yet (never an earlier one), so no played game is ever rescored. A change that starts in the current season needs a
+   unanimous vote of all 12 Owners; one that starts next season, a Supermajority (rule 13-1-2). Each change is kept, with
+   who made it, when, and the vote, as the dated record rule 13-2-3 asks for (shown on the Rules page). */
+exports.settings = onCall({ region: 'us-central1', maxInstances: 2, timeoutSeconds: 30 }, async req => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const db = getFirestore();
+  const roles = (await db.doc('config/roles').get()).data() || {};
+  if (!(roles.commish || []).includes(uid)) throw new HttpsError('permission-denied', 'Only the commissioner can change League settings.');
+  const d = req.data || {};
+  if (d.action !== 'scoring') throw new HttpsError('invalid-argument', 'Unknown settings change.');
+  const state = await getJSON('https://api.sleeper.app/v1/state/nfl'), cur = Number(state.season);
+  const sb = await getJSON(`${ESPN_NFL}/scoreboard`), espnWeek = Number((sb.week || {}).number || state.week);
+  const started = (sb.events || []).some(e => e.status.type.state !== 'pre');
+  const earliest = { season: cur, week: started ? espnWeek + 1 : espnWeek };
+  const season = Number(d.season), week = Number(d.week);
+  if (!Number.isInteger(season) || !Number.isInteger(week) || week < 1 || week > 18) throw new HttpsError('invalid-argument', 'Pick the week the change starts.');
+  if (wk(season, week) < wk(earliest.season, earliest.week)) throw new HttpsError('failed-precondition', `A change can't start before Week ${earliest.week} of ${earliest.season}: that's the first week no game has kicked off yet.`);
+  if (season > cur + 1) throw new HttpsError('invalid-argument', 'Changes can be set for this season or next season.');
+  const midseason = season === cur && week > 1;
+  if (!d.vote) throw new HttpsError('failed-precondition', midseason ? 'A midseason scoring change needs a unanimous vote of all 12 Owners. Confirm the vote first.' : 'A scoring change needs a Supermajority vote of the Owners (rule 13-1-2). Confirm the vote first.');
+  const S = await scoringVersions(), before = scoringAt(S, season, week);
+  const settings = {};
+  for (const [k, v] of Object.entries(d.settings || {})) {
+    if (!(k in S.base)) continue;                    // only stats the League's scoring file lists (the nightly stats keep exactly those)
+    const n = Number(v); if (!Number.isFinite(n) || Math.abs(n) > 100) throw new HttpsError('invalid-argument', `${k}: points must be a number between -100 and 100.`);
+    if (n !== 0) settings[k] = Math.round(n * 1000) / 1000;
+  }
+  const changes = [...new Set([...Object.keys(before), ...Object.keys(settings)])].filter(k => (before[k] || 0) !== (settings[k] || 0))
+    .map(k => ({ k, from: before[k] || 0, to: settings[k] || 0 }));
+  if (!changes.length) throw new HttpsError('failed-precondition', 'Nothing changed.');
+  const entry = { season, week, settings, changes, at: Date.now(), by: uid, vote: String(d.vote).slice(0, 200), note: String(d.note || '').slice(0, 300), midseason };
+  const keep = S.versions.filter(v => wk(v.season, v.week) !== wk(season, week));        // a second change for the same week replaces the first
+  await db.doc('config/scoring').set({ versions: [...keep, entry] , log: FieldValue.arrayUnion({ ...entry, settings: null }) }, { merge: true });
+  return { ok: true, season, week, changes: changes.length };
+});
+
 exports.trades = onCall({ region: 'us-central1', maxInstances: 10, timeoutSeconds: 30, memory: '512MiB' }, async req => {
   const uid = req.auth && req.auth.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');

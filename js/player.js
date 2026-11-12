@@ -27,9 +27,11 @@
 
   let M = null, dlg = null, cur = null;
 
-  function fantasy(stats, pos) {
+  // Scored with the League scoring in effect that week (a later scoring change never rewrites a past game).
+  function fantasy(stats, pos, season, week) {
     if (!stats) return null;
-    if (M.scoring) return Object.entries(M.scoring).reduce((t, [k, v]) => t + n(stats, k) * v, 0);
+    const sc = M.scoringAt && season && week ? M.scoringAt(season, week) : M.scoring;
+    if (sc) return Object.entries(sc).reduce((t, [k, v]) => t + n(stats, k) * v, 0);
     return DEF.includes(pos) ? n(stats, 'pts_idp') : n(stats, 'pts_ppr');
   }
 
@@ -136,7 +138,7 @@
     const shown = cols.filter(c => typeof c[1] === 'function' || played.some(g => n(g.e.stats, c[1])));
     const lw = g => (thisSeason ? leagueWeek(id, g.w) : null);
     const showLeague = M.live && thisSeason;
-    const fpts = g => { const l = lw(g); return l ? l.pts : fantasy(g.e && g.e.stats, p.position); };
+    const fpts = g => { const l = lw(g); return l ? l.pts : fantasy(g.e && g.e.stats, p.position, season, g.w); };
     const total = played.reduce((t, g) => t + (fpts(g) || 0), 0);
     const sum = c => {
       if (c[2] === 'max') return Math.max(...played.map(g => n(g.e.stats, c[1])));

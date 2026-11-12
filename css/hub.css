@@ -1607,3 +1607,11 @@ div.lu-empty .lu-plus { border-style: dotted; }
 /* trade alert in the missed-messages popup */
 .ann.trade { border-left-color: var(--red, #e23b3b); }
 .ann .ann-go { display: flex; width: fit-content; margin-top: 8px; }
+/* League scoring editor (Account page, commissioner) */
+.sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 18px; margin-bottom: 10px; }
+.sc-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; }
+.sc-row input { width: 84px; text-align: right; }
+.sc-vote { display: grid; gap: 8px; margin: 14px 0 8px; }
+/* trade prepay lock (rule 8-3-5) */
+.tr-owe { display: block; color: var(--gold, #e9b949); font-size: 11px; }
+.tr-lock { margin: 10px 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--gold, #e9b949) 50%, transparent); border-radius: var(--radius); background: color-mix(in srgb, var(--gold, #e9b949) 8%, transparent); font-size: 14px; }

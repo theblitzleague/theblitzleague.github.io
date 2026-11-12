@@ -205,8 +205,13 @@ main .wrap { padding-block: 16px 40px; }
 .field.two-way .formation { grid-template-areas: "db1 . . . . . db2" ". . lb1 . lb2 . ." ". . dl1 . dl2 . ." "los los los los los los los"
   "wr1 . te . wr2 . wr3" ". . . qb . . ." ". . rb1 . rb2 . ."; }
 .los { grid-area: los; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 4px -14px;
-  padding: 3px 12px; border-top: 2px solid color-mix(in srgb, var(--t2) 70%, transparent);
+  padding: 0 12px; min-height: 36px; position: relative; align-items: stretch;
   font-family: var(--font-display); font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+/* the line runs through the middle: "Defense" sits on the defense side (above), "Offense" on the offense side (below) */
+.los::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid color-mix(in srgb, var(--t2) 70%, transparent); }
+.los span { display: flex; align-items: flex-end; padding-bottom: 21px; }
+.los span:nth-child(2) { align-items: flex-start; padding: 21px 0 0; }
+.los span:last-child { align-items: flex-start; padding: 21px 0 0; }
 .slot { display: grid; justify-items: center; gap: 4px; text-align: center; min-width: 0; }
 .slot .shot { width: 58px; height: 58px; border: 2px solid var(--t2); box-shadow: 0 4px 12px rgba(0,0,0,.45); }
 .slot .pname { font-size: 15px; justify-content: center; line-height: 1.05; }

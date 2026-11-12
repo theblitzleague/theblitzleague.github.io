@@ -31,6 +31,16 @@ service cloud.firestore {
     // site, but can't change the owner or remove themselves. Nobody else can change it from the site.
     // League scoring versions (written only by the "settings" function, for the commissioner). Anyone can read them:
     // every page scores games with them, and the nightly data build reads them without signing in.
+    // Season tools (functions "season"): the record book of finished Hub seasons and the open dues/draft season.
+    // Public like the rest of the league's results; written only by the server.
+    match /history/{season} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /config/season {
+      allow read: if true;
+      allow write: if false;
+    }
     match /config/scoring {
       allow read: if true;
       allow write: if false;

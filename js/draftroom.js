@@ -28,7 +28,9 @@ const tMark = id => (M.teams[id] ? markSVG(M.teams[id].f, 'mini') : '');
 const short = n => { const p = n.split(' '); return p.length > 1 ? `${p[0][0]}. ${p.slice(1).join(' ')}` : n; };
 // My seat: the team I sit at (one person per franchise).
 const mySeat = () => (D ? Object.keys(D.seats || {}).find(t => D.seats[t] === me.uid) || null : null);
-const onClock = () => (D && D.teams.length ? D.teams[D.picks.length % D.teams.length] : null);
+// Rookie drafts follow pick ownership (D.owners, set when the draft starts: traded picks go to their new owners).
+const ownerAt = n => (D.owners && D.owners.length ? D.owners[n] : D.teams[n % D.teams.length]);
+const onClock = () => (D && D.teams.length ? ownerAt(D.picks.length) : null);
 const left = () => (D && D.clockEnd ? Math.max(0, D.clockEnd - (Date.now() + skew)) : null);
 const mmss = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 const slot = n => `${Math.floor(n / D.teams.length) + 1}.${String(n % D.teams.length + 1).padStart(2, '0')}`;
@@ -85,13 +87,17 @@ function lobby(list) {
       <p class="footnote"><b>Mock:</b> for practice; never changes the rosters, and the computer drafts empty seats after a few seconds. <b>Official:</b> when the last pick is made, the picks become the league rosters; empty seats get the full pick clock. GMs linked to a team sit at it automatically when they open the room. Only you can start a draft.</p></details></section>` : ''}</div>`;
   const f = $('dr-new');
   if (f) {
-    f.kind.addEventListener('change', () => { f.rounds.value = f.kind.value === 'rookie' ? 4 : 24; });
+    // A rookie draft uses the order the season tools saved (rule 8-2-3) and that year's picks, so traded picks go to their owners.
+    const SC = (M && M.league && M.league.seasonConfig) || {};
+    f.kind.addEventListener('change', () => { const rk = f.kind.value === 'rookie'; f.rounds.value = rk ? 4 : 24; if (rk && (SC.draftOrder || []).length) f.shuffle.checked = false; });
     f.addEventListener('submit', async e => {
       e.preventDefault(); const b = e.submitter || f.querySelector('[value="mock"]'), official = b.value === 'official', label = b.textContent;
       if (official && !await confirmBox('Create an official draft?', OFFICIAL_MSG.replace("this draft's picks", "this draft's picks as soon as the last pick is made"), 'Yes, create official draft')) return;
       b.disabled = true; b.textContent = 'Creating…';
-      let order = teams.map(t => t.id); if (f.shuffle.checked) order = order.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
-      try { const r = await act({ action: 'create', name: f.name.value, kind: f.kind.value, rounds: f.rounds.value, clockSec: f.clockSec.value, simDelay: f.simDelay.value, teams: order, official });
+      const rk = f.kind.value === 'rookie', saved = (SC.draftOrder || []).filter(t => teams.some(x => x.id === t));
+      let order = rk && saved.length === teams.length ? saved : teams.map(t => t.id);
+      if (f.shuffle.checked) order = order.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+      try { const r = await act({ action: 'create', name: f.name.value, kind: f.kind.value, rounds: f.rounds.value, clockSec: f.clockSec.value, simDelay: f.simDelay.value, teams: order, official, pickSeason: rk ? SC.draftSeason || null : null });
         location.href = `draftroom.html?d=${r.id}`; } catch (err) { b.disabled = false; b.textContent = label; }
     });
   }
@@ -103,7 +109,7 @@ function headerHTML() {
   const round = Math.floor(D.picks.length / D.teams.length) + 1, inRound = D.picks.length % D.teams.length + 1;
   const status = D.status === 'done' ? 'Draft complete' : D.status === 'setup' ? 'Waiting for the commissioner to start' : D.status === 'paused' ? 'Paused' : `Round ${round} · pick ${inRound} · overall ${D.picks.length + 1}`;
   const running = D.status === 'live' || D.status === 'paused';
-  const next = running && D.picks.length + 1 < D.rounds * D.teams.length ? D.teams[(D.picks.length + 1) % D.teams.length] : null;
+  const next = running && D.picks.length + 1 < D.rounds * D.teams.length ? ownerAt(D.picks.length + 1) : null;
   return `<div class="dr-top${mine && D.status === 'live' ? ' mine' : ''}">
     <div class="dr-now">${running ? `${tMark(t)}<div><span class="eyebrow">${mine ? 'You are on the clock' : 'On the clock'}</span><b>${esc(tName(t))}</b>${next != null ? `<small class="pmeta">Next: ${esc(tName(next))}</small>` : ''}</div>` : `<div><span class="eyebrow">${esc(D.kind === 'rookie' ? 'Rookie draft' : 'Startup draft')} · ${D.practice ? 'mock' : 'official'}</span><b>${esc(D.name)}</b></div>`}</div>
     <div class="dr-clock"><span id="dr-clock">${D.status === 'live' ? mmss(left()) : D.status === 'paused' ? mmss(D.pausedLeft || 0) : '--:--'}</span><small>${esc(status)}</small></div>

@@ -29,6 +29,24 @@
       .then(d => { const f = d && d.fields ? fsVal({ mapValue: { fields: d.fields } }) : {};
         return { versions: (f.versions || []).sort((a, b) => (a.season * 100 + a.week) - (b.season * 100 + b.week)), log: f.log || [] }; }));
   }
+  // The record book of Hub seasons the commissioner closed with the season tools (history/{season}), and the open
+  // dues/draft season (config/season). Both public; merged into data/history.json and league.json.
+  function fsGetAll(path) {
+    const cfg = window.FIREBASE_CONFIG;
+    if (!cfg) return Promise.resolve(null);
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 5000);
+    return fetch(`https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${path}${path.includes('?') ? '&' : '?'}key=${cfg.apiKey}`, { signal: c.signal, cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null)).catch(() => null).finally(() => clearTimeout(t));
+  }
+  async function seasonRecords(history, league) {
+    const [list, cfg] = await Promise.all([fsGetAll('history?pageSize=100'), fsGetAll('config/season')]);
+    const extra = ((list && list.documents) || []).map(d => fsVal({ mapValue: { fields: d.fields || {} } })).filter(x => x && x.season);
+    const have = new Set((history.seasons || []).map(x => String(x.season)));
+    history.seasons = [...(history.seasons || []), ...extra.filter(x => !have.has(String(x.season)))].sort((a, b) => +a.season - +b.season);
+    const C = cfg && cfg.fields ? fsVal({ mapValue: { fields: cfg.fields } }) : {};
+    if (C.duesSeason) league.duesSeason = C.duesSeason;
+    league.seasonConfig = C;
+  }
   function scoringAt(base, versions, season, week) {
     let out = base;
     for (const v of versions) if (v.season * 100 + v.week <= Number(season) * 100 + Number(week)) out = v.settings || {};
@@ -89,12 +107,12 @@
     const list = path => fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/${path}&key=${c.apiKey}`, { signal: ctl.signal })
       .then(x => (x.ok ? x.json() : {})).catch(() => ({}));
     try {
-      const [lg, res, txs] = await Promise.all([list('league?pageSize=20'), list('results?pageSize=60'), list('transactions?pageSize=300')]);
+      const [lg, res, txs] = await Promise.all([list('league?pageSize=20'), list('results?pageSize=60&orderBy=season%20desc'), list('transactions?pageSize=300&orderBy=created%20desc')]);
       const D = {}; for (const d of lg.documents || []) D[d.name.split('/').pop()] = d.fields || {};
       const f = D.rosters; if (!f) return null;
       const obj = k => val({ mapValue: { fields: D[k] || {} } }) || {};
       return { source: f.source && f.source.stringValue, name: f.name && f.name.stringValue, at: +((f.at && (f.at.integerValue || f.at.doubleValue)) || 0),
-        rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((D.lineups || {}).teams), startWeek: f.startWeek ? val(f.startWeek) : null,
+        rosters: lists(f.rosters), ir: lists(f.ir), taxi: lists(f.taxi), lineups: lists((D.lineups || {}).teams), startWeek: f.startWeek ? val(f.startWeek) : null, startSeason: f.startSeason ? val(f.startSeason) : null,
         results: (res.documents || []).map(d => val({ mapValue: { fields: d.fields } })),
         waivers: obj('waivers').players || {}, faab: obj('faab'), picks: obj('picks').traded || [], bracket: D.bracket ? obj('bracket') : null,
         transactions: (txs.documents || []).map(d => ({ transaction_id: d.name.split('/').pop(), ...val({ mapValue: { fields: d.fields } }) })) };
@@ -113,7 +131,7 @@
     const wk = raw.state.week;
     // Weeks before startWeek (the first week the official rosters could set a lineup before kickoff) stay placeholder
     // weeks, scores and all. Until the server records startWeek, rosters made official mid-week start next week.
-    const start = hub.startWeek || wk + 1;
+    const start = hub.startSeason && +raw.state.season > +hub.startSeason ? 1 : hub.startWeek || wk + 1;   // later seasons: all Hub
     raw.hubStart = start;
     for (const [w, rows] of Object.entries(raw.matchups)) if (+w >= wk) for (const m of rows) {
       if (+w < start) continue;
@@ -378,6 +396,7 @@
     async _load() {
       const [league, brand, history] = await Promise.all([getJSON('data/league.json'), getJSON('data/franchises.json'),
         getJSON('data/history.json').catch(() => ({ seasons: [] }))]);
+      await seasonRecords(history, league);
       const live = !!league.sleeperLeagueId;
       const [raw, hub] = await Promise.all([live ? loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : loadSample(), live ? null : hubRosters()]);
       if (hub) {

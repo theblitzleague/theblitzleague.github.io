@@ -215,6 +215,7 @@ function commishView() {
     ${panel('Commissioner', 'League backup', `<p class="acct-note">Everything the League has, as an Excel workbook: franchises, members, rosters, every week's lineups and scores, standings, schedules, playoffs, drafts and every pick, transactions, trades, waiver claims, FAAB, pick ownership, history and the ledger. A copy is saved every night at 2:30 AM Central and kept for good, plus a permanent season-final copy once each Blitz Bowl is official.</p>
       <div class="acct-row"><button class="btn primary" id="bk-now">Download the workbook now</button><select id="bk-day" aria-label="Saved night"><option value="">Saved nights…</option></select><button class="btn" id="bk-get">Download that night</button><button class="btn" id="bk-json">That night's raw data (.json)</button></div>${note('bkmsg')}`, 's12')}
     <div id="scoring-ui" class="s12"></div>
+    <div id="season-ui" class="s12"></div>
     ${panel('Commissioner', 'Scheduled reminders', `<p class="acct-note">Messages the site sends on its own. Sent ones appear under "Sent to specific GMs" as Automatic reminder.</p><div id="sched" class="acct-list"><p class="pmeta">Loading…</p></div>`, 's12')}
   </div>`;
   const toTeams = () => document.querySelector('input[name="to"]:checked').value === 'teams';
@@ -263,6 +264,7 @@ function commishView() {
   backupPanel();
   scheduled();
   import('./scoring-admin.js?v=1').then(m => m.scoringAdmin(M, $('scoring-ui'))).catch(e => console.error(e));
+  import('./season-tools.js?v=1').then(m => m.seasonTools(M, $('season-ui'), owner === me.uid)).catch(e => console.error(e));
 }
 
 // Automatic messages and when they run. Keep in step with functions/index.js (DUES dates and the watchRefresh schedule).

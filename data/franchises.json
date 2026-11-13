@@ -62,7 +62,14 @@
         "primary": "Final",
         "mark": "Final",
         "wordmark": "Final"
-      }
+      },
+      "helmetImages": {
+        "home": {
+          "right": "assets/franchises/flg/helmet-home-right.webp",
+          "left": "assets/franchises/flg/helmet-home-left.webp"
+        }
+      },
+      "_helmetNote": "Faceoff helmets from the commissioner, 2026-11-12: Codex 3D renders on the free Sketchfab SpeedFlex (Exodusks, CC BY 4.0, credited on the Rules page), meteor decal both sides. 4K transparent originals trimmed to 2000px in assets/source/flagstaff/helmet-{right,left}-src.webp. Faceoff art only. No away set: away games wear these."
     },
     "2": {
       "location": "Reno",

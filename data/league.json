@@ -220,6 +220,12 @@
       "lon": -107.55
     },
     {
+      "name": "Flagstaff",
+      "region": "west",
+      "lat": 35.2,
+      "lon": -111.65
+    },
+    {
       "name": "Reno",
       "region": "west",
       "lat": 39.53,
@@ -267,6 +273,11 @@
   "scoringLeagueId": "1423408541737156608",
   "_creditsNote": "Required credits for outside art the site uses, shown at the bottom of the Rules page (js/rules.js). The helmet model is CC BY 4.0: keep this credit as long as any team helmet is built on it.",
   "credits": [
-    { "text": "Team helmets are built on \"Buffalo Bills Helmet\" by Exodusks, recolored and rebranded for the Blitz League.", "source": "https://sketchfab.com/3d-models/buffalo-bills-helmet-fd471344bf9c4900b8cc0f59fedb8093", "license": "CC BY 4.0", "licenseUrl": "https://creativecommons.org/licenses/by/4.0/" }
+    {
+      "text": "Team helmets are built on \"Buffalo Bills Helmet\" by Exodusks, recolored and rebranded for the Blitz League.",
+      "source": "https://sketchfab.com/3d-models/buffalo-bills-helmet-fd471344bf9c4900b8cc0f59fedb8093",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+    }
   ]
 }

@@ -2,34 +2,32 @@
   "_readme": "Commissioner-only file, keyed by Sleeper roster_id. Branding shows up automatically when a GM claims that roster. 'placeholder: true' = location not yet picked.",
   "franchises": {
     "1": {
-      "location": "Wyoming",
-      "nickname": "Whitewalkers",
-      "abbr": "WYO",
+      "location": "Flagstaff",
+      "nickname": "Meteors",
+      "abbr": "FLG",
       "division": "west",
       "placeholder": false,
       "founded": 2026,
       "colors": {
-        "primary": "#000000",
-        "secondary": "#7FD3FF",
-        "trim": "#C0C6D4"
+        "primary": "#1A1224",
+        "secondary": "#E04E48",
+        "trim": "#BAC3CC"
       },
       "helmet": {
-        "shell": "#000000",
-        "facemask": "#C0C6D4",
-        "stripe": "#7FD3FF",
-        "stripeTrim": "#C0C6D4"
+        "shell": "#1A1224",
+        "facemask": "#BAC3CC",
+        "stripe": "#E04E48",
+        "stripeTrim": "#BAC3CC"
       },
       "logos": {
-        "primary": "assets/franchises/wyo/primary.webp",
-        "mark": "assets/franchises/wyo/mark-ww.webp",
-        "wordmark": "assets/franchises/wyo/wordmark.webp",
-        "helmetDecal": "assets/franchises/wyo/mark-head.webp",
-        "alternates": {
-          "\"W\" mark": "assets/franchises/wyo/mark-w.webp",
-          "Whitewalker head": "assets/franchises/wyo/mark-head.webp",
-          "Ice crown": "assets/franchises/wyo/mark-crown.webp",
-          "Mountain": "assets/franchises/wyo/mark-mountain.webp"
-        }
+        "primary": "assets/franchises/flg/primary.webp",
+        "primaryWide": true,
+        "mark": "assets/franchises/flg/mark-f.webp",
+        "wordmark": "assets/franchises/flg/wordmark.webp",
+        "helmetDecal": null,
+        "alternates": {},
+        "matchup": "assets/franchises/flg/mark-f.webp",
+        "matchupSquare": true
       },
       "gm": {
         "name": "Commissioner",
@@ -39,52 +37,31 @@
         "bio": null
       },
       "pastGms": [],
-      "_colorsNote": "Official palette from the Wyoming brand sheet (assets/source/wyoming-brand-sheet.webp), 2026-11-03.",
       "palette": [
         [
-          "White",
-          "#FFFFFF"
+          "Midnight Plum",
+          "#1A1224"
         ],
         [
-          "Black",
-          "#000000"
-        ],
-        [
-          "Ice Blue",
-          "#7FD3FF"
+          "Meteor Red",
+          "#E04E48"
         ],
         [
           "Silver",
-          "#C0C6D4"
+          "#BAC3CC"
+        ],
+        [
+          "Cream",
+          "#F2F0E8"
         ]
       ],
-      "_logosNote": "mark, wordmark, alternates and helmetDecal were cut from the flattened brand sheet (dark background keyed out). They are interim: dark-background use only, ~150-300px. Replace with transparent exports when available.",
+      "_colorsNote": "Sampled from the commissioner's primary logo, 2026-11-12. Interim until a brand sheet arrives.",
+      "_logosNote": "2026-11-12 from the commissioner (Codex): meteor F + FLAGSTAFF METEORS = primary (team page, primaryWide). F with red streaks = logos.mark (every small spot). Wordmark = logos.wordmark. The meteor-only logo is helmet art and is not used on the site (original kept in assets/source/flagstaff/meteor-src.webp). Originals in assets/source/flagstaff/.",
+      "_replacedNote": "Slot 1 was the Wyoming Whitewalkers until 2026-11-12 (commissioner: 'replace wyoming'). The old entry and its art are archived in assets/source/retired-wyoming-2026-11-12/. History stays with the slot.",
       "logoStatus": {
+        "primary": "Final",
         "mark": "Final",
-        "wordmark": "Final",
-        "alternates": "Interim cut"
-      },
-      "helmetAway": {
-        "shell": "#FFFFFF",
-        "facemask": "#000000",
-        "stripe": "#7FD3FF",
-        "stripeTrim": "#C0C6D4"
-      },
-      "_helmetNote": "Finished side-profile renders received 2026-11-03: home = matte black / silver mask, away = white / black mask, each facing both ways. These replace the recolored template for Wyoming.",
-      "helmetImages": {
-        "home": {
-          "right": "assets/franchises/wyo/helmet-home-right.webp",
-          "left": "assets/franchises/wyo/helmet-home-left.webp"
-        },
-        "away": {
-          "right": "assets/franchises/wyo/helmet-away-right.webp",
-          "left": "assets/franchises/wyo/helmet-away-left.webp"
-        }
-      },
-      "uniforms": {
-        "Home": "assets/franchises/wyo/uniform-home.webp",
-        "Away": "assets/franchises/wyo/uniform-away.webp",
-        "Alternate": "assets/franchises/wyo/uniform-alternate.webp"
+        "wordmark": "Final"
       }
     },
     "2": {

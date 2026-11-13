@@ -69,7 +69,9 @@
           "left": "assets/franchises/flg/helmet-home-left.webp"
         }
       },
-      "_helmetNote": "Faceoff helmets from the commissioner, 2026-11-12: Codex 3D renders on the free Sketchfab SpeedFlex (Exodusks, CC BY 4.0, credited on the Rules page), meteor decal both sides. 4K transparent originals trimmed to 2000px in assets/source/flagstaff/helmet-{right,left}-src.webp. Faceoff art only. No away set: away games wear these."
+      "_helmetNote": "Faceoff helmets from the commissioner, 2026-11-12: Codex 3D renders on the free Sketchfab SpeedFlex (Exodusks, CC BY 4.0, credited on the Rules page), meteor decal both sides. 4K transparent originals trimmed to 2000px in assets/source/flagstaff/helmet-{right,left}-src.webp. Faceoff art only. No away set: away games wear these.",
+      "banner": "assets/franchises/flg/banner.webp",
+      "_bannerNote": "San Francisco Peaks at night over the city lights, with a meteor, from the commissioner 2026-11-12 (original in assets/source/flagstaff/). Shown faded behind the team-page hero."
     },
     "2": {
       "location": "Reno",

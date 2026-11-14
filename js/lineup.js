@@ -6,7 +6,7 @@
    Tap "Move" on a bench player -> the spots he can start in, or IR / taxi. "Activate" brings a taxi or IR player back. */
 import { app, auth, db } from './fb.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js';
 
 const { esc, shot, f1 } = UI;
@@ -156,8 +156,46 @@ onAuthStateChanged(auth, async user => {
   commish = (((roles && roles.data()) || {}).commish || []).includes(user.uid);
   const t = ((prof && prof.data()) || {}).team; myTeam = t == null ? null : +t;
   window.LineupEdit = { can: id => (myTeam != null && +id === myTeam) || (commish && editOn(id)), game, pts };
+  document.body.classList.toggle('is-commish', commish);
   dispatchEvent(new Event('hub:lineup'));
   commishBar();
+});
+
+// ---------- GM name (commissioner only) ----------
+// Saved to config/gms (public; Firestore rules let only commissioners write it). data.js lays it over franchises.json.
+// Each person gets a stable id, so fixing a name keeps their career; "a new person" starts a new GM record.
+function openGmEdit(id) {
+  const t = window.TeamPage && TeamPage.T; if (!t || +t.id !== +id) return;
+  const gm = t.f.gm || {}, season = (TeamPage.M && TeamPage.M.state && +TeamPage.M.state.season) || new Date().getFullYear();
+  const d = document.createElement('dialog'); d.className = 'lu-sheet';
+  d.innerHTML = `<div class="lu-head"><div><span class="eyebrow">${esc(UI.teamName(t))}</span><h3>General manager</h3></div><button class="pc-x" type="button" aria-label="Close">&times;</button></div>
+    <form class="gm-form" method="dialog">
+      <label>Name shown on the site<input name="name" maxlength="40" value="${esc(gm.name || '')}" placeholder="Leave empty for an open seat"></label>
+      <label>GM since (season)<input name="since" type="number" min="2026" max="2100" value="${esc(gm.since || season)}"></label>
+      ${gm.name ? '<label class="gm-new"><input name="fresh" type="checkbox"> This is a different person taking over (starts a new GM record; leave unticked to just fix the name)</label>' : ''}
+      <div class="gm-actions"><button type="submit" class="btn primary">Save</button><span class="gm-msg" role="status"></span></div>
+    </form>`;
+  document.body.appendChild(d);
+  d.addEventListener('click', e => { if (e.target === d || e.target.closest('.pc-x')) d.close(); });
+  d.addEventListener('close', () => d.remove());
+  d.querySelector('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = e.target, name = f.name.value.trim().replace(/\s+/g, ' ').slice(0, 40), since = +f.since.value || season;
+    const fresh = f.fresh && f.fresh.checked, msg = d.querySelector('.gm-msg');
+    const entry = name ? { name, since, id: (!fresh && gm.id) || ('gm-' + Math.random().toString(36).slice(2, 10)) } : { name: null, since: null, id: null };
+    msg.textContent = 'Saving...';
+    try {
+      await setDoc(doc(db, 'config', 'gms'), { teams: { [String(t.id)]: entry }, at: Date.now() }, { merge: true });
+      t.f.gm = { ...gm, ...entry };
+      d.close(); toast(name ? `GM set to ${name}.` : 'Seat is open.');
+      dispatchEvent(new Event('hub:moves'));
+    } catch (err) { msg.textContent = 'Not saved: ' + (err.code === 'permission-denied' ? 'only a commissioner can change this.' : err.message); }
+  });
+  d.showModal();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-gm-edit]'); if (!b || !commish) return;
+  e.preventDefault(); openGmEdit(+b.dataset.gmEdit);
 });
 
 // ---------- Commissioner edit ----------

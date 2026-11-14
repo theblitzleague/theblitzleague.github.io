@@ -413,7 +413,7 @@
     return `<div class="grid">
   <div class="s7 fo-col">
   <section class="panel">
-    <header><div><span class="eyebrow">General manager</span><h2>${esc(gm.name || 'Open seat')}</h2></div><span class="aside">${gm.since ? `Since ${gm.since}` : ''}</span></header>
+    <header><div><span class="eyebrow">General manager</span><h2>${esc(gm.name || 'Open seat')}</h2></div><span class="aside">${gm.since ? `Since ${gm.since}` : ''}<button type="button" class="gm-edit" data-gm-edit="${t.id}">Edit GM</button></span></header>
     <div class="fo${rack ? '' : ' bare'}">
       ${gm.portrait ? `<img class="portrait-lg" src="${esc(gm.portrait)}" alt="${esc(gm.name)}">` : '<div class="portrait-lg">Portrait coming</div>'}
       ${rack}

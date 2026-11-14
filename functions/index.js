@@ -1425,7 +1425,7 @@ async function buildWorkbook(L) {
   // Franchises and members
   const users = C.users || {}, roles = C.config.roles || {};
   sheet('Franchises', [['Team id', 'id', 9], ['Location', 'loc', 16], ['Nickname', 'nick', 18], ['Abbr', 'abbr', 7], ['Division', 'div', 12], ['GM', 'gm', 20], ['Linked account', 'acct', 26], ['Founded', 'founded', 9]],
-    Object.entries(fr).map(([id, f]) => ({ id: +id, loc: f.location, nick: f.nickname || '', abbr: f.abbr || '', div: f.division, gm: (f.gm || {}).name || '', founded: f.founded || '',
+    Object.entries(fr).map(([id, f]) => ({ id: +id, loc: f.location, nick: f.nickname || '', abbr: f.abbr || '', div: f.division, gm: ((((C.config || {}).gms || {}).teams || {})[id] || {}).name || (f.gm || {}).name || '', founded: f.founded || '',
       acct: Object.values(users).filter(u => +u.team === +id).map(u => u.name || u.email || '').join(', ') })));
   sheet('Members', [['Account', 'uid', 30], ['Name', 'name', 20], ['Email', 'email', 28], ['Team', 'team', 22], ['Role', 'role', 16], ['Joined', 'at', 18, DT]],
     Object.entries(users).map(([uid, u]) => ({ uid, name: u.name || '', email: u.email || '', team: team(u.team), role: roles.owner === uid ? 'Owner' : (roles.commish || []).includes(uid) ? 'Commissioner' : 'GM', at: when(u.at) })));

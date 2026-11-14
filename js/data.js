@@ -38,6 +38,15 @@
     return fetch(`https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${path}${path.includes('?') ? '&' : '?'}key=${cfg.apiKey}`, { signal: c.signal, cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null)).catch(() => null).finally(() => clearTimeout(t));
   }
+  // GM names the commissioner set on the site (config/gms, public; js/lineup.js writes it). They win over franchises.json.
+  async function gmNames(brand) {
+    const d = await fsGetAll('config/gms');
+    const T = (d && d.fields ? fsVal({ mapValue: { fields: d.fields } }) : {}).teams || {};
+    for (const [id, g] of Object.entries(T)) {
+      const f = brand.franchises[String(id)];
+      if (f && g) f.gm = { ...(f.gm || {}), name: g.name || null, since: g.since || null, id: g.id || null };
+    }
+  }
   async function seasonRecords(history, league) {
     const [list, cfg] = await Promise.all([fsGetAll('history?pageSize=100'), fsGetAll('config/season')]);
     const extra = ((list && list.documents) || []).map(d => fsVal({ mapValue: { fields: d.fields || {} } })).filter(x => x && x.season);
@@ -197,7 +206,8 @@
 
   // A GM's identity: their Sleeper user ID (live: the roster owner; otherwise franchises.json), so honors and
   // career numbers follow the person from franchise to franchise. Falls back to the name before IDs exist.
-  const gmKey = (r, f) => r.owner_id || (f.gm && (f.gm.sleeperUserId || (f.gm.name && `name:${f.gm.name}`))) || null;
+  // gm.id: the stable id the commissioner's GM editor gives a person (config/gms), so a renamed GM keeps their career.
+  const gmKey = (r, f) => r.owner_id || (f.gm && (f.gm.sleeperUserId || (f.gm.id && `gm:${f.gm.id}`) || (f.gm.name && `name:${f.gm.name}`))) || null;
 
   // Highest score of each final regular-season week; a tie shares it. Pays the weekly prize.
   function weeklyHighs(teams, league) {
@@ -409,7 +419,7 @@
     async _load() {
       const [league, brand, history] = await Promise.all([getJSON('data/league.json'), getJSON('data/franchises.json'),
         getJSON('data/history.json').catch(() => ({ seasons: [] }))]);
-      await seasonRecords(history, league);
+      await Promise.all([seasonRecords(history, league), gmNames(brand)]);
       const live = !!league.sleeperLeagueId;
       const [raw, hub] = await Promise.all([live ? loadLive(league.sleeperLeagueId, league.regularSeasonWeeks) : loadSample(), live ? null : hubRosters()]);
       if (hub) {

@@ -41,6 +41,14 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+    // GM names shown on the site: { teams: { "<team id>": { name, since, id } }, at }. Public; only commissioners write.
+    match /config/gms {
+      allow read: if true;
+      allow create, update: if isCommish()
+        && request.resource.data.keys().hasOnly(['teams', 'at'])
+        && request.resource.data.teams is map && request.resource.data.teams.size() <= 32;
+      allow delete: if false;
+    }
     match /config/scoring {
       allow read: if true;
       allow write: if false;

@@ -4,7 +4,7 @@
    to every registered phone of a GM who is linked to a team, plus the commissioner's own. The message is data-only:
    sw.js on the phone turns it into the notification, so it looks the same everywhere. Phones whose registration has
    expired are removed. The send result (sent / failed) is written back onto the announcement for the Commissioner panel. */
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentWritten, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
@@ -115,6 +115,7 @@ exports.watchRefresh = onSchedule({ schedule: '30 5 * * *', timeZone: 'America/C
   const to = roles.owner || (roles.commish || [])[0];
   if (!to) return;
   const last = built ? new Date(built).toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'medium', timeStyle: 'short' }) + ' Central' : null;
+  await logEvent(db, 'error', 'system', "Nightly refresh didn't update the site", last ? `Last updated ${last}.` : why);
   await db.collection('notes').add({ to, team: null, by: 'system', at: FieldValue.serverTimestamp(), title: "Nightly refresh didn't update the site",
     body: (last ? `The site's NFL data was last updated ${last}. ` : `Couldn't check the site's NFL data (${why}). `)
       + 'Check the "Refresh data" run at github.com/theblitzleague/theblitzleague.github.io/actions, or ask ALFRED to look into it.' });
@@ -225,6 +226,55 @@ const BATCH_SLACK = 20 * 60e3;   // the batch counts anything due within a few m
    page calls "tick" when the clock hits zero) and by draftClock, a once-a-minute backstop. */
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const SITE = 'https://theblitzleague.github.io';
+
+/* ---------- League log (Account › League log, commissioner only) ----------
+   log/{id} {at, level: 'info'|'warn'|'error', kind, title, body, teams}: everything the commissioner needs to see in one
+   place: the Wednesday batch, every trade step, waiver results, commissioner actions, and anything that failed.
+   Written only here (firestore.rules); kept for good, so it doubles as the league's audit trail. */
+async function logEvent(db, level, kind, title, body = '', teams = []) {
+  await db.collection('log').add({ at: Date.now(), level, kind, title: String(title).slice(0, 200), body: String(body || '').slice(0, 1000), teams: teams.map(Number) })
+    .catch(e => console.error('log write failed', e));
+}
+async function logNames() {
+  const [fr, P] = await Promise.all([getJSON(`${SITE}/data/franchises.json?t=${Date.now()}`).then(j => j.franchises || {}).catch(() => ({})), playerInfo().catch(() => ({}))]);
+  return { team: id => (fr[String(id)] ? fr[String(id)].location : `Team ${id}`), pl: id => (P[id] ? P[id].name : `Player ${id}`) };
+}
+const pickText = (p, team) => `${team(p.roster_id)}'s ${p.season} round ${p.round} pick`;
+const chiWhen = ms => new Date(ms).toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'medium', timeStyle: 'short' }) + ' Central';
+exports.logTrades = onDocumentWritten({ document: 'trades/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
+  const was = event.data.before.exists ? event.data.before.data() : null, T = event.data.after.exists ? event.data.after.data() : null;
+  if (!T || (was && was.status === T.status)) return;
+  const db = getFirestore(), { team, pl } = await logNames();
+  const side = a => [...((a || {}).players || []).map(pl), ...((a || {}).picks || []).map(p => pickText(p, team))].join(', ') || 'nothing';
+  const what = `${team(T.from)} sends ${side(T.give)}. ${team(T.to)} sends ${side(T.get)}.`;
+  const m = {
+    offered: ['info', `Trade offer: ${team(T.from)} → ${team(T.to)}`, what],
+    review: ['info', `Trade accepted: ${team(T.from)} ⇄ ${team(T.to)}`, `${what} Goes through ${T.processAt ? chiWhen(T.processAt) : 'in the next batch'}.`],
+    processed: ['info', `Trade went through${T.pushedBy ? ' (pushed by the commissioner)' : ''}: ${team(T.from)} ⇄ ${team(T.to)}`, what],
+    failed: ['error', `Trade FAILED: ${team(T.from)} ⇄ ${team(T.to)}`, `${T.note || 'No reason recorded.'} ${what}`],
+    vetoed: ['warn', `Trade vetoed: ${team(T.from)} ⇄ ${team(T.to)}`, `${T.note || ''} ${what}`],
+    rejected: ['info', `Trade rejected: ${team(T.from)} → ${team(T.to)}`, what],
+    cancelled: ['info', `Trade withdrawn: ${team(T.from)} → ${team(T.to)}`, what],
+    countered: ['info', `Trade countered: ${team(T.to)} countered ${team(T.from)}`, what],
+  }[T.status];
+  if (m) await logEvent(db, m[0], 'trade', m[1], m[2], [T.from, T.to]);
+});
+exports.logMoves = onDocumentCreated({ document: 'transactions/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
+  const X = event.data && event.data.data(); if (!X || X.type === 'trade') return;          // trades are logged by logTrades
+  const db = getFirestore(), { team, pl } = await logNames();
+  const adds = Object.entries(X.adds || {}), drops = Object.entries(X.drops || {});
+  const parts = [...adds.map(([id, t]) => `${team(t)} added ${pl(id)}`), ...drops.map(([id, t]) => `${team(t)} dropped ${pl(id)}`)].join('; ');
+  const bid = X.settings && X.settings.waiver_bid != null ? ` ($${X.settings.waiver_bid})` : '';
+  const title = X.type === 'commissioner' ? `Commissioner: ${(X.settings || {}).note || 'roster change'}`
+    : X.type === 'waiver' ? `Waiver claim won${bid}` : 'Free-agent move';
+  await logEvent(db, X.type === 'commissioner' ? 'warn' : 'info', X.type || 'move', title, parts, X.roster_ids || []);
+});
+exports.logClaims = onDocumentUpdated({ document: 'claims/{id}', region: 'us-central1', maxInstances: 2 }, async event => {
+  const was = event.data.before.data(), C = event.data.after.data();
+  if (!C || C.status !== 'failed' || was.status === 'failed') return;
+  const db = getFirestore(), { team, pl } = await logNames();
+  await logEvent(db, 'warn', 'claim', `Waiver claim failed: ${team(C.team)} for ${pl(C.player)}`, C.note || '', [C.team]);
+});
 const DRAFT_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB'], IDP_POS = ['DL', 'LB', 'DB'];
 const IDPMAP = { DE: 'DL', DT: 'DL', NT: 'DL', ILB: 'LB', OLB: 'LB', MLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
 const NEED = { QB: 1, RB: 2, WR: 2, TE: 1, K: 1, DL: 1, LB: 1, DB: 1 };   // one of each starting spot (rulebook 7-2-1)
@@ -1387,6 +1437,7 @@ async function processTrades(db, onlyId = null) {
 // Each run is recorded in config/movesRun. If it fails, the commissioner gets a site alert and a push notification (once
 // that day, though it retries twice); movesWatch, an hour later, alerts if no run finished at all.
 async function alertCommish(db, title, body) {
+  await logEvent(db, 'error', 'system', title, body);
   const roles = (await db.doc('config/roles').get()).data() || {};
   const to = [...new Set([roles.owner, ...(roles.commish || [])].filter(Boolean))];
   await Promise.all(to.map(uid => db.collection('notes').add({ to: uid, team: null, by: 'system', at: FieldValue.serverTimestamp(), title, body })));
@@ -1397,6 +1448,7 @@ exports.movesRun = onSchedule({ schedule: '0 3 * * 3', timeZone: 'America/Chicag
   try {
     const t = await processTrades(db), w = await settleWaivers(db);
     await log.set({ lastOk: Date.now(), day: chiDay(), trades: t.processed || 0, waivers: w.settled || 0, error: null }, { merge: true });
+    await logEvent(db, 'info', 'batch', 'Wednesday moves batch ran', `${t.processed || 0} trade${t.processed === 1 ? '' : 's'} went through; ${w.settled || 0} player${w.settled === 1 ? '' : 's'} came off waivers.`);
   } catch (e) {
     const prev = (await log.get()).data() || {};
     await log.set({ lastError: Date.now(), error: String(e && e.message || e).slice(0, 500) }, { merge: true });
@@ -1584,7 +1636,9 @@ async function saveBackup(db) {
 }
 
 exports.leagueBackup = onSchedule({ schedule: '30 2 * * *', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 2, timeoutSeconds: 300, memory: '1GiB', maxInstances: 1 }, async () => {
-  await saveBackup(getFirestore());
+  const db = getFirestore();
+  try { await saveBackup(db); }
+  catch (e) { await logEvent(db, 'error', 'system', 'Nightly backup failed', String(e && e.message || e)); throw e; }
 });
 
 // The commissioner's copy: "now" builds a fresh workbook, "list" names the saved nights, "get" returns one of them.

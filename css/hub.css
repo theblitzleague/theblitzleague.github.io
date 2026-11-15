@@ -1637,3 +1637,7 @@ body.is-commish .gm-edit { display: inline-block; }
 .gm-form .gm-new { display: flex; gap: 8px; align-items: flex-start; }
 .gm-actions { display: flex; gap: 12px; align-items: center; }
 .gm-msg { font-size: 13px; color: var(--muted); }
+/* League log (js/league-log.js): problems get a red edge, heads-ups amber. */
+.acct-item.lg-error { border-left: 3px solid var(--bad); }
+.acct-item.lg-warn { border-left: 3px solid var(--warn); }
+.aside.bad { color: var(--bad); }

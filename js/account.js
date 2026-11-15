@@ -214,6 +214,7 @@ function commishView() {
     ${panel('Commissioner', 'Link accounts to teams', `<p class="acct-note">Everyone who has signed in. Pick each GM's team; they get announcements once linked.</p><div id="members" class="acct-list"></div>${note('memmsg')}`, 's5')}
     ${panel('Commissioner', 'League backup', `<p class="acct-note">Everything the League has, as an Excel workbook: franchises, members, rosters, every week's lineups and scores, standings, schedules, playoffs, drafts and every pick, transactions, trades, waiver claims, FAAB, pick ownership, history and the ledger. A copy is saved every night at 2:30 AM Central and kept for good, plus a permanent season-final copy once each Blitz Bowl is official.</p>
       <div class="acct-row"><button class="btn primary" id="bk-now">Download the workbook now</button><select id="bk-day" aria-label="Saved night"><option value="">Saved nights…</option></select><button class="btn" id="bk-get">Download that night</button><button class="btn" id="bk-json">That night's raw data (.json)</button></div>${note('bkmsg')}`, 's12')}
+    <div id="league-log" class="s12"></div>
     <div id="trades-admin" class="s12"></div>
     <div id="scoring-ui" class="s12"></div>
     <div id="season-ui" class="s12"></div>
@@ -264,6 +265,7 @@ function commishView() {
   members();
   backupPanel();
   scheduled();
+  import('./league-log.js?v=1').then(m => m.leagueLog($('league-log'))).catch(e => console.error(e));
   import('./commish-trades.js?v=1').then(m => m.commishTrades(M, $('trades-admin'))).catch(e => console.error(e));
   import('./scoring-admin.js?v=1').then(m => m.scoringAdmin(M, $('scoring-ui'))).catch(e => console.error(e));
   import('./season-tools.js?v=1').then(m => m.seasonTools(M, $('season-ui'), owner === me.uid)).catch(e => console.error(e));

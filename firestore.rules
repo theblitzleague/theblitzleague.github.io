@@ -54,6 +54,11 @@ service cloud.firestore {
       allow read: if isCommish();
       allow write: if false;
     }
+    // League log (Account › League log): written only by the server's functions; the commissioner reads it.
+    match /log/{id} {
+      allow read: if isCommish();
+      allow write: if false;
+    }
     match /config/scoring {
       allow read: if true;
       allow write: if false;

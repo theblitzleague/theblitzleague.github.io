@@ -1191,8 +1191,33 @@ async function tradesAct(db, uid, commish, myTeam, data) {
   if (!T) throw new HttpsError('not-found', 'No such trade.');
   const isFrom = String(T.from) === me, isTo = String(T.to) === me;
   if (data.action === 'cancel') { if (!(isFrom || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer can be withdrawn, by the team that made it.'); await ref.update({ status: 'cancelled', done: Date.now() }); return { ok: true }; }
-  if (data.action === 'reject') { if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be rejected.'); await ref.update({ status: 'rejected', done: Date.now() }); return { ok: true }; }
+  if (data.action === 'reject') { if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be rejected.'); await ref.update({ status: 'rejected', done: Date.now() }); if (!isTo) await commishLog('Trade rejected by the Commissioner for the receiving team'); return { ok: true }; }
   if (data.action === 'veto') { if (!commish || T.status !== 'review') throw new HttpsError('failed-precondition', 'Only a trade in review can be vetoed, by the commissioner (rule 8-3-4).'); await ref.update({ status: 'vetoed', done: Date.now(), note: String(data.reason || 'Vetoed by the commissioner (rule 8-3-4).').slice(0, 300) }); return { ok: true }; }
+  // Commissioner actions on another team's trade go in the transaction log (11-2-1), like lineup overrides.
+  const commishLog = async note => {
+    const week = Number(state.week) || 0;
+    await db.collection('transactions').add({ type: 'commissioner', status: 'complete', leg: week, created: Date.now(), roster_ids: [Number(T.from), Number(T.to)],
+      adds: {}, drops: {}, draft_picks: [], settings: { note }, by: uid, trade: ref.id });
+  };
+  if (data.action === 'push') {
+    // The commissioner pushes a trade through now instead of waiting for the review and the Wednesday batch. An open
+    // offer is accepted for the receiving team first. Dues (6-1-3), the deadline (8-3-3) and the roster checks still apply.
+    if (!commish) throw new HttpsError('permission-denied', 'Only the commissioner can push a trade through.');
+    if (!['offered', 'review'].includes(T.status)) throw new HttpsError('failed-precondition', 'Only an open offer or a trade in review can be pushed through.');
+    if (T.status === 'offered') {
+      const dl = await deadlinePassed(db);
+      if (dl.passed) throw new HttpsError('failed-precondition', `The trade deadline has passed (rule 8-3-3: the last game of Week ${TRADE_DEADLINE_WEEK}); trading reopens when the championship game is final.`);
+      await gate([T.from, T.to], T.to);
+      await checkTrade(db, { ...T, dropsTo: [] }, R, picks, P, state, { prepay: true });
+      await ref.update({ status: 'review', dropsTo: [], acceptedAt: Date.now(), acceptedBy: uid, reviewUntil: Date.now(), processAt: Date.now() });
+    }
+    await processTrades(db, ref.id);
+    const after = (await ref.get()).data() || {};
+    if (after.status !== 'processed') throw new HttpsError('failed-precondition', `It didn't go through: ${after.note || after.status}.`);
+    await ref.update({ pushedBy: uid });
+    await commishLog('Trade pushed through by the Commissioner');
+    return { ok: true, processed: true };
+  }
   if (data.action === 'accept') {
     if (!(isTo || commish) || T.status !== 'offered') throw new HttpsError('failed-precondition', 'Only an open offer made to you can be accepted.');
     const dl = await deadlinePassed(db);
@@ -1202,7 +1227,8 @@ async function tradesAct(db, uid, commish, myTeam, data) {
     await checkTrade(db, T2, R, picks, P, state, { prepay: true });
     // Two days of review (8-3-2), then it goes through in the next Wednesday 3 AM batch, never in the middle of a week.
     const reviewUntil = Date.now() + TRADE_REVIEW_MS, processAt = nextBatch(reviewUntil);
-    await ref.update({ status: 'review', dropsTo: T2.dropsTo, acceptedAt: Date.now(), reviewUntil, processAt });
+    await ref.update({ status: 'review', dropsTo: T2.dropsTo, acceptedAt: Date.now(), acceptedBy: uid, reviewUntil, processAt });
+    if (!isTo) await commishLog('Trade accepted by the Commissioner for the receiving team');
     return { ok: true, reviewUntil, processAt };
   }
   throw new HttpsError('invalid-argument', 'Unknown action.');
@@ -1310,8 +1336,10 @@ exports.trades = onCall({ region: 'us-central1', maxInstances: 10, timeoutSecond
 
 // Process every accepted trade whose two-day review is over: check it again, then swap players and picks, drop the named
 // players to waivers, clear moved players from the old team's lineup and log it (transactions, type "trade").
-async function processTrades(db) {
-  const due = (await db.collection('trades').where('status', '==', 'review').get()).docs.filter(d => (d.data().processAt || d.data().reviewUntil) <= Date.now() + BATCH_SLACK);
+// With onlyId (the commissioner's "Push through now", rule 4-1), just that trade goes through, review or not.
+async function processTrades(db, onlyId = null) {
+  const inReview = (await db.collection('trades').where('status', '==', 'review').get()).docs;
+  const due = onlyId ? inReview.filter(d => d.id === onlyId) : inReview.filter(d => (d.data().processAt || d.data().reviewUntil) <= Date.now() + BATCH_SLACK);
   if (!due.length) return { processed: 0 };
   const [P, state, G] = await Promise.all([playerInfo(), getJSON('https://api.sleeper.app/v1/state/nfl'), weekGames()]);
   const cal = await leagueCalendar(db, state), { pickSeasons } = cal, unpaid = await unpaidTeams(db, cal);
@@ -1356,10 +1384,33 @@ async function processTrades(db) {
 // movesRun: the weekly moves batch, Wednesday 3 AM Central. Trades whose review is over go through first, then every
 // waiver claim on a player whose waiver time is up (a player nobody wins becomes a free agent). Players never change
 // teams in the middle of a week this way; free agents can still be added any time (8-4).
+// Each run is recorded in config/movesRun. If it fails, the commissioner gets a site alert and a push notification (once
+// that day, though it retries twice); movesWatch, an hour later, alerts if no run finished at all.
+async function alertCommish(db, title, body) {
+  const roles = (await db.doc('config/roles').get()).data() || {};
+  const to = [...new Set([roles.owner, ...(roles.commish || [])].filter(Boolean))];
+  await Promise.all(to.map(uid => db.collection('notes').add({ to: uid, team: null, by: 'system', at: FieldValue.serverTimestamp(), title, body })));
+}
+const chiDay = (ms = Date.now()) => new Date(ms).toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
 exports.movesRun = onSchedule({ schedule: '0 3 * * 3', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 2, timeoutSeconds: 300, memory: '512MiB', maxInstances: 1 }, async () => {
-  const db = getFirestore();
-  await processTrades(db);
-  await settleWaivers(db);
+  const db = getFirestore(), log = db.doc('config/movesRun');
+  try {
+    const t = await processTrades(db), w = await settleWaivers(db);
+    await log.set({ lastOk: Date.now(), day: chiDay(), trades: t.processed || 0, waivers: w.settled || 0, error: null }, { merge: true });
+  } catch (e) {
+    const prev = (await log.get()).data() || {};
+    await log.set({ lastError: Date.now(), error: String(e && e.message || e).slice(0, 500) }, { merge: true });
+    if (prev.alerted !== chiDay()) {
+      await log.set({ alerted: chiDay() }, { merge: true });
+      await alertCommish(db, "Wednesday moves batch failed", `Trades and waiver claims didn't finish (${String(e && e.message || e).slice(0, 200)}). It retries on its own; if it still fails, push trades from Account › All trades or ask ALFRED.`);
+    }
+    throw e;
+  }
+});
+exports.movesWatch = onSchedule({ schedule: '0 4 * * 3', timeZone: 'America/Chicago', region: 'us-central1', retryCount: 1, timeoutSeconds: 60 }, async () => {
+  const db = getFirestore(), L = (await db.doc('config/movesRun').get()).data() || {};
+  if (L.day === chiDay()) return;                                   // this morning's batch finished
+  await alertCommish(db, "Wednesday moves batch didn't run", `No finished moves batch this morning (last good run: ${L.lastOk ? new Date(L.lastOk).toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'medium', timeStyle: 'short' }) + ' Central' : 'never'}). Trades and claims are waiting. Push trades from Account › All trades or ask ALFRED.`);
 });
 
 // Tests only (never set in production): the pure helpers, for checking the bracket and the Tuesday cutoff.

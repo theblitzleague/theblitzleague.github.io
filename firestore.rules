@@ -49,6 +49,11 @@ service cloud.firestore {
         && request.resource.data.teams is map && request.resource.data.teams.size() <= 32;
       allow delete: if false;
     }
+    // The Wednesday moves batch's last run (written only by movesRun): the commissioner sees it under Account › All trades.
+    match /config/movesRun {
+      allow read: if isCommish();
+      allow write: if false;
+    }
     match /config/scoring {
       allow read: if true;
       allow write: if false;
